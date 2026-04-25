@@ -15,7 +15,7 @@ export async function mockSubmitFNOL(lob: 'auto' | 'home'): Promise<FNOLSubmitRe
   await delay(2500)
   const year = new Date().getFullYear()
   const seq  = Math.floor(Math.random() * 90000 + 10000)
-  const type = lob === 'home' ? 'HOME' : 'AUTO'
+  const type = lob === 'home' ? 'HOME' : lob === 'commercial-auto' ? 'CAUTO' : 'AUTO'
   const gwId = `CLM-${year}-${type}-${seq}`
 
   const result: FNOLSubmitResponse = {
@@ -39,7 +39,7 @@ export async function mockGetClaimStatus(claimId: string): Promise<ClaimStatusRe
   await delay(400)
 
   const stored = sessionStorage.getItem(`vm_claim_${claimId}`)
-  const lob: 'auto' | 'home' = stored ? JSON.parse(stored).lob : 'auto'
+  const lob: 'auto' | 'home' | 'commercial-auto' = stored ? JSON.parse(stored).lob : 'auto'
 
   const adjusterName  = lob === 'home' ? 'Daniel Park'    : 'Rebecca Kim'
   const adjusterPhone = lob === 'home' ? '(214) 555-0193' : '(214) 555-0192'
