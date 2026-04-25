@@ -3,17 +3,13 @@ import { isMock, mockSubmitFNOL } from '@/lib/mockApi'
 import { claimsApi } from '@/lib/api/claims.api'
 import type { FNOLFormData, FNOLSubmitResponse } from '@/lib/types'
 
-interface FNOLPayload extends Partial<FNOLFormData> {
-  lob?: 'auto' | 'home'
-}
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useFNOL() {
-  return useMutation<FNOLSubmitResponse, Error, FNOLPayload>({
+  return useMutation<FNOLSubmitResponse, Error, Record<string, unknown>>({
     mutationFn: async (data) => {
-      if (isMock()) {
-        return mockSubmitFNOL(data.lob ?? 'auto')
-      }
-      return claimsApi.submitFNOL(data as FNOLFormData)
+      const lob = (data.lob as 'auto' | 'home') ?? 'auto'
+      if (isMock()) return mockSubmitFNOL(lob)
+      return claimsApi.submitFNOL(data as unknown as FNOLFormData)
     },
   })
 }
