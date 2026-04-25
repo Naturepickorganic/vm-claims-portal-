@@ -16,7 +16,7 @@ export type PIPType =
 
 export interface PIPRules {
   type:          PIPType
-  limit:         number | null          // USD
+  limit:         number | undefined          // USD
   mandatory:     boolean
   treatmentWindow?: number             // days to seek treatment
   specialRules?: string
@@ -49,7 +49,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   CA: {
     code:'CA', name:'California', rank:1,
     negligence: 'pure-comparative',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV claims allowed against at-fault third party. CA courts apply a 17c formula for first-party DV.',
     glassDeductible: 'full',
@@ -62,7 +62,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   TX: {
     code:'TX', name:'Texas', rank:2,
     negligence: 'modified-51',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV recoverable from at-fault third party. Texas uses market value approach. First-party DV from own insurer is limited.',
     glassDeductible: 'waived-chip',
@@ -114,7 +114,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   IL: {
     code:'IL', name:'Illinois', rank:6,
     negligence: 'modified-51',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV recoverable from at-fault third party in Illinois. No specific formula mandated — market-based approach.',
     glassDeductible: 'full',
@@ -127,7 +127,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   OH: {
     code:'OH', name:'Ohio', rank:7,
     negligence: 'modified-51',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV claims allowed in Ohio against at-fault third party. Ohio courts recognize both "inherent" and "repair-related" DV.',
     glassDeductible: 'full',
@@ -153,7 +153,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   GA: {
     code:'GA', name:'Georgia', rank:9,
     negligence: 'modified-50',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'strong',
     dvNotes: 'Georgia is the STRONGEST DV state. O.C.G.A. § 33-34-6 explicitly recognizes DV. Third-party DV is routinely claimed and awarded. First-party DV may also be available depending on policy. Always initiate DV assessment for repaired vehicles.',
     glassDeductible: 'full',
@@ -166,7 +166,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   MI: {
     code:'MI', name:'Michigan', rank:10,
     negligence: 'modified-51',
-    pip: { type:'no-fault', limit:null, mandatory:true, specialRules:'Michigan post-2020 REFORM has 6 PIP tiers: (1) Unlimited medical, (2) $500K, (3) $250K, (4) $50K (Medicaid eligible), (5) Coordinated with employer health, (6) Opt-out (Medicare eligible). MUST verify tier from policy declarations before any medical bill payment. Attendant care, replacement services, and work loss covered under applicable tier.' },
+    pip: { type:'no-fault', limit:undefined, mandatory:true, specialRules:'Michigan post-2020 REFORM has 6 PIP tiers: (1) Unlimited medical, (2) $500K, (3) $250K, (4) $50K (Medicaid eligible), (5) Coordinated with employer health, (6) Opt-out (Medicare eligible). MUST verify tier from policy declarations before any medical bill payment. Attendant care, replacement services, and work loss covered under applicable tier.' },
     diminishedValue: 'limited',
     dvNotes: 'DV against at-fault third party allowed but limited by Michigan tort threshold. First-party DV not recoverable from own insurer.',
     glassDeductible: 'full',
@@ -179,7 +179,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   NC: {
     code:'NC', name:'North Carolina', rank:11,
     negligence: 'contributory',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'none',
     dvNotes: 'North Carolina does not recognize DV claims — neither first-party nor third-party. Courts have consistently rejected DV as a measure of damages.',
     glassDeductible: 'full',
@@ -192,7 +192,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   VA: {
     code:'VA', name:'Virginia', rank:12,
     negligence: 'contributory',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV allowed in Virginia against at-fault third party despite contributory negligence rule. Progressive v. Lloyd established DV as recoverable.',
     glassDeductible: 'full',
@@ -205,7 +205,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   WA: {
     code:'WA', name:'Washington', rank:13,
     negligence: 'pure-comparative',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV recoverable in Washington against at-fault third party. Washington courts apply market value diminution approach.',
     glassDeductible: 'full',
@@ -231,7 +231,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   AZ: {
     code:'AZ', name:'Arizona', rank:15,
     negligence: 'pure-comparative',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV recoverable in Arizona against at-fault third party. Arizona courts have consistently upheld DV claims.',
     glassDeductible: 'waived-all',
@@ -244,7 +244,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   CO: {
     code:'CO', name:'Colorado', rank:16,
     negligence: 'modified-50',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV allowed in Colorado against at-fault third party. Colorado uses the before-and-after market value method.',
     glassDeductible: 'waived-all',
@@ -257,7 +257,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   MD: {
     code:'MD', name:'Maryland', rank:17,
     negligence: 'contributory',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV allowed in Maryland against at-fault third party despite contributory negligence. Maryland courts recognize DV as a separate element of damages.',
     glassDeductible: 'full',
@@ -270,7 +270,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   TN: {
     code:'TN', name:'Tennessee', rank:18,
     negligence: 'modified-50',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV recoverable in Tennessee against at-fault third party. Tennessee uses market value diminution approach.',
     glassDeductible: 'full',
@@ -283,7 +283,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   IN: {
     code:'IN', name:'Indiana', rank:19,
     negligence: 'modified-51',
-    pip: { type:'none', limit:null, mandatory:false },
+    pip: { type:'none', limit:undefined, mandatory:false },
     diminishedValue: 'allowed',
     dvNotes: 'DV allowed in Indiana against at-fault third party. Indiana courts use market value diminution.',
     glassDeductible: 'full',
