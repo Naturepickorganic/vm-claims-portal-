@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { font-family: 'DM Sans', sans-serif; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+}
+
+@layer components {
+  /* Cards */
+  .card { @apply bg-white border border-border rounded-2xl p-6 mb-4 shadow-sm transition-all; }
+  .card-title { @apply text-[13.5px] font-bold text-navy flex items-center gap-2; }
+
+  /* Buttons */
+  .btn { @apply inline-flex items-center gap-2 font-semibold text-[13px] px-5 py-2.5 rounded-xl cursor-pointer border-none transition-all duration-200; }
+  .btn-primary { @apply bg-red text-white shadow-red hover:bg-red-dark hover:-translate-y-0.5 active:translate-y-0; }
+  .btn-ghost   { @apply bg-transparent text-slate border border-border hover:border-navy hover:text-navy hover:bg-bg; }
+  .btn-navy    { @apply bg-navy text-white hover:bg-navy-light; }
+  .btn-green   { @apply bg-green text-white shadow-green hover:bg-green-dark hover:-translate-y-0.5; }
+
+  /* Form */
+  .field        { @apply flex flex-col gap-1.5; }
+  .field-label  { @apply text-[11.5px] font-semibold text-slate flex items-center gap-1.5 flex-wrap; }
+  .field-input  { @apply w-full text-[13px] text-navy border border-border rounded-xl px-3.5 py-2.5 bg-white outline-none transition-all focus:border-red focus:ring-2 focus:ring-red/10 font-body; }
+  .field-select { @apply field-input appearance-none; }
+  .field-textarea { @apply field-input resize-y min-h-[90px] leading-relaxed; }
+  .prefilled    { @apply bg-green-light border-green-mid; }
+  .field-hint   { @apply text-[11px] text-faint leading-snug; }
+  .err-msg      { @apply text-[11px] text-red font-semibold; }
+  .prefill-badge { @apply inline-flex items-center text-[9.5px] font-bold text-green bg-green-light border border-green-mid px-1.5 py-px rounded-full ml-1; }
+
+  /* Chips */
+  .chip    { @apply text-xs font-semibold px-3 py-1.5 rounded-full border border-border text-slate cursor-pointer transition-all bg-white select-none hover:bg-red hover:border-red hover:text-white; }
+  .chip-on { @apply bg-red border-red text-white; }
+
+  /* Info boxes */
+  .info-box    { @apply flex gap-3 p-3 rounded-xl mb-3.5 items-start text-[12.5px] leading-relaxed; }
+  .info-blue   { @apply bg-blue-light border border-blue-mid text-[#1E3A8A]; }
+  .info-green  { @apply bg-green-light border border-green-mid text-[#064E3B]; }
+  .info-amber  { @apply bg-amber-light border border-[#FDE68A] text-[#92400E]; }
+  .info-red    { @apply bg-red-light border border-red-mid text-[#7F1D1D]; }
+  .info-neutral{ @apply bg-[#FAFBFF] border border-[#D6DEFF] text-[#2C3E7A]; }
+  .info-teal   { @apply bg-[#ECFEFF] border border-[#A5F3FC] text-[#164E63]; }
+
+  /* Upload */
+  .drop-zone { @apply border-2 border-dashed border-border rounded-xl min-h-[115px] flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all bg-bg hover:border-red hover:border-solid hover:bg-red-light; }
+
+  /* Incident cards */
+  .inc-card    { @apply border border-border rounded-xl p-3.5 cursor-pointer text-center transition-all bg-white relative hover:border-red hover:bg-red-light hover:-translate-y-px; }
+  .inc-card-on { @apply border-red bg-red-light ring-2 ring-red/10; }
+
+  /* Step nav */
+  .step-nav { @apply flex items-center justify-between pt-5 border-t border-border mt-2; }
+
+  /* Toggle switch */
+  .toggle { @apply w-[42px] h-[23px] rounded-full relative flex-shrink-0 transition-colors duration-200; }
+  .toggle-on  { @apply bg-green; }
+  .toggle-off { @apply bg-border; }
+  .toggle-knob { @apply absolute top-[3px] w-[17px] h-[17px] rounded-full bg-white shadow transition-all duration-200; }
+}
