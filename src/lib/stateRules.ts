@@ -140,7 +140,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   NJ: {
     code:'NJ', name:'New Jersey', rank:8,
     negligence: 'modified-50',
-    pip: { type:'choice', limit:15000, mandatory:true, treatmentWindow:null, specialRules:'NJ is a CHOICE no-fault state with mandatory PIP. Basic Policy: $15K PIP default. Standard Policy: up to $250K. "Lawsuit Threshold" chosen by policyholder — Verbal (limited tort) or Dollar ($3,600 medical expenses). CRITICAL: verify threshold selection.' },
+    pip: { type:'choice', limit:15000, mandatory:true, treatmentWindow:undefined, specialRules:'NJ is a CHOICE no-fault state with mandatory PIP. Basic Policy: $15K PIP default. Standard Policy: up to $250K. "Lawsuit Threshold" chosen by policyholder — Verbal (limited tort) or Dollar ($3,600 medical expenses). CRITICAL: verify threshold selection.' },
     diminishedValue: 'limited',
     dvNotes: 'DV limited in NJ. Third-party DV claims possible but courts apply strict scrutiny. First-party DV generally not recognized.',
     glassDeductible: 'full',
@@ -296,7 +296,7 @@ export const STATE_RULES: Record<string, StateRule> = {
   MN: {
     code:'MN', name:'Minnesota', rank:20,
     negligence: 'modified-51',
-    pip: { type:'no-fault', limit:40000, mandatory:true, treatmentWindow:null, specialRules:'Minnesota No-Fault Act: $40,000 PIP covering medical expenses ($20K) and non-medical loss ($20K). MN has strict no-fault rules — must use PIP before accessing tort liability for economic loss. Economic threshold: $4,000 in medical expenses or 60-day disability to access tort system.' },
+    pip: { type:'no-fault', limit:40000, mandatory:true, treatmentWindow:undefined, specialRules:'Minnesota No-Fault Act: $40,000 PIP covering medical expenses ($20K) and non-medical loss ($20K). MN has strict no-fault rules — must use PIP before accessing tort liability for economic loss. Economic threshold: $4,000 in medical expenses or 60-day disability to access tort system.' },
     diminishedValue: 'limited',
     dvNotes: 'DV limited in Minnesota under the no-fault framework. Third-party DV may be available once tort threshold is met.',
     glassDeductible: 'full',
