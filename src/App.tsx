@@ -5,6 +5,7 @@ import Login            from '@/pages/Login'
 import Signup           from '@/pages/Signup'
 import TrackClaim       from '@/pages/TrackClaim'
 import FileClaimStart   from '@/pages/FileClaimStart'
+import ThirdPartyFNOL   from '@/pages/ThirdPartyFNOL'
 import FNOLWizard       from '@/pages/claims/auto/FNOLWizard'
 import ClaimStatus      from '@/pages/claims/auto/ClaimStatus'
 import ClaimClosure     from '@/pages/claims/auto/ClaimClosure'
@@ -15,23 +16,28 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Public pages */}
-        <Route path="/"           element={<Home />} />
-        <Route path="/login"      element={<Login />} />
-        <Route path="/signup"     element={<Signup />} />
-        <Route path="/track"      element={<TrackClaim />} />
-        <Route path="/file-claim" element={<FileClaimStart />} />
+        {/* Public */}
+        <Route path="/"                            element={<Home />} />
+        <Route path="/login"                       element={<Login />} />
+        <Route path="/signup"                      element={<Signup />} />
+        <Route path="/track"                       element={<TrackClaim />} />
+        <Route path="/file-claim"                  element={<FileClaimStart />} />
+        <Route path="/claims/third-party/new"      element={<ThirdPartyFNOL />} />
 
-        {/* Claims flows */}
-        <Route path="/claims/auto/new"         element={<FNOLWizard />} />
-        <Route path="/claims/auto/:id/status"  element={<ClaimStatus />} />
-        <Route path="/claims/auto/:id/closure" element={<ClaimClosure />} />
-        <Route path="/claims/home/new"         element={<HomeFNOLWizard />} />
-        <Route path="/claims/home/:id/status"  element={<HomeClaimStatus />} />
-        <Route path="/claims/:id/status"       element={<ClaimStatus />} />
-        <Route path="/claims/:id/closure"      element={<ClaimClosure />} />
+        {/* Auto */}
+        <Route path="/claims/auto/new"             element={<FNOLWizard />} />
+        <Route path="/claims/auto/:id/status"      element={<ClaimStatus />} />
+        <Route path="/claims/auto/:id/closure"     element={<ClaimClosure />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Home */}
+        <Route path="/claims/home/new"             element={<HomeFNOLWizard />} />
+        <Route path="/claims/home/:id/status"      element={<HomeClaimStatus />} />
+
+        {/* Legacy compat */}
+        <Route path="/claims/:id/status"           element={<ClaimStatus />} />
+        <Route path="/claims/:id/closure"          element={<ClaimClosure />} />
+
+        <Route path="*"                            element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
   )
