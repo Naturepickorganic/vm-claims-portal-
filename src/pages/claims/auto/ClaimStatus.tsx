@@ -270,6 +270,15 @@ function DetailRow({ label, value }: { label:string; value:React.ReactNode }) {
     <div className="flex items-start justify-between py-2.5 border-b border-bg last:border-none gap-3">
       <span className="text-[12.5px] text-muted flex-shrink-0">{label}</span>
       <span className="text-[12.5px] font-bold text-navy text-right">{value}</span>
+      {/* Floating Chat Button */}
+      <button
+        onClick={() => setTab('messages')}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-red text-white font-bold text-[13px] px-5 py-3 rounded-full shadow-[0_4px_20px_rgba(200,16,46,.4)] hover:bg-red-dark transition-all border-none cursor-pointer animate-bounce-slow">
+        <span className="text-[18px]">💬</span>
+        <span className="hidden sm:block">Chat with Adjuster</span>
+        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse ml-1" />
+      </button>
+
     </div>
   )
 }
