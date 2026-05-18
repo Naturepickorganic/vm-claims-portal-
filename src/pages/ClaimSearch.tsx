@@ -975,17 +975,7 @@ export default function ClaimSearch() {
             <button onClick={clearAll} style={{ fontSize:13,background:C.white,color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,padding:'7px 14px',cursor:'pointer' }}>Clear</button>
           </div>
           {error&&<div style={{ display:'flex',alignItems:'center',gap:6,fontSize:12.5,color:'#DC2626',marginTop:6 }}><AlertCircle size={14}/>{error}</div>}
-          {/* Compact demo hint */}
-          <div style={{ marginTop:14,padding:'8px 12px',background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:6,fontSize:11.5 }}>
-            <span style={{ fontWeight:700,color:'#92400E' }}>Demo claims: </span>
-            {DEMO_CLAIMS.map((d,i)=>(
-              <span key={d.num}>{i>0&&' · '}<span onClick={()=>{setSearchTab('claim');setClaimInput(d.num)}} style={{ color:C.blue,cursor:'pointer',fontWeight:600 }}>{d.num}</span><span style={{ color:'#92400E' }}> ({d.desc.split('—')[1]?.trim()})</span></span>
-            ))}
-            <span style={{ fontWeight:700,color:'#92400E',marginLeft:8 }}>Policies: </span>
-            {DEMO_POLICIES.map((d,i)=>(
-              <span key={d.num}>{i>0&&' · '}<span onClick={()=>{setSearchTab('policy');setPolicyInput(d.num)}} style={{ color:C.blue,cursor:'pointer',fontWeight:600 }}>{d.num}</span></span>
-            ))}
-          </div>
+
         </div>
 
         {foundClaim&&<><ClaimTracker claim={foundClaim}/><ClaimDetail claim={foundClaim}/></>}
