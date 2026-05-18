@@ -11,13 +11,16 @@ const C = {
   border:'#E2E8F2', bg:'#F5F8FF', white:'#FFFFFF',
   text:'#1A2744', mid:'#4A5568', muted:'#718096', faint:'#A0AEC0',
   tblHead:'#1B3A6B', rowAlt:'#F5F8FF',
-  orange:'#E65100', purple:'#6A1B9A',
+  orange:'#E65100', purple:'#6A1B9A', teal:'#0F6E56', amber:'#854F0B',
 }
 
-const TRACKER_STEPS = ['Filed','Adjuster\nAssigned','Inspection\nComplete','Estimate\nApproved','Rental\nActive','Repair\nIn Progress','Payment','Closed']
+/* ── LOB-aware tracker steps ── */
+const AUTO_STEPS = ['Filed','Adjuster\nAssigned','Inspection\nComplete','Estimate\nApproved','Rental\nActive','Repair\nIn Progress','Payment','Closed']
+const PROP_STEPS = ['Filed','Adjuster\nAssigned','Inspection\nComplete','Estimate\nApproved','Mitigation\nComplete','Rebuild\nIn Progress','Payment','Closed']
 
-type EvtCategory = 'General'|'Repair'|'Rental'|'Payment'|'Inspection'
+type EvtCategory = 'General'|'Repair'|'Rental'|'Payment'|'Inspection'|'Mitigation'|'Rebuild'|'ALE'|'Contents'
 type StatusType  = 'on-track'|'action-needed'|'closed'
+type LobType     = 'auto'|'property'
 
 interface TimelineEvent {
   id:number; category:EvtCategory; title:string; sub:string
@@ -30,11 +33,15 @@ interface NoteRow    { adjuster:string; date:string; message:string }
 
 interface ClaimData {
   claimNumber:string; insuredName:string; policyNumber:string
-  claimStatus:string; statusType:StatusType
+  claimStatus:string; statusType:StatusType; lobType:LobType
   adjusterName:string; adjusterPhone:string
   reporterName:string; reportedType:string; reportedDate:string
+  /* Auto fields */
   vehicle:string; dateOfLoss:string; lossType:string
   repairShop:string; rentalInfo:string
+  /* Property fields */
+  propertyAddress?:string; propertyType?:string; peril?:string
+  contractor?:string; aleInfo?:string
   activeStep:number; progressPct:number; statusMsg:string
   notes:NoteRow[]; payments:PaymentRow[]
   contacts:ContactRow[]; services:ServiceRow[]
@@ -44,41 +51,49 @@ interface ClaimData {
 interface PolicyClaim {
   claimNumber:string; insuredName:string; adjusterName:string
   status:string; createdDate:string; vehicle:string; lossType:string
+  lobType:LobType
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MOCK DATA — 9 fully detailed claims, 4 policies
+   MOCK DATA — 12 fully detailed claims (9 Auto + 3 Property)
+   4 Policies + 3 Property policies
    All tabs: Info, Payments, Contacts, Services, Timeline in sync
+   Auto events sourced from: GW ClaimCenter, CCC ONE, Mitchell, Enterprise ARMS, HiMarley, ISO
+   Property events sourced from: GW ClaimCenter, Xactimate/Symbility, EagleView, Alacrity, HiMarley, OneInc
    🔌 Replace with Guidewire API calls when ready
    ═══════════════════════════════════════════════════════════════ */
 
 const MOCK_CLAIMS: Record<string,ClaimData> = {
 
-  /* ── 1. Rosario — CR-V — Repair + Rental active — GREEN ── */
+  /* ════════════════════════════════════════════════════════
+     AUTO CLAIMS
+     ════════════════════════════════════════════════════════ */
+
+  /* ── AUTO 1: Rosario — CR-V — Repair + Rental active — GREEN ── */
   '000-00-000480': {
     claimNumber:'000-00-000480', insuredName:'Rosario Marinello',
-    policyNumber:'7407354463',   claimStatus:'Open', statusType:'on-track',
+    policyNumber:'7407354463', claimStatus:'Open', statusType:'on-track', lobType:'auto',
     adjusterName:'Emily Rodriguez', adjusterPhone:'(214) 555-0142',
     reporterName:'Rosario Marinello', reportedType:'Self / Insured',
     reportedDate:'2024-09-15', vehicle:'2022 Honda CR-V EX-L',
-    dateOfLoss:'2024-09-15',   lossType:'Collision — Rear End',
+    dateOfLoss:'2024-09-15', lossType:'Collision — Rear End',
     repairShop:'Caliber Collision Dallas (4821 Mockingbird Ln)',
     rentalInfo:'Enterprise #ENT-88421 · 2022 Toyota Camry · 9 days remaining',
     activeStep:6, progressPct:68,
-    statusMsg:"Body work underway at Caliber Collision. Parts arrived May 19. Enterprise rental active — 9 days remaining. We'll notify you immediately when your vehicle passes quality inspection.",
+    statusMsg:"Body work underway at Caliber Collision. Parts arrived May 19. Enterprise rental active — 9 days remaining. We'll notify you when your vehicle passes quality inspection.",
     notes:[
-      { adjuster:'Emily Rodriguez', date:'May 16, 2025', message:'Supplement approved — additional damage behind rear bumper. Revised total $8,267. No deductible change for customer.' },
-      { adjuster:'Emily Rodriguez', date:'Sep 15, 2024', message:'Claim opened. Inspection scheduled at Caliber Collision Dallas for May 14. Rental authorized.' },
+      { adjuster:'Emily Rodriguez', date:'May 16, 2025', message:'Supplement approved — additional damage behind rear bumper. Revised total $8,267. No deductible change.' },
+      { adjuster:'Emily Rodriguez', date:'Sep 15, 2024', message:'Claim opened. ISO ClaimSearch clear. Inspection scheduled at Caliber Collision Dallas for May 14. Rental authorized.' },
     ],
     payments:[
       { checkNumber:'',              payTo:'Rosario Marinello', grossAmount:88,   issueDate:'2025-09-02', scheduledSendDate:'',           status:'Notifying'  },
       { checkNumber:'',              payTo:'Caliber Collision',  grossAmount:7767, issueDate:'',           scheduledSendDate:'2025-05-30', status:'Requesting' },
     ],
     contacts:[
-      { name:'Rosario Marinello',        role:'Insured',          createdDate:'Sep 15, 2024', phone:'(214) 555-0181', email:'rosario@email.com'             },
-      { name:'Emily Rodriguez',          role:'Adjuster',         createdDate:'Sep 15, 2024', phone:'(214) 555-0142', email:'emily.rodriguez@valuemumt.com' },
-      { name:'Caliber Collision Dallas', role:'Repair Shop',      createdDate:'May 13, 2025', phone:'(214) 555-0300', email:'dallas@calibercollision.com'   },
-      { name:'Enterprise Rent-A-Car',    role:'Rental Provider',  createdDate:'May 14, 2025', phone:'(214) 555-0400', email:'dallas.rental@enterprise.com'  },
+      { name:'Rosario Marinello',        role:'Insured',         createdDate:'Sep 15, 2024', phone:'(214) 555-0181', email:'rosario@email.com'             },
+      { name:'Emily Rodriguez',          role:'Adjuster',        createdDate:'Sep 15, 2024', phone:'(214) 555-0142', email:'emily.rodriguez@valuemumt.com' },
+      { name:'Caliber Collision Dallas', role:'Repair Shop',     createdDate:'May 13, 2025', phone:'(214) 555-0300', email:'dallas@calibercollision.com'   },
+      { name:'Enterprise Rent-A-Car',    role:'Rental Provider', createdDate:'May 14, 2025', phone:'(214) 555-0400', email:'dallas.rental@enterprise.com'  },
     ],
     services:[
       { serviceNumber:'SRV-480-001', serviceType:'Collision Repair',   provider:'Caliber Collision Dallas', serviceStatus:'In Progress', expectedCompletion:'May 28, 2025' },
@@ -86,37 +101,43 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
       { serviceNumber:'SRV-480-003', serviceType:'Quality Inspection', provider:'Caliber Collision Dallas', serviceStatus:'Pending',     expectedCompletion:'May 28, 2025' },
     ],
     timeline:[
-      { id:1,  category:'General',    title:'Claim #000-00-000480 Received',                      sub:'Confirmation sent to rosario@email.com and (214) 555-0181.',                                                              date:'Sep 15, 2024 · 9:14 AM',  status:'done',     badge:'✓ Filed'       },
-      { id:2,  category:'General',    title:'Emily Rodriguez Assigned',                            sub:'Emily Rodriguez (Property — Team B). Direct: (214) 555-0142.',                                                           date:'Sep 15, 2024 · 11:30 AM', status:'done',     badge:'✓ Complete'    },
-      { id:3,  category:'Inspection', title:'Inspection Booked — Caliber Collision Dallas',        sub:'Drop-off: May 14, 10:00 AM · 4821 Mockingbird Ln, Dallas TX.',                                                          date:'May 13, 2025',            status:'done',     badge:'✓ Complete'    },
-      { id:4,  category:'Inspection', title:'Vehicle Received at Caliber Collision',               sub:'Vehicle checked in at 10:22 AM. Inspection underway.',                                                                    date:'May 14, 2025',            status:'done',     badge:'✓ Complete'    },
-      { id:5,  category:'Inspection', title:'Estimate Completed & Approved — $6,847',              sub:'Parts $3,210 · Labor 18.5 hrs $2,490 · Paint $1,147. Approved by Emily Rodriguez. Repairs begin May 16.',               date:'May 14–15, 2025',         status:'done',     badge:'✓ Approved'    },
-      { id:6,  category:'Rental',     title:'Enterprise Rental Reserved & Active',                 sub:'Confirmation #ENT-88421 · 2022 Toyota Camry · 2424 Commerce St Dallas. Fully covered.',                                  date:'May 14, 2025',            status:'active',   badge:'● Active'      },
-      { id:7,  category:'Repair',     title:'Hidden Damage Found — Supplement $1,420 Approved',   sub:'Additional damage behind bumper. Deductible unchanged. Revised total $8,267. New ETA May 28.',                           date:'May 17, 2025',            status:'done',     badge:'✓ Approved'    },
-      { id:8,  category:'Repair',     title:'Parts Arrived — Body Work Began',                    sub:'Replacement bumper and quarter panel received. Body repair started at Caliber Collision.',                                 date:'May 19, 2025',            status:'done',     badge:'✓ In Progress' },
-      { id:9,  category:'Repair',     title:'Body Work Complete — Entering Paint & Refinish',     sub:'Vehicle moving to paint booth. Typically 2–3 days. Next update when paint is complete.',                                   date:'Today · May 21, 2025',    status:'active',   badge:'● In Progress' },
-      { id:10, category:'Repair',     title:'Quality Inspection & Vehicle Ready',                  sub:"We'll notify you immediately when your vehicle passes QC. $500 deductible due at pickup.",                               date:'Est. May 28, 2025',       status:'upcoming', badge:'⏳ Scheduled'  },
-      { id:11, category:'Rental',     title:'Rental Return',                                       sub:'Return at Caliber or any Enterprise by May 28. Fully covered — no charges to you.',                                       date:'Est. May 28, 2025',       status:'upcoming', badge:'⏳ Scheduled'  },
-      { id:12, category:'Payment',    title:'Payment — $7,767 to Caliber Collision',               sub:'Balance paid directly to shop after repairs. Your portion: $500 deductible at pickup.',                                   date:'After repairs',           status:'upcoming', badge:'⏳ Scheduled'  },
-      { id:13, category:'General',    title:'Claim Closed',                                        sub:'Full summary sent by email. Reopen within 30 days if issues arise.',                                                      date:'Est. ~May 30, 2025',      status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:1,  category:'General',    title:'FNOL Submitted — Claim #000-00-000480 Assigned',      sub:'Claim created in system. Coverage verified: collision, $500 deductible, rental coverage confirmed. Confirmation sent to rosario@email.com.',                                          date:'Sep 15, 2024 · 9:14 AM',  status:'done',     badge:'✓ Filed'       },
+      { id:2,  category:'General',    title:'Emily Rodriguez Assigned — Text Thread Opened',        sub:'Emily Rodriguez (Property — Team B) assigned. Direct: (214) 555-0142. Two-way SMS thread opened via HiMarley. ISO ClaimSearch history: clear.',                                     date:'Sep 15, 2024 · 11:30 AM', status:'done',     badge:'✓ Complete'    },
+      { id:3,  category:'Repair',     title:'DRP Shop Selected — Caliber Collision Dallas',         sub:'Caliber Collision Dallas selected from DRP network via CCC Engage based on proximity and capacity. Shop details sent to member.',                                                     date:'May 12, 2025',            status:'done',     badge:'✓ Complete'    },
+      { id:4,  category:'Inspection', title:'Inspection Appointment Scheduled',                     sub:'Drop-off: May 14, 10:00 AM · 4821 Mockingbird Ln, Dallas TX. Reminder sent via HiMarley 24 hrs prior.',                                                                              date:'May 13, 2025',            status:'done',     badge:'✓ Complete'    },
+      { id:5,  category:'Rental',     title:'Enterprise Rental Reserved — Confirmation #ENT-88421', sub:'Reservation created via Enterprise ARMS: 2022 Toyota Camry, pickup at 2424 Commerce St Dallas. Coverage: up to 30 days, fully covered. No cost to you.',                            date:'May 13, 2025',            status:'done',     badge:'✓ Reserved'    },
+      { id:6,  category:'Rental',     title:'Rental Vehicle Picked Up',                             sub:'Pickup confirmed in Enterprise ARMS. Rental period clock started. Coverage countdown: 30 days remaining.',                                                                           date:'May 14, 2025 · 10:05 AM', status:'done',     badge:'✓ Active'      },
+      { id:7,  category:'Inspection', title:'Vehicle Received at Caliber — Teardown Started',       sub:'Vehicle checked in 10:22 AM via CCC ONE. Teardown phase begun. Hidden damage discovery begins here.',                                                                                date:'May 14, 2025 · 10:22 AM', status:'done',     badge:'✓ Complete'    },
+      { id:8,  category:'Inspection', title:'Estimate Completed — $6,847 (CCC Estimate STP)',       sub:'Full line-item estimate: Parts $3,210 (Honda OEM) · Labor 18.5 hrs $2,490 · Paint $1,147. Transmitted to carrier via CCC API.',                                                    date:'May 14, 2025',            status:'done',     badge:'✓ Complete'    },
+      { id:9,  category:'Inspection', title:'Estimate Approved — Repairs Authorized May 16',        sub:'Approved by Emily Rodriguez. Caliber Collision notified via CCC/Mitchell. Repair start date confirmed. HiMarley: "Estimate approved. Repairs begin May 16."',                       date:'May 15, 2025',            status:'done',     badge:'✓ Approved'    },
+      { id:10, category:'Repair',     title:'Parts Ordered — Honda OEM ETA May 19',                sub:'Rear bumper assembly ordered via CCC ONE integrated parts ordering. Supplier ETA: May 19. Body work begins on arrival. HiMarley update sent.',                                       date:'May 15, 2025',            status:'done',     badge:'✓ Ordered'     },
+      { id:11, category:'Repair',     title:'Body Repair Started',                                  sub:'CCC ONE UpdatePlus: "Repairs have started on your vehicle." Body repair phase logged.',                                                                                               date:'May 16, 2025',            status:'done',     badge:'✓ In Progress' },
+      { id:12, category:'Repair',     title:'Hidden Damage Found — Supplement $1,420 Approved',    sub:'Additional damage behind bumper identified during teardown. CCC supplement with photos submitted. Adjuster approved. HiMarley: "No change to your deductible. New ETA: May 28."',   date:'May 17, 2025',            status:'done',     badge:'✓ Approved'    },
+      { id:13, category:'Rental',     title:'Enterprise Rental — Active, 9 Days Remaining',         sub:'ARMS rental extension check: repair extends past original end date. Coverage extended to May 28. HiMarley: "Your rental coverage has been extended to May 28. No action needed."',  date:'May 18, 2025',            status:'active',   badge:'● Active'      },
+      { id:14, category:'Repair',     title:'OEM Parts Received — Body Work Completed',             sub:'Honda parts received May 19. Body repair completed. Vehicle moving to paint booth. CCC ONE UpdatePlus: "Your CR-V is in the paint booth."',                                         date:'May 19–21, 2025',         status:'done',     badge:'✓ Complete'    },
+      { id:15, category:'Repair',     title:'Paint & Refinish In Progress',                         sub:'Vehicle in paint booth at Caliber Collision. Paint phase typically 2–3 days. Next update when paint is complete and reassembly begins.',                                              date:'Today · May 21, 2025',    status:'active',   badge:'● In Progress' },
+      { id:16, category:'Repair',     title:'QC Inspection & Vehicle Ready for Pickup',             sub:'CCC ONE UpdatePlus will notify when vehicle passes QC. Pickup notification includes shop hours, address, deductible amount ($500) due, payment methods accepted.',                  date:'Est. May 28, 2025',       status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:17, category:'Rental',     title:'Rental Return',                                        sub:'Return your Enterprise vehicle at Caliber or any Enterprise location by May 28. Enterprise ARMS will confirm closure. No charges — fully covered.',                                   date:'Est. May 28, 2025',       status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:18, category:'Payment',    title:'Final Invoice & Payment — $7,767 to Caliber',          sub:'Shop invoice reconciled against approved estimate via CCC/Mitchell. Payment authorized in GW ClaimCenter. Disbursed via OneInc ACH to Caliber Collision.',                          date:'After repairs complete',  status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:19, category:'General',    title:'Member Satisfaction Survey & Claim Closed',             sub:'5-star SMS survey triggered via HiMarley immediately at closure. Closing summary: repair total, your out-of-pocket ($500), rental days used (15), reopen window 60 days.',          date:'Est. ~May 30, 2025',      status:'upcoming', badge:'⏳ Scheduled'  },
     ],
   },
 
-  /* ── 2. Marcus — F-150 — Hail, inspection pending — AMBER ── */
+  /* ── AUTO 2: Marcus — F-150 — Hail, action needed — AMBER ── */
   '000-00-000521': {
     claimNumber:'000-00-000521', insuredName:'Marcus T. Williams',
-    policyNumber:'8812047291',   claimStatus:'Open', statusType:'action-needed',
+    policyNumber:'8812047291', claimStatus:'Open', statusType:'action-needed', lobType:'auto',
     adjusterName:'Scott Henson', adjusterPhone:'(214) 555-0188',
     reporterName:'Marcus T. Williams', reportedType:'Self / Insured',
     reportedDate:'2025-04-10', vehicle:'2021 Ford F-150 XLT 4WD',
-    dateOfLoss:'2025-04-10',   lossType:'Comprehensive — Hail / Weather',
+    dateOfLoss:'2025-04-10', lossType:'Comprehensive — Hail / Weather',
     repairShop:'Joe Myers Ford Collision — Houston (13602 Northwest Fwy)',
     rentalInfo:'Enterprise rental authorized — available at time of vehicle drop-off',
     activeStep:3, progressPct:30,
-    statusMsg:'Action needed: Please drop off your F-150 at Joe Myers Ford Collision by May 23, 8:30 AM. Your Enterprise rental will be ready at the same location. No deductible for hail under your policy.',
+    statusMsg:'Action needed: Please drop off your F-150 at Joe Myers Ford Collision by May 23, 8:30 AM. Your Enterprise rental will be ready at that location. No deductible for hail under your policy.',
     notes:[
-      { adjuster:'Scott Henson', date:'May 20, 2025', message:'Inspection confirmed May 23 at 8:30 AM at Joe Myers Ford. Please bring insurance card and license. Rental ready at drop-off.' },
-      { adjuster:'Scott Henson', date:'Apr 11, 2025', message:'Large hail event confirmed Apr 10 in Houston metro. Comprehensive coverage verified. No deductible applies for hail.' },
+      { adjuster:'Scott Henson', date:'May 20, 2025', message:'Inspection confirmed May 23 at 8:30 AM at Joe Myers Ford. Please bring insurance card and license. Enterprise rental will be ready at drop-off — no separate pickup needed.' },
+      { adjuster:'Scott Henson', date:'Apr 11, 2025', message:'Large hail event confirmed Apr 10 in Houston metro via Verisk storm data (1.75" hail, NW Houston). Comprehensive coverage verified — no deductible applies for hail.' },
     ],
     payments:[],
     contacts:[
@@ -130,33 +151,33 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
       { serviceNumber:'SRV-521-003', serviceType:'Rental Vehicle',          provider:'Enterprise Rent-A-Car',   serviceStatus:'Authorized', expectedCompletion:'During repairs'  },
     ],
     timeline:[
-      { id:1, category:'General',    title:'Claim #000-00-000521 Received — Hail Damage',    sub:'Hail event Apr 10 confirmed. Confirmation sent to marcus.williams@email.com.',                                  date:'Apr 10, 2025 · 6:42 PM', status:'done',     badge:'✓ Filed'        },
-      { id:2, category:'General',    title:'Scott Henson Assigned',                           sub:'Scott Henson (Hail — Team A). Direct: (214) 555-0188.',                                                        date:'Apr 11, 2025 · 9:00 AM', status:'done',     badge:'✓ Complete'     },
-      { id:3, category:'General',    title:'Coverage Verified — No Deductible',               sub:'Comprehensive coverage confirmed. No deductible applies for hail damage under your current policy.',           date:'Apr 12, 2025',           status:'done',     badge:'✓ Verified'     },
-      { id:4, category:'Inspection', title:'⚡ Action Needed — Drop Off Vehicle May 23',      sub:'Joe Myers Ford Collision, 13602 Northwest Fwy, Houston TX. Drop-off: May 23, 8:30 AM. Rental ready at shop.',  date:'May 20, 2025',           status:'active',   badge:'● Action Needed' },
-      { id:5, category:'Rental',     title:'Enterprise Rental Authorized — Ready at Drop-off',sub:'Enterprise rental approved. Pickup at Joe Myers when you drop off. Up to 21 days covered.',                    date:'Pending drop-off',        status:'upcoming', badge:'⏳ Authorized'   },
-      { id:6, category:'Inspection', title:'Estimate & Approval',                             sub:'Estimate prepared during inspection. Adjuster reviews and authorizes same day.',                               date:'Est. May 23–24, 2025',   status:'upcoming', badge:'⏳ Scheduled'    },
-      { id:7, category:'Repair',     title:'Repairs Begin — Paintless Dent Repair',           sub:'PDR for hail damage typically 5–10 business days depending on extent.',                                        date:'Est. late May 2025',      status:'upcoming', badge:'⏳ Scheduled'    },
-      { id:8, category:'Repair',     title:'Vehicle Ready for Pickup',                        sub:"We'll notify you when repairs are complete and your truck passes QC.",                                          date:'Est. early Jun 2025',     status:'upcoming', badge:'⏳ Scheduled'    },
-      { id:9, category:'Payment',    title:'Payment & Claim Closure',                         sub:'No deductible. Payment direct to shop. Rental billing summary sent after closure.',                            date:'After repairs',           status:'upcoming', badge:'⏳ Scheduled'    },
+      { id:1, category:'General',    title:'FNOL Submitted — Hail Damage, Claim #000-00-000521',  sub:'Claim created. Verisk storm data confirms Apr 10 hail event (1.75") at member location. ISO ClaimSearch: clear. Confirmation sent to marcus.williams@email.com.',             date:'Apr 10, 2025 · 6:42 PM', status:'done',     badge:'✓ Filed'        },
+      { id:2, category:'General',    title:'Scott Henson Assigned — Text Thread Opened',           sub:'Scott Henson (Hail — Team A) assigned. Direct: (214) 555-0188. Comprehensive coverage confirmed. No deductible for hail. HiMarley thread opened.',                          date:'Apr 11, 2025 · 9:00 AM', status:'done',     badge:'✓ Complete'     },
+      { id:3, category:'General',    title:'Coverage Verified — No Deductible for Hail',           sub:'Comprehensive coverage confirmed. Hail peril covered. No deductible applies. Member statement collected via HiMarley guided text questionnaire.',                           date:'Apr 12, 2025',           status:'done',     badge:'✓ Verified'     },
+      { id:4, category:'Inspection', title:'⚡ Action Needed — Drop Off Vehicle by May 23, 8:30 AM',sub:'Joe Myers Ford Collision, 13602 Northwest Fwy, Houston TX. Enterprise rental will be ready at shop on arrival. Bring insurance card and license. HiMarley reminder set.',  date:'May 20, 2025',           status:'active',   badge:'● Action Needed' },
+      { id:5, category:'Rental',     title:'Enterprise Rental Authorized — Ready at Drop-off',     sub:'Enterprise ARMS reservation authorized. Pickup at Joe Myers Ford on vehicle drop-off. Up to 21 days covered — no separate pickup needed.',                                   date:'Pending drop-off',        status:'upcoming', badge:'⏳ Authorized'   },
+      { id:6, category:'Inspection', title:'Estimate — CCC AI Hail Assessment',                   sub:'CCC AI-assisted hail damage assessment with photo analysis. Damage mapped per vehicle zone. Full line-item estimate (PDR + paint) transmitted to adjuster for approval.',    date:'Est. May 23–24, 2025',   status:'upcoming', badge:'⏳ Scheduled'    },
+      { id:7, category:'Repair',     title:'Repairs Begin — Paintless Dent Repair',                sub:'PDR for hail damage on hood, roof, trunk, quarter panels. Typically 5–10 business days. Mitchell RepairCenter tracks each phase.',                                          date:'Est. late May 2025',      status:'upcoming', badge:'⏳ Scheduled'    },
+      { id:8, category:'Repair',     title:'QC Inspection & Vehicle Ready',                        sub:"CCC ONE UpdatePlus will notify when your truck passes QC. Rental return instructions included.",                                                                             date:'Est. early Jun 2025',     status:'upcoming', badge:'⏳ Scheduled'    },
+      { id:9, category:'Payment',    title:'Payment & Claim Closure',                              sub:'No deductible. Payment direct to shop via OneInc. HiMarley closing summary: repair total, rental days used, reopen window.',                                                date:'After repairs',           status:'upcoming', badge:'⏳ Scheduled'    },
     ],
   },
 
-  /* ── 3. Jennifer — Camry — Total Loss, closed — STEEL ── */
+  /* ── AUTO 3: Jennifer — Camry — Total Loss, closed — STEEL ── */
   '000-00-000612': {
     claimNumber:'000-00-000612', insuredName:'Jennifer K. Okafor',
-    policyNumber:'5503819042',   claimStatus:'Closed', statusType:'closed',
+    policyNumber:'5503819042', claimStatus:'Closed', statusType:'closed', lobType:'auto',
     adjusterName:'Linda Park', adjusterPhone:'(214) 555-0166',
     reporterName:'Jennifer K. Okafor', reportedType:'Self / Insured',
     reportedDate:'2025-01-08', vehicle:'2020 Toyota Camry SE',
-    dateOfLoss:'2025-01-07',   lossType:'Comprehensive — Vehicle Theft',
+    dateOfLoss:'2025-01-07', lossType:'Comprehensive — Vehicle Theft',
     repairShop:'N/A — Total Loss Settlement',
     rentalInfo:'Enterprise — Closed Jan 28, 2025. 20 days fully covered.',
     activeStep:8, progressPct:100,
     statusMsg:'Your claim is closed. Total loss settlement of $24,800 issued Jan 29, 2025. Rental closed after 20 days, fully covered. Thank you for trusting us with your claim.',
     notes:[
-      { adjuster:'Linda Park', date:'Jan 22, 2025', message:'Vehicle declared total loss. ACV $24,800 per market analysis. Settlement letter sent by email and certified mail. Lien release obtained from Bank of America.' },
-      { adjuster:'Linda Park', date:'Jan 08, 2025', message:'Theft reported. Police report #DPD-2025-00812 filed. Rental approved immediately. Total loss team engaged.' },
+      { adjuster:'Linda Park', date:'Jan 22, 2025', message:'Vehicle declared total loss. ACV $24,800 per Verisk/CCC market valuation. Settlement letter sent by email and certified mail. Lien release obtained from Bank of America.' },
+      { adjuster:'Linda Park', date:'Jan 08, 2025', message:'Theft reported. Police report #DPD-2025-00812 filed. ISO ClaimSearch: no prior theft flags on VIN. Rental approved immediately. Total loss team engaged.' },
     ],
     payments:[
       { checkNumber:'CHK-2025-4421', payTo:'Jennifer K. Okafor',              grossAmount:24300, issueDate:'2025-01-29', scheduledSendDate:'', status:'Cleared' },
@@ -169,158 +190,143 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
       { name:'Enterprise Rent-A-Car',        role:'Rental Provider',  createdDate:'Jan 08, 2025', phone:'(469) 555-0400', email:'dallas.rental@enterprise.com' },
     ],
     services:[
-      { serviceNumber:'SRV-612-001', serviceType:'ACV Vehicle Valuation',   provider:'Total Loss Team',      serviceStatus:'Completed', expectedCompletion:'Jan 15, 2025' },
-      { serviceNumber:'SRV-612-002', serviceType:'Title Transfer Processing',provider:'Title Express',        serviceStatus:'Completed', expectedCompletion:'Jan 22, 2025' },
-      { serviceNumber:'SRV-612-003', serviceType:'Rental Vehicle',           provider:'Enterprise Rent-A-Car',serviceStatus:'Completed', expectedCompletion:'Jan 28, 2025' },
+      { serviceNumber:'SRV-612-001', serviceType:'ACV Vehicle Valuation',    provider:'CCC / Verisk Valuation', serviceStatus:'Completed', expectedCompletion:'Jan 15, 2025' },
+      { serviceNumber:'SRV-612-002', serviceType:'Title Transfer Processing', provider:'Title Express',           serviceStatus:'Completed', expectedCompletion:'Jan 22, 2025' },
+      { serviceNumber:'SRV-612-003', serviceType:'Rental Vehicle',           provider:'Enterprise Rent-A-Car',  serviceStatus:'Completed', expectedCompletion:'Jan 28, 2025' },
     ],
     timeline:[
-      { id:1, category:'General',    title:'Claim #000-00-000612 — Vehicle Theft Reported',    sub:'Police report #DPD-2025-00812. Confirmation sent to jennifer.okafor@email.com.',                  date:'Jan 08, 2025 · 7:15 AM',  status:'done', badge:'✓ Filed'     },
-      { id:2, category:'General',    title:'Linda Park Assigned',                               sub:'Linda Park (Total Loss — Team C). Direct: (214) 555-0166.',                                     date:'Jan 08, 2025 · 10:00 AM', status:'done', badge:'✓ Complete'  },
-      { id:3, category:'Rental',     title:'Enterprise Rental Reserved & Active',               sub:'Enterprise #ENT-44129 · 2021 Honda Accord · Fully covered while claim is open.',                date:'Jan 08, 2025',            status:'done', badge:'✓ Active'    },
-      { id:4, category:'Inspection', title:'ACV Valuation Completed — $24,800',                sub:'ACV determined from market data, condition, mileage 41,200, and comparable vehicles.',          date:'Jan 15, 2025',            status:'done', badge:'✓ Complete'  },
-      { id:5, category:'Inspection', title:'Total Loss Declared',                               sub:'Repair cost exceeds ACV. Settlement $24,800 issued. Title transfer initiated with Bank of America.', date:'Jan 18, 2025',       status:'done', badge:'✓ Declared'  },
-      { id:6, category:'Inspection', title:'Settlement Accepted — $24,800',                    sub:'Signed title received. Lien release obtained from Bank of America.',                            date:'Jan 22, 2025',            status:'done', badge:'✓ Accepted'  },
-      { id:7, category:'Payment',    title:'Payment Issued — $24,300 + $500 Lienholder',       sub:'ACH $24,300 to your account (ending 4421). $500 to Bank of America. Both cleared Jan 31.',     date:'Jan 29, 2025',            status:'done', badge:'✓ Cleared'   },
-      { id:8, category:'Rental',     title:'Rental Closed — 20 Days Covered',                  sub:'Enterprise rental closed Jan 28. 20 days fully covered, no charges to you.',                   date:'Jan 28, 2025',            status:'done', badge:'✓ Closed'    },
-      { id:9, category:'General',    title:'Claim Closed',                                      sub:'Claim closed Jan 30, 2025. Full summary sent. Reopen within 30 days if issues arise.',         date:'Jan 30, 2025',            status:'done', badge:'✓ Closed'    },
+      { id:1, category:'General',    title:'FNOL — Vehicle Theft Reported, Claim #000-00-000612', sub:'Theft reported. Police report #DPD-2025-00812 filed. ISO ClaimSearch: no prior theft on VIN or member identity. Confirmation sent to jennifer.okafor@email.com.',    date:'Jan 08, 2025 · 7:15 AM',  status:'done', badge:'✓ Filed'     },
+      { id:2, category:'General',    title:'Linda Park Assigned — Total Loss Team Engaged',        sub:'Linda Park (Total Loss — Team C). Direct: (214) 555-0166. HiMarley thread opened. Total loss pathway initiated.',                                                   date:'Jan 08, 2025 · 10:00 AM', status:'done', badge:'✓ Complete'  },
+      { id:3, category:'Rental',     title:'Enterprise Rental Reserved & Active',                  sub:'Enterprise #ENT-44129 · 2021 Honda Accord · Fully covered while claim is open. Confirmed via ARMS.',                                                               date:'Jan 08, 2025',            status:'done', badge:'✓ Active'    },
+      { id:4, category:'Inspection', title:'ACV Valuation Completed — $24,800 (CCC / Verisk)',    sub:'Actual Cash Value determined at $24,800 using CCC market valuation: 12 comparable vehicles, adjusted for mileage (41,200), condition, and options.',              date:'Jan 15, 2025',            status:'done', badge:'✓ Complete'  },
+      { id:5, category:'Inspection', title:'Total Loss Declared — Settlement $24,800',             sub:'Repair cost exceeds 75% of ACV threshold. Total loss declared. Settlement letter issued. Title transfer initiated with Bank of America lienholder.',              date:'Jan 18, 2025',            status:'done', badge:'✓ Declared'  },
+      { id:6, category:'Inspection', title:'Settlement Accepted — Signed Title Received',          sub:'Jennifer accepted settlement of $24,800. Signed title received. Lien release obtained from Bank of America. OneInc payment disbursement initiated.',              date:'Jan 22, 2025',            status:'done', badge:'✓ Accepted'  },
+      { id:7, category:'Payment',    title:'Payment Issued — $24,300 ACH + $500 to BofA',         sub:'$24,300 to Jennifer\'s account (ending 4421) via OneInc ACH. $500 lien payoff to Bank of America. Both cleared Jan 31. HiMarley: "Payment sent."',              date:'Jan 29, 2025',            status:'done', badge:'✓ Cleared'   },
+      { id:8, category:'Rental',     title:'Rental Closed — 20 Days, Fully Covered',              sub:'Enterprise rental closed Jan 28. ARMS confirms: 20 days, fully covered, no charges to member. Billing summary generated.',                                       date:'Jan 28, 2025',            status:'done', badge:'✓ Closed'    },
+      { id:9, category:'General',    title:'Satisfaction Survey & Claim Closed',                   sub:'HiMarley 5-star survey sent. Claim closed Jan 30, 2025. Closing SMS: total paid $24,800, rental 20 days, reopen within 60 days if needed.',                     date:'Jan 30, 2025',            status:'done', badge:'✓ Closed'    },
     ],
   },
 
-  /* ── 4. Rosario — CR-V — Hail, closed 2023 — STEEL ── */
+  /* ── AUTO 4: Rosario — CR-V — Hail, closed 2023 — STEEL ── */
   '000-00-000312': {
     claimNumber:'000-00-000312', insuredName:'Rosario Marinello',
-    policyNumber:'7407354463',   claimStatus:'Closed', statusType:'closed',
+    policyNumber:'7407354463', claimStatus:'Closed', statusType:'closed', lobType:'auto',
     adjusterName:'Jonah Egertson', adjusterPhone:'(214) 555-0177',
     reporterName:'Rosario Marinello', reportedType:'Self / Insured',
     reportedDate:'2023-06-22', vehicle:'2022 Honda CR-V EX-L',
-    dateOfLoss:'2023-06-22',   lossType:'Comprehensive — Hail / Weather',
+    dateOfLoss:'2023-06-22', lossType:'Comprehensive — Hail / Weather',
     repairShop:'Service King Dallas (7800 Forest Ln)',
     rentalInfo:'Enterprise — Closed Jun 30, 2023. 8 days fully covered.',
     activeStep:8, progressPct:100,
     statusMsg:'Your claim is closed. Hail damage repaired at Service King Dallas. Settlement of $3,240 issued Jun 30, 2023. No deductible applied.',
-    notes:[
-      { adjuster:'Jonah Egertson', date:'Jun 22, 2023', message:'Hail damage confirmed from June 22 storm. Full roof and hood PDR required. Comprehensive coverage confirmed — no deductible.' },
-    ],
-    payments:[
-      { checkNumber:'CHK-2023-8812', payTo:'Service King Dallas', grossAmount:3240, issueDate:'2023-06-30', scheduledSendDate:'', status:'Cleared' },
-    ],
+    notes:[{ adjuster:'Jonah Egertson', date:'Jun 22, 2023', message:'Hail damage confirmed from June 22 storm (Verisk: 1.5" hail, DFW). Full roof and hood PDR required. Comprehensive coverage — no deductible.' }],
+    payments:[{ checkNumber:'CHK-2023-8812', payTo:'Service King Dallas', grossAmount:3240, issueDate:'2023-06-30', scheduledSendDate:'', status:'Cleared' }],
     contacts:[
-      { name:'Rosario Marinello',  role:'Insured',     createdDate:'Jun 22, 2023', phone:'(214) 555-0181', email:'rosario@email.com'            },
-      { name:'Jonah Egertson',     role:'Adjuster',    createdDate:'Jun 22, 2023', phone:'(214) 555-0177', email:'jonah.egertson@valuemumt.com' },
-      { name:'Service King Dallas',role:'Repair Shop', createdDate:'Jun 24, 2023', phone:'(214) 555-0600', email:'dallas@serviceking.com'       },
+      { name:'Rosario Marinello',  role:'Insured',         createdDate:'Jun 22, 2023', phone:'(214) 555-0181', email:'rosario@email.com'            },
+      { name:'Jonah Egertson',     role:'Adjuster',        createdDate:'Jun 22, 2023', phone:'(214) 555-0177', email:'jonah.egertson@valuemumt.com' },
+      { name:'Service King Dallas',role:'Repair Shop',     createdDate:'Jun 24, 2023', phone:'(214) 555-0600', email:'dallas@serviceking.com'       },
       { name:'Enterprise Rent-A-Car', role:'Rental Provider', createdDate:'Jun 24, 2023', phone:'(214) 555-0400', email:'dallas.rental@enterprise.com' },
     ],
     services:[
       { serviceNumber:'SRV-312-001', serviceType:'Hail / PDR Repair', provider:'Service King Dallas',   serviceStatus:'Completed', expectedCompletion:'Jun 30, 2023' },
-      { serviceNumber:'SRV-312-002', serviceType:'Rental Vehicle',     provider:'Enterprise Rent-A-Car', serviceStatus:'Completed', expectedCompletion:'Jun 30, 2023' },
+      { serviceNumber:'SRV-312-002', serviceType:'Rental Vehicle',    provider:'Enterprise Rent-A-Car', serviceStatus:'Completed', expectedCompletion:'Jun 30, 2023' },
     ],
     timeline:[
-      { id:1, category:'General',    title:'Claim #000-00-000312 — Hail Damage Filed',  sub:'June 22 hail event confirmed. Confirmation sent to rosario@email.com.',                       date:'Jun 22, 2023', status:'done', badge:'✓ Filed'    },
-      { id:2, category:'General',    title:'Jonah Egertson Assigned',                   sub:'Jonah Egertson (Hail — Team A). Direct: (214) 555-0177.',                                    date:'Jun 22, 2023', status:'done', badge:'✓ Complete' },
-      { id:3, category:'Inspection', title:'Estimate Completed & Approved — $3,240',    sub:'Roof and hood PDR confirmed at Service King. Approved Jun 25. No deductible.',               date:'Jun 24–25, 2023', status:'done', badge:'✓ Approved' },
-      { id:4, category:'Rental',     title:'Enterprise Rental Active',                  sub:'Rental active during repairs. 8 days total, fully covered.',                                  date:'Jun 24, 2023', status:'done', badge:'✓ Complete' },
-      { id:5, category:'Repair',     title:'Repairs Complete — QC Passed',              sub:'PDR completed on roof, hood, and trunk lid. Quality inspection passed.',                      date:'Jun 29, 2023', status:'done', badge:'✓ Complete' },
-      { id:6, category:'Rental',     title:'Rental Closed — 8 Days',                   sub:'Enterprise rental returned. 8 days fully covered, no charges.',                               date:'Jun 30, 2023', status:'done', badge:'✓ Closed'   },
-      { id:7, category:'Payment',    title:'Payment — $3,240 to Service King',          sub:'No cost to you. Insurance paid shop directly.',                                               date:'Jun 30, 2023', status:'done', badge:'✓ Cleared'  },
-      { id:8, category:'General',    title:'Claim Closed',                              sub:'Claim closed Jul 3, 2023. Summary sent to rosario@email.com.',                               date:'Jul 03, 2023', status:'done', badge:'✓ Closed'   },
+      { id:1, category:'General',    title:'FNOL — Hail Damage, Claim #000-00-000312',  sub:'June 22 hail event confirmed via Verisk. ISO ClaimSearch: clear. Confirmation sent to rosario@email.com.',          date:'Jun 22, 2023', status:'done', badge:'✓ Filed'    },
+      { id:2, category:'General',    title:'Jonah Egertson Assigned',                   sub:'Jonah Egertson (Hail — Team A). Direct: (214) 555-0177. Comprehensive confirmed, no deductible.',                   date:'Jun 22, 2023', status:'done', badge:'✓ Complete' },
+      { id:3, category:'Inspection', title:'Estimate Completed & Approved — $3,240',    sub:'PDR estimate via CCC: roof and hood. Approved Jun 25. Repairs begin Jun 26 at Service King Dallas.',                date:'Jun 24–25, 2023',status:'done', badge:'✓ Approved' },
+      { id:4, category:'Rental',     title:'Enterprise Rental Active — 8 Days',          sub:'Rental active during repairs. Fully covered, no cost to member.',                                                    date:'Jun 24, 2023', status:'done', badge:'✓ Complete' },
+      { id:5, category:'Repair',     title:'PDR Repairs Complete — QC Passed',           sub:'Paintless dent repair on roof, hood, trunk lid. QC passed Jun 29 via CCC ONE.',                                    date:'Jun 29, 2023', status:'done', badge:'✓ Complete' },
+      { id:6, category:'Rental',     title:'Rental Closed — 8 Days',                    sub:'Enterprise rental returned. ARMS confirms: 8 days, fully covered, no charges.',                                     date:'Jun 30, 2023', status:'done', badge:'✓ Closed'   },
+      { id:7, category:'Payment',    title:'Payment — $3,240 to Service King via OneInc',sub:'No cost to member. Insurance paid shop directly via OneInc ACH.',                                                  date:'Jun 30, 2023', status:'done', badge:'✓ Cleared'  },
+      { id:8, category:'General',    title:'Satisfaction Survey & Claim Closed',         sub:'HiMarley 5-star survey sent. Claim closed Jul 3, 2023. Summary sent to rosario@email.com.',                        date:'Jul 03, 2023', status:'done', badge:'✓ Closed'   },
     ],
   },
 
-  /* ── 5. Rosario — Civic — Glass chip, closed 2022 — STEEL ── */
+  /* ── AUTO 5: Rosario — Civic — Glass chip, closed 2022 — STEEL ── */
   '000-00-000201': {
     claimNumber:'000-00-000201', insuredName:'Rosario Marinello',
-    policyNumber:'7407354463',   claimStatus:'Closed', statusType:'closed',
+    policyNumber:'7407354463', claimStatus:'Closed', statusType:'closed', lobType:'auto',
     adjusterName:'Spencer Dunn', adjusterPhone:'(214) 555-0155',
     reporterName:'Rosario Marinello', reportedType:'Self / Insured',
     reportedDate:'2022-11-04', vehicle:'2019 Honda Civic LX',
-    dateOfLoss:'2022-11-04',   lossType:'Comprehensive — Glass / Windshield',
+    dateOfLoss:'2022-11-04', lossType:'Comprehensive — Glass / Windshield',
     repairShop:'Safelite AutoGlass Dallas (Mobile)',
     rentalInfo:'N/A — Same-day glass repair, no rental required',
     activeStep:8, progressPct:100,
-    statusMsg:'Your claim is closed. Windshield chip repaired same day by Safelite mobile. Texas deductible waiver applied — no out-of-pocket cost to you.',
-    notes:[
-      { adjuster:'Spencer Dunn', date:'Nov 04, 2022', message:'Windshield chip repair completed same-day by Safelite mobile tech. Texas deductible waiver applied per Tex. Ins. Code §1952.061. No cost to insured.' },
-    ],
+    statusMsg:'Your claim is closed. Windshield chip repaired same day by Safelite mobile. Texas deductible waiver applied — no out-of-pocket cost.',
+    notes:[{ adjuster:'Spencer Dunn', date:'Nov 04, 2022', message:'Chip repair same-day via Safelite mobile. Texas deductible waiver applied per Tex. Ins. Code §1952.061. No cost to insured.' }],
     payments:[],
     contacts:[
       { name:'Rosario Marinello',           role:'Insured',     createdDate:'Nov 04, 2022', phone:'(214) 555-0181', email:'rosario@email.com'          },
       { name:'Spencer Dunn',                role:'Adjuster',    createdDate:'Nov 04, 2022', phone:'(214) 555-0155', email:'spencer.dunn@valuemumt.com' },
       { name:'Safelite AutoGlass (Mobile)', role:'Glass Repair', createdDate:'Nov 04, 2022', phone:'(800) 638-8958', email:'—'                         },
     ],
-    services:[
-      { serviceNumber:'SRV-201-001', serviceType:'Windshield Chip Repair', provider:'Safelite AutoGlass (Mobile)', serviceStatus:'Completed', expectedCompletion:'Nov 04, 2022' },
-    ],
+    services:[{ serviceNumber:'SRV-201-001', serviceType:'Windshield Chip Repair', provider:'Safelite AutoGlass (Mobile)', serviceStatus:'Completed', expectedCompletion:'Nov 04, 2022' }],
     timeline:[
-      { id:1, category:'General',    title:'Glass Claim Filed — Windshield Chip',         sub:'Chip reported. Safelite mobile dispatch initiated. Texas deductible waiver confirmed.',  date:'Nov 04, 2022 · 9:00 AM',  status:'done', badge:'✓ Filed'     },
-      { id:2, category:'Inspection', title:'Safelite Mobile Technician Dispatched',        sub:'Technician en route to 4821 Mockingbird Ln, Dallas TX. ETA: 11:30 AM.',               date:'Nov 04, 2022 · 9:15 AM',  status:'done', badge:'✓ Dispatched' },
-      { id:3, category:'Repair',     title:'Windshield Chip Repair Complete',              sub:'30-minute chip repair completed. QC passed. No cost to you.',                          date:'Nov 04, 2022 · 11:55 AM', status:'done', badge:'✓ Complete'   },
-      { id:4, category:'Payment',    title:'Texas Deductible Waiver Applied',              sub:'Safelite billed directly. No out-of-pocket cost per Tex. Ins. Code §1952.061.',       date:'Nov 04, 2022',            status:'done', badge:'✓ Waived'     },
-      { id:5, category:'General',    title:'Claim Closed',                                 sub:'Same-day closure. Summary sent to rosario@email.com.',                                 date:'Nov 04, 2022',            status:'done', badge:'✓ Closed'     },
+      { id:1, category:'General',    title:'Glass Claim Filed — Windshield Chip',       sub:'Chip reported. Safelite mobile dispatched. TX deductible waiver confirmed (§1952.061).',  date:'Nov 04, 2022 · 9:00 AM',  status:'done', badge:'✓ Filed'     },
+      { id:2, category:'Inspection', title:'Safelite Mobile Technician Dispatched',      sub:'Technician en route. ETA 11:30 AM. HiMarley: "Your tech is 20 minutes away."',           date:'Nov 04, 2022 · 9:15 AM',  status:'done', badge:'✓ Dispatched' },
+      { id:3, category:'Repair',     title:'Windshield Chip Repair Complete',            sub:'30-minute chip repair completed. QC passed. No cost to you.',                             date:'Nov 04, 2022 · 11:55 AM', status:'done', badge:'✓ Complete'   },
+      { id:4, category:'Payment',    title:'Texas Deductible Waiver Applied',            sub:'Safelite billed insurance directly. No out-of-pocket per Tex. Ins. Code §1952.061.',     date:'Nov 04, 2022',            status:'done', badge:'✓ Waived'     },
+      { id:5, category:'General',    title:'Claim Closed — Same Day',                   sub:'HiMarley satisfaction survey sent. Summary sent to rosario@email.com.',                  date:'Nov 04, 2022',            status:'done', badge:'✓ Closed'     },
     ],
   },
 
-  /* ── 6. Marcus — F-150 — Collision, closed 2024 — STEEL ── */
+  /* ── AUTO 6: Marcus — F-150 — Collision closed 2024 — STEEL ── */
   '000-00-000398': {
     claimNumber:'000-00-000398', insuredName:'Marcus T. Williams',
-    policyNumber:'8812047291',   claimStatus:'Closed', statusType:'closed',
+    policyNumber:'8812047291', claimStatus:'Closed', statusType:'closed', lobType:'auto',
     adjusterName:'Jonah Egertson', adjusterPhone:'(214) 555-0177',
     reporterName:'Marcus T. Williams', reportedType:'Self / Insured',
     reportedDate:'2024-03-15', vehicle:'2021 Ford F-150 XLT 4WD',
-    dateOfLoss:'2024-03-15',   lossType:'Collision — Side Impact',
+    dateOfLoss:'2024-03-15', lossType:'Collision — Side Impact',
     repairShop:'Caliber Collision Houston (9210 Katy Fwy)',
     rentalInfo:'Enterprise — Closed Apr 2, 2024. 18 days fully covered.',
     activeStep:8, progressPct:100,
-    statusMsg:'Your claim is closed. Side panel repairs completed at Caliber Collision Houston. Settlement of $5,340 issued Apr 2, 2024. Subrogation ongoing to recover your $500 deductible.',
+    statusMsg:'Your claim is closed. Side panel repairs completed at Caliber Collision Houston. Settlement of $5,340 issued Apr 2, 2024. Subrogation ongoing — we will notify you if $500 deductible is recovered.',
     notes:[
-      { adjuster:'Jonah Egertson', date:'Mar 19, 2024', message:'Other driver 100% at fault confirmed by police report and witness. Subrogation initiated to recover $500 deductible.' },
-      { adjuster:'Jonah Egertson', date:'Mar 15, 2024', message:'Side impact collision, passenger side. $500 collision deductible applies. Rental approved.' },
+      { adjuster:'Jonah Egertson', date:'Mar 19, 2024', message:'Other driver 100% at fault — police report and witness statement confirm. Subrogation demand filed via ISO ARB Forum. Marcus\'s $500 deductible recovery in progress.' },
+      { adjuster:'Jonah Egertson', date:'Mar 15, 2024', message:'Side impact collision, passenger side. $500 collision deductible applies. Rental approved. ISO ClaimSearch: clear.' },
     ],
-    payments:[
-      { checkNumber:'CHK-2024-2210', payTo:'Caliber Collision Houston', grossAmount:5340, issueDate:'2024-04-02', scheduledSendDate:'', status:'Cleared' },
-    ],
+    payments:[{ checkNumber:'CHK-2024-2210', payTo:'Caliber Collision Houston', grossAmount:5340, issueDate:'2024-04-02', scheduledSendDate:'', status:'Cleared' }],
     contacts:[
-      { name:'Marcus T. Williams',         role:'Insured',     createdDate:'Mar 15, 2024', phone:'(832) 555-0210', email:'marcus.williams@email.com'       },
-      { name:'Jonah Egertson',             role:'Adjuster',    createdDate:'Mar 15, 2024', phone:'(214) 555-0177', email:'jonah.egertson@valuemumt.com'    },
-      { name:'Caliber Collision Houston',  role:'Repair Shop', createdDate:'Mar 18, 2024', phone:'(713) 555-0550', email:'houston@calibercollision.com'    },
-      { name:'Enterprise Rent-A-Car',      role:'Rental Provider', createdDate:'Mar 18, 2024', phone:'(713) 555-0400', email:'houston.rental@enterprise.com' },
+      { name:'Marcus T. Williams',         role:'Insured',         createdDate:'Mar 15, 2024', phone:'(832) 555-0210', email:'marcus.williams@email.com'        },
+      { name:'Jonah Egertson',             role:'Adjuster',        createdDate:'Mar 15, 2024', phone:'(214) 555-0177', email:'jonah.egertson@valuemumt.com'     },
+      { name:'Caliber Collision Houston',  role:'Repair Shop',     createdDate:'Mar 18, 2024', phone:'(713) 555-0550', email:'houston@calibercollision.com'     },
+      { name:'Enterprise Rent-A-Car',      role:'Rental Provider', createdDate:'Mar 18, 2024', phone:'(713) 555-0400', email:'houston.rental@enterprise.com'   },
     ],
     services:[
-      { serviceNumber:'SRV-398-001', serviceType:'Collision Repair',      provider:'Caliber Collision Houston', serviceStatus:'Completed',   expectedCompletion:'Apr 02, 2024' },
-      { serviceNumber:'SRV-398-002', serviceType:'Rental Vehicle',         provider:'Enterprise Rent-A-Car',    serviceStatus:'Completed',   expectedCompletion:'Apr 02, 2024' },
-      { serviceNumber:'SRV-398-003', serviceType:'Subrogation Recovery',   provider:'Subrogation Team',         serviceStatus:'In Progress', expectedCompletion:'Ongoing'      },
+      { serviceNumber:'SRV-398-001', serviceType:'Collision Repair',     provider:'Caliber Collision Houston', serviceStatus:'Completed',   expectedCompletion:'Apr 02, 2024' },
+      { serviceNumber:'SRV-398-002', serviceType:'Rental Vehicle',       provider:'Enterprise Rent-A-Car',    serviceStatus:'Completed',   expectedCompletion:'Apr 02, 2024' },
+      { serviceNumber:'SRV-398-003', serviceType:'Subrogation Recovery', provider:'ISO ARB Forum',             serviceStatus:'In Progress', expectedCompletion:'Ongoing'      },
     ],
     timeline:[
-      { id:1,  category:'General',    title:'Claim #000-00-000398 — Collision Filed',           sub:'Side impact collision reported. Confirmation sent to marcus.williams@email.com.',           date:'Mar 15, 2024 · 2:30 PM', status:'done', badge:'✓ Filed'     },
-      { id:2,  category:'General',    title:'Jonah Egertson Assigned',                          sub:'Jonah Egertson (Collision — Team B). Direct: (214) 555-0177.',                             date:'Mar 15, 2024',           status:'done', badge:'✓ Complete'  },
-      { id:3,  category:'Inspection', title:'Vehicle Received at Caliber Collision Houston',    sub:'Drop-off Mar 18. Inspection and estimate underway.',                                        date:'Mar 18, 2024',           status:'done', badge:'✓ Complete'  },
-      { id:4,  category:'Inspection', title:'Estimate Approved — $5,840',                      sub:'Passenger door and quarter panel. Labor 14.5 hrs. Approved. Repairs begin Mar 20.',         date:'Mar 19, 2024',           status:'done', badge:'✓ Approved'  },
-      { id:5,  category:'General',    title:'Other Driver At Fault — Subrogation Started',     sub:'Police report confirms 100% fault. Subrogation to recover your $500 deductible.',          date:'Mar 19, 2024',           status:'done', badge:'✓ Confirmed' },
-      { id:6,  category:'Rental',     title:'Enterprise Rental Active — 18 Days',              sub:'Enterprise #ENT-77234 · 2022 Ford F-150 · Fully covered.',                                 date:'Mar 18, 2024',           status:'done', badge:'✓ Complete'  },
-      { id:7,  category:'Repair',     title:'Repairs Complete — QC Passed',                    sub:'Passenger door and quarter panel repaired. QC passed Apr 1.',                               date:'Apr 01, 2024',           status:'done', badge:'✓ Complete'  },
-      { id:8,  category:'Rental',     title:'Rental Closed — 18 Days',                         sub:'Enterprise rental returned. 18 days fully covered, no charges.',                           date:'Apr 02, 2024',           status:'done', badge:'✓ Closed'    },
-      { id:9,  category:'Payment',    title:'Payment — $5,340 to Caliber Collision',            sub:'You paid $500 deductible directly to Caliber. Insurance paid $5,340 balance.',             date:'Apr 02, 2024',           status:'done', badge:'✓ Cleared'   },
-      { id:10, category:'General',    title:'Claim Closed',                                     sub:'Claim closed Apr 5, 2024. Subrogation ongoing — we will notify you when $500 is recovered.', date:'Apr 05, 2024',        status:'done', badge:'✓ Closed'    },
+      { id:1,  category:'General',    title:'FNOL — Side Impact Collision, Claim #000-00-000398', sub:'Police report filed. ISO ClaimSearch: clear. Liability investigation initiated. Confirmation to marcus.williams@email.com.', date:'Mar 15, 2024 · 2:30 PM', status:'done', badge:'✓ Filed'     },
+      { id:2,  category:'General',    title:'Jonah Egertson Assigned — Liability Investigation',  sub:'Jonah Egertson (Collision — Team B). Direct: (214) 555-0177. Police report and witness statement collected via HiMarley.', date:'Mar 15, 2024',           status:'done', badge:'✓ Complete'  },
+      { id:3,  category:'Inspection', title:'Vehicle at Caliber — Estimate $5,840 Approved',      sub:'Passenger door and quarter panel. CCC Estimate: Labor 14.5 hrs, parts $2,890. Approved Mar 19.',                       date:'Mar 18–19, 2024',        status:'done', badge:'✓ Approved'  },
+      { id:4,  category:'General',    title:'Other Driver 100% At Fault — Subrogation Filed',     sub:'Police report and witness confirm other driver at fault. Subrogation demand filed via ISO ARB Forum. Deductible recovery in progress.', date:'Mar 19, 2024', status:'done', badge:'✓ Confirmed' },
+      { id:5,  category:'Rental',     title:'Enterprise Rental Active — 18 Days',                 sub:'Enterprise #ENT-77234 · 2022 Ford F-150 · Fully covered.',                                                             date:'Mar 18, 2024',           status:'done', badge:'✓ Complete'  },
+      { id:6,  category:'Repair',     title:'Repairs Complete — QC Passed',                       sub:'Passenger door and quarter panel repaired. CCC ONE QC pass Apr 1. Vehicle ready for pickup.',                          date:'Apr 01, 2024',           status:'done', badge:'✓ Complete'  },
+      { id:7,  category:'Rental',     title:'Rental Closed — 18 Days',                            sub:'ARMS confirms: 18 days, fully covered, no charges.',                                                                   date:'Apr 02, 2024',           status:'done', badge:'✓ Closed'    },
+      { id:8,  category:'Payment',    title:'Payment — $5,340 to Caliber via OneInc',              sub:'You paid $500 deductible to Caliber. Insurance paid $5,340 balance via OneInc ACH.',                                  date:'Apr 02, 2024',           status:'done', badge:'✓ Cleared'   },
+      { id:9,  category:'General',    title:'Claim Closed — Subrogation Ongoing',                  sub:'Closed Apr 5, 2024. ISO ARB Forum subrogation to recover your $500 deductible — we will notify you of recovery.',     date:'Apr 05, 2024',           status:'done', badge:'✓ Closed'    },
     ],
   },
 
-  /* ── 7. David — Tesla — EV collision, active — GREEN ── */
+  /* ── AUTO 7: David — Tesla — EV repair, step 5, GREEN ── */
   '000-00-006000': {
     claimNumber:'000-00-006000', insuredName:'David Chen',
-    policyNumber:'9901234567',   claimStatus:'Open', statusType:'on-track',
+    policyNumber:'9901234567', claimStatus:'Open', statusType:'on-track', lobType:'auto',
     adjusterName:'Lynzi Farrell', adjusterPhone:'(214) 555-0199',
     reporterName:'David Chen', reportedType:'Self / Insured',
     reportedDate:'2025-05-05', vehicle:'2023 Tesla Model 3 Long Range',
-    dateOfLoss:'2025-05-05',   lossType:'Collision — Rear End',
+    dateOfLoss:'2025-05-05', lossType:'Collision — Rear End',
     repairShop:'Tesla Certified Collision Dallas (4200 Lemmon Ave)',
     rentalInfo:'Enterprise #ENT-99102 · 2023 Hyundai Ioniq 5 EV · 11 days remaining',
     activeStep:5, progressPct:55,
-    statusMsg:"Estimate approved and repairs authorized at Tesla Certified Collision. EV rental active. Tesla OEM parts lead time is 7–10 days — repair timeline approximately 12–15 business days.",
-    notes:[
-      { adjuster:'Lynzi Farrell', date:'May 08, 2025', message:'Tesla OEM parts ordered. Lead time 7–10 days. Estimate $9,420 approved. EV-compatible rental authorized — Hyundai Ioniq 5 provided.' },
-    ],
-    payments:[
-      { checkNumber:'', payTo:'Tesla Certified Collision Dallas', grossAmount:8920, issueDate:'', scheduledSendDate:'2025-06-10', status:'Requesting' },
-    ],
+    statusMsg:"Estimate approved at Tesla Certified Collision. OEM parts ordered — 7–10 day lead time. EV rental active. ADAS sensor recalibration will be required after body repairs.",
+    notes:[{ adjuster:'Lynzi Farrell', date:'May 08, 2025', message:'Tesla OEM parts ordered (bumper, sensors, quarter panel). 7–10 day lead time. Estimate $9,420 approved. EV-compatible Ioniq 5 rental authorized via ARMS.' }],
+    payments:[{ checkNumber:'', payTo:'Tesla Certified Collision Dallas', grossAmount:8920, issueDate:'', scheduledSendDate:'2025-06-10', status:'Requesting' }],
     contacts:[
       { name:'David Chen',                      role:'Insured',         createdDate:'May 05, 2025', phone:'(972) 555-0301', email:'david.chen@email.com'           },
       { name:'Lynzi Farrell',                   role:'Adjuster',        createdDate:'May 05, 2025', phone:'(214) 555-0199', email:'lynzi.farrell@valuemumt.com'    },
@@ -328,41 +334,38 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
       { name:'Enterprise Rent-A-Car',           role:'Rental Provider', createdDate:'May 07, 2025', phone:'(972) 555-0400', email:'dallas.rental@enterprise.com'  },
     ],
     services:[
-      { serviceNumber:'SRV-6000-001', serviceType:'EV Collision Repair',  provider:'Tesla Certified Collision Dallas', serviceStatus:'In Progress',  expectedCompletion:'Jun 10, 2025' },
-      { serviceNumber:'SRV-6000-002', serviceType:'Rental Vehicle (EV)',  provider:'Enterprise Rent-A-Car',           serviceStatus:'Active',        expectedCompletion:'Jun 10, 2025' },
-      { serviceNumber:'SRV-6000-003', serviceType:'ADAS Recalibration',   provider:'Tesla Certified Collision Dallas', serviceStatus:'Pending',       expectedCompletion:'Jun 10, 2025' },
+      { serviceNumber:'SRV-6000-001', serviceType:'EV Collision Repair',     provider:'Tesla Certified Collision Dallas', serviceStatus:'In Progress', expectedCompletion:'Jun 10, 2025' },
+      { serviceNumber:'SRV-6000-002', serviceType:'Rental Vehicle (EV)',     provider:'Enterprise Rent-A-Car',           serviceStatus:'Active',      expectedCompletion:'Jun 10, 2025' },
+      { serviceNumber:'SRV-6000-003', serviceType:'ADAS Sensor Recalibration',provider:'Tesla Certified Collision Dallas', serviceStatus:'Pending',   expectedCompletion:'Jun 10, 2025' },
     ],
     timeline:[
-      { id:1, category:'General',    title:'Claim #000-00-006000 Filed — Tesla Rear End',     sub:'Confirmation sent to david.chen@email.com. Tesla Certified shop search initiated.',        date:'May 05, 2025',           status:'done',     badge:'✓ Filed'      },
-      { id:2, category:'General',    title:'Lynzi Farrell Assigned — EV Specialist',          sub:'Lynzi Farrell (EV Specialist — Team D). Direct: (214) 555-0199.',                          date:'May 05, 2025',           status:'done',     badge:'✓ Complete'   },
-      { id:3, category:'Inspection', title:'Tesla Certified Shop — Vehicle Received',          sub:'Tesla Certified Collision Dallas. Drop-off May 7. Vehicle received 9:15 AM.',              date:'May 07, 2025',           status:'done',     badge:'✓ Complete'   },
-      { id:4, category:'Inspection', title:'Estimate Approved — $9,420',                      sub:'Tesla OEM parts required. Labor 22 hrs. Approved by Lynzi Farrell. Parts ordered.',        date:'May 08, 2025',           status:'done',     badge:'✓ Approved'   },
-      { id:5, category:'Rental',     title:'EV Rental Active — Hyundai Ioniq 5',              sub:'Enterprise #ENT-99102. EV-compatible rental. Fully covered. 11 days remaining.',           date:'May 07, 2025',           status:'active',   badge:'● Active'     },
-      { id:6, category:'Repair',     title:'Tesla OEM Parts Ordered — 7–10 Day Lead Time',   sub:'Bumper, sensors, and rear quarter panel on order from Tesla. Body work begins on arrival.', date:'May 08, 2025',           status:'active',   badge:'● In Progress'},
-      { id:7, category:'Repair',     title:'Repairs & ADAS Calibration',                      sub:'After body repairs, Tesla ADAS sensors and cameras will be recalibrated.',                  date:'Est. May 20 – Jun 5',    status:'upcoming', badge:'⏳ Scheduled'  },
-      { id:8, category:'Repair',     title:'Vehicle Ready — QC & Software Verification',      sub:'Tesla verifies all software, ADAS, and safety systems before delivery.',                    date:'Est. Jun 10, 2025',       status:'upcoming', badge:'⏳ Scheduled'  },
-      { id:9, category:'Payment',    title:'Payment & Claim Closure',                          sub:'$500 deductible due at pickup. Insurance pays $8,920 to Tesla shop.',                      date:'After repairs',           status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:1, category:'General',    title:'FNOL — Tesla Rear End Collision, #000-00-006000',  sub:'Claim created. CCC EV specialist pathway initiated. Tesla Certified shop search via CCC Engage. ISO: clear. Confirmation to david.chen@email.com.',        date:'May 05, 2025',           status:'done',     badge:'✓ Filed'      },
+      { id:2, category:'General',    title:'Lynzi Farrell Assigned — EV Specialist',           sub:'Lynzi Farrell (EV Specialist — Team D). Direct: (214) 555-0199. Tesla Certified Collision Dallas selected from DRP network.',                              date:'May 05, 2025',           status:'done',     badge:'✓ Complete'   },
+      { id:3, category:'Rental',     title:'EV Rental Reserved — Hyundai Ioniq 5',             sub:'Enterprise ARMS: EV-compatible Ioniq 5 reserved. Pickup at Tesla shop on drop-off. 30-day coverage authorized.',                                          date:'May 06, 2025',           status:'done',     badge:'✓ Reserved'   },
+      { id:4, category:'Inspection', title:'Vehicle Received at Tesla Certified — Teardown',   sub:'Vehicle checked in May 7, 9:15 AM. Teardown begun. Tesla OEM parts requirement confirmed.',                                                                date:'May 07, 2025',           status:'done',     badge:'✓ Complete'   },
+      { id:5, category:'Inspection', title:'Estimate Approved — $9,420 (Tesla OEM)',           sub:'Tesla OEM parts required (bumper, rear sensors, quarter panel). Labor 22 hrs. ADAS recalibration included in scope. Approved by Lynzi Farrell.',           date:'May 08, 2025',           status:'done',     badge:'✓ Approved'   },
+      { id:6, category:'Rental',     title:'EV Rental Active — 11 Days Remaining',             sub:'Ioniq 5 pickup confirmed in Enterprise ARMS. Coverage countdown: 30 days. HiMarley: "Your EV rental is active."',                                         date:'May 07, 2025',           status:'active',   badge:'● Active'     },
+      { id:7, category:'Repair',     title:'Tesla OEM Parts Ordered — 7–10 Day Lead Time',    sub:'Bumper, sensors, and rear quarter panel ordered via Tesla parts portal. Supplier ETA: May 16–18. Body work begins on arrival.',                             date:'May 08, 2025',           status:'active',   badge:'● In Progress'},
+      { id:8, category:'Repair',     title:'Body Repair & ADAS Recalibration',                 sub:'After body repairs: all Tesla cameras, radar, and ultrasonic sensors recalibrated at certified facility. Autopilot verification required before delivery.',  date:'Est. May 18 – Jun 5',    status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:9, category:'Repair',     title:'QC — Software Verification & Vehicle Ready',       sub:'Tesla verifies all software, ADAS, and safety systems before delivery. Full Autopilot function test required.',                                             date:'Est. Jun 10, 2025',       status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:10,category:'Payment',    title:'Payment & Claim Closure',                           sub:'$500 deductible due at pickup. Insurance pays $8,920 to Tesla shop via OneInc. HiMarley closing summary.',                                                date:'After repairs',           status:'upcoming', badge:'⏳ Scheduled'  },
     ],
   },
 
-  /* ── 8. David — BMW X5 — Hail, closed — STEEL ── */
+  /* ── AUTO 8: David — BMW X5 — Hail, closed — STEEL ── */
   '000-00-006001': {
     claimNumber:'000-00-006001', insuredName:'David Chen',
-    policyNumber:'9901234567',   claimStatus:'Closed', statusType:'closed',
+    policyNumber:'9901234567', claimStatus:'Closed', statusType:'closed', lobType:'auto',
     adjusterName:'Trevor Gunderson', adjusterPhone:'(214) 555-0183',
     reporterName:'David Chen', reportedType:'Self / Insured',
     reportedDate:'2025-02-18', vehicle:'2022 BMW X5 xDrive40i',
-    dateOfLoss:'2025-02-18',   lossType:'Comprehensive — Hail / Weather',
+    dateOfLoss:'2025-02-18', lossType:'Comprehensive — Hail / Weather',
     repairShop:'Park Place BMW Collision Dallas',
     rentalInfo:'Enterprise — Closed Mar 5, 2025. 15 days fully covered.',
     activeStep:8, progressPct:100,
     statusMsg:'Your claim is closed. Hail damage repaired at Park Place BMW. Settlement of $6,120 issued Mar 5, 2025. No deductible applied.',
-    notes:[
-      { adjuster:'Trevor Gunderson', date:'Feb 18, 2025', message:'Feb 18 DFW hail event confirmed. BMW requires OEM-certified repair. Park Place BMW authorized. No deductible — comprehensive coverage.' },
-    ],
-    payments:[
-      { checkNumber:'CHK-2025-9901', payTo:'Park Place BMW Collision', grossAmount:6120, issueDate:'2025-03-05', scheduledSendDate:'', status:'Cleared' },
-    ],
+    notes:[{ adjuster:'Trevor Gunderson', date:'Feb 18, 2025', message:'Feb 18 DFW hail event confirmed via Verisk (1.25" hail). BMW requires OEM-certified PDR repair. Park Place BMW authorized. No deductible — comprehensive.' }],
+    payments:[{ checkNumber:'CHK-2025-9901', payTo:'Park Place BMW Collision', grossAmount:6120, issueDate:'2025-03-05', scheduledSendDate:'', status:'Cleared' }],
     contacts:[
       { name:'David Chen',               role:'Insured',         createdDate:'Feb 18, 2025', phone:'(972) 555-0301', email:'david.chen@email.com'           },
       { name:'Trevor Gunderson',         role:'Adjuster',        createdDate:'Feb 18, 2025', phone:'(214) 555-0183', email:'trevor.gunderson@valuemumt.com' },
@@ -374,35 +377,30 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
       { serviceNumber:'SRV-6001-002', serviceType:'Rental Vehicle',    provider:'Enterprise Rent-A-Car',   serviceStatus:'Completed', expectedCompletion:'Mar 05, 2025' },
     ],
     timeline:[
-      { id:1, category:'General',    title:'Claim #000-00-006001 — BMW Hail Filed',       sub:'Feb 18 DFW hail event. Confirmation sent to david.chen@email.com.',                  date:'Feb 18, 2025', status:'done', badge:'✓ Filed'    },
-      { id:2, category:'General',    title:'Trevor Gunderson Assigned',                   sub:'Trevor Gunderson (Hail — Team C). Direct: (214) 555-0183.',                          date:'Feb 18, 2025', status:'done', badge:'✓ Complete' },
-      { id:3, category:'Inspection', title:'Estimate & Approval — $6,120',               sub:'BMW OEM PDR repair. Approved Feb 21. No deductible — comprehensive.',                 date:'Feb 20–21, 2025', status:'done', badge:'✓ Approved'},
-      { id:4, category:'Rental',     title:'Enterprise Rental Active — 15 Days',          sub:'Rental active during repairs. Fully covered.',                                        date:'Feb 20, 2025', status:'done', badge:'✓ Complete' },
-      { id:5, category:'Repair',     title:'Repairs Complete — QC Passed',                sub:'PDR on hood, roof, and trunk. QC passed Mar 4.',                                     date:'Mar 04, 2025', status:'done', badge:'✓ Complete' },
-      { id:6, category:'Rental',     title:'Rental Closed — 15 Days',                    sub:'15 days fully covered, no charges.',                                                  date:'Mar 05, 2025', status:'done', badge:'✓ Closed'   },
-      { id:7, category:'Payment',    title:'Payment — $6,120 to Park Place BMW',          sub:'No cost to you. Insurance paid shop directly.',                                       date:'Mar 05, 2025', status:'done', badge:'✓ Cleared'  },
-      { id:8, category:'General',    title:'Claim Closed',                                sub:'Claim closed Mar 6, 2025. Summary sent to david.chen@email.com.',                    date:'Mar 06, 2025', status:'done', badge:'✓ Closed'   },
+      { id:1, category:'General',    title:'FNOL — BMW Hail Damage, #000-00-006001', sub:'Verisk storm data: Feb 18 DFW hail 1.25". BMW OEM shop required. Park Place BMW selected. ISO: clear.',   date:'Feb 18, 2025',    status:'done', badge:'✓ Filed'    },
+      { id:2, category:'General',    title:'Trevor Gunderson Assigned',              sub:'Trevor Gunderson (Hail — Team C). Direct: (214) 555-0183. Comprehensive, no deductible.',                 date:'Feb 18, 2025',    status:'done', badge:'✓ Complete' },
+      { id:3, category:'Inspection', title:'Estimate & Approval — $6,120',          sub:'BMW OEM PDR: hood, roof, trunk. Approved Feb 21 via CCC. No deductible.',                                  date:'Feb 20–21, 2025', status:'done', badge:'✓ Approved' },
+      { id:4, category:'Rental',     title:'Enterprise Rental — 15 Days',            sub:'Rental active during repairs. Fully covered. ARMS closure: 15 days, no charges.',                         date:'Feb 20, 2025',    status:'done', badge:'✓ Complete' },
+      { id:5, category:'Repair',     title:'PDR Repairs & QC Passed',               sub:'OEM PDR on hood, roof, trunk. QC passed Mar 4 via CCC ONE. No paint required.',                           date:'Mar 04, 2025',    status:'done', badge:'✓ Complete' },
+      { id:6, category:'Payment',    title:'Payment — $6,120 to Park Place BMW',    sub:'OneInc ACH payment. No cost to David. HiMarley confirmation sent.',                                        date:'Mar 05, 2025',    status:'done', badge:'✓ Cleared'  },
+      { id:7, category:'General',    title:'Claim Closed',                           sub:'Closed Mar 6, 2025. Summary sent to david.chen@email.com.',                                               date:'Mar 06, 2025',    status:'done', badge:'✓ Closed'   },
     ],
   },
 
-  /* ── 9. David — Audi A4 — Glass replacement, closed — STEEL ── */
+  /* ── AUTO 9: David — Audi A4 — Glass, closed — STEEL ── */
   '000-00-006002': {
     claimNumber:'000-00-006002', insuredName:'David Chen',
-    policyNumber:'9901234567',   claimStatus:'Closed', statusType:'closed',
+    policyNumber:'9901234567', claimStatus:'Closed', statusType:'closed', lobType:'auto',
     adjusterName:'Spencer Dunn', adjusterPhone:'(214) 555-0155',
     reporterName:'David Chen', reportedType:'Self / Insured',
     reportedDate:'2024-11-12', vehicle:'2021 Audi A4 Premium Plus',
-    dateOfLoss:'2024-11-12',   lossType:'Comprehensive — Glass / Windshield',
+    dateOfLoss:'2024-11-12', lossType:'Comprehensive — Glass / Windshield',
     repairShop:'Safelite AutoGlass Plano (Drop-off)',
     rentalInfo:'N/A — Glass repair completed same day, no rental needed',
     activeStep:8, progressPct:100,
     statusMsg:'Your claim is closed. Audi OEM windshield replaced at Safelite Plano. ADAS camera recalibrated. $200 deductible collected.',
-    notes:[
-      { adjuster:'Spencer Dunn', date:'Nov 12, 2024', message:'Large crack (8 inches) requires full windshield replacement. Audi OEM glass required per policy. $200 comprehensive deductible applies for full replacement (chip repair waiver does not apply).' },
-    ],
-    payments:[
-      { checkNumber:'CHK-2024-8801', payTo:'Safelite AutoGlass Plano', grossAmount:1240, issueDate:'2024-11-15', scheduledSendDate:'', status:'Cleared' },
-    ],
+    notes:[{ adjuster:'Spencer Dunn', date:'Nov 12, 2024', message:'8-inch crack requires full replacement (chip repair waiver does not apply). Audi OEM glass required per policy. $200 comprehensive deductible. ADAS forward camera recalibration required post-replacement.' }],
+    payments:[{ checkNumber:'CHK-2024-8801', payTo:'Safelite AutoGlass Plano', grossAmount:1240, issueDate:'2024-11-15', scheduledSendDate:'', status:'Cleared' }],
     contacts:[
       { name:'David Chen',               role:'Insured',     createdDate:'Nov 12, 2024', phone:'(972) 555-0301', email:'david.chen@email.com'          },
       { name:'Spencer Dunn',             role:'Adjuster',    createdDate:'Nov 12, 2024', phone:'(214) 555-0155', email:'spencer.dunn@valuemumt.com'    },
@@ -413,11 +411,201 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
       { serviceNumber:'SRV-6002-002', serviceType:'ADAS Camera Recalibration',    provider:'Safelite AutoGlass Plano', serviceStatus:'Completed', expectedCompletion:'Nov 14, 2024' },
     ],
     timeline:[
-      { id:1, category:'General',    title:'Glass Claim — Windshield Replacement Required',  sub:'Large crack (8 in) requires full replacement. Safelite Plano drop-off scheduled.',   date:'Nov 12, 2024', status:'done', badge:'✓ Filed'    },
-      { id:2, category:'Inspection', title:'Vehicle Dropped at Safelite Plano',              sub:'Audi OEM glass ordered. Replacement and ADAS recalibration scheduled Nov 14.',        date:'Nov 13, 2024', status:'done', badge:'✓ Complete' },
-      { id:3, category:'Repair',     title:'OEM Windshield Replaced — ADAS Recalibrated',   sub:'Audi OEM windshield installed. Forward camera recalibrated and verified.',             date:'Nov 14, 2024', status:'done', badge:'✓ Complete' },
-      { id:4, category:'Payment',    title:'$200 Deductible + $1,240 Insurance Paid',        sub:'You paid $200 deductible to Safelite. Insurance paid $1,240 balance.',               date:'Nov 15, 2024', status:'done', badge:'✓ Cleared'  },
-      { id:5, category:'General',    title:'Claim Closed',                                   sub:'Summary sent to david.chen@email.com.',                                              date:'Nov 15, 2024', status:'done', badge:'✓ Closed'   },
+      { id:1, category:'General',    title:'Glass Claim — Windshield Replacement Required', sub:'8-inch crack (full replacement). Audi OEM required. ADAS recalibration needed. $200 deductible.',             date:'Nov 12, 2024', status:'done', badge:'✓ Filed'    },
+      { id:2, category:'Inspection', title:'Vehicle Dropped at Safelite Plano',             sub:'Audi OEM glass ordered from supplier. Replacement and recalibration scheduled Nov 14.',                       date:'Nov 13, 2024', status:'done', badge:'✓ Complete' },
+      { id:3, category:'Repair',     title:'OEM Windshield Replaced + ADAS Recalibrated',  sub:'Audi OEM windshield installed. Forward-facing camera recalibrated, adaptive cruise and lane assist verified.', date:'Nov 14, 2024', status:'done', badge:'✓ Complete' },
+      { id:4, category:'Payment',    title:'$200 Deductible + $1,240 Insurance Paid',       sub:'$200 deductible paid at Safelite. Insurance paid $1,240 balance via OneInc.',                                 date:'Nov 15, 2024', status:'done', badge:'✓ Cleared'  },
+      { id:5, category:'General',    title:'Claim Closed',                                   sub:'Summary sent to david.chen@email.com.',                                                                       date:'Nov 15, 2024', status:'done', badge:'✓ Closed'   },
+    ],
+  },
+
+  /* ════════════════════════════════════════════════════════
+     PROPERTY CLAIMS — Events distinct from Auto
+     Vendor sources: EagleView, Xactimate/Symbility, Alacrity,
+     Verisk Geomni, HiMarley, OneInc (no CCC/Mitchell/ARMS)
+     ════════════════════════════════════════════════════════ */
+
+  /* ── PROP 1: Sarah Mitchell — Wind/Hail, active rebuild — GREEN ── */
+  '000-00-000750': {
+    claimNumber:'000-00-000750', insuredName:'Sarah Mitchell',
+    policyNumber:'6601234500', claimStatus:'Open', statusType:'on-track', lobType:'property',
+    adjusterName:'Maria Delgado', adjusterPhone:'(214) 555-0220',
+    reporterName:'Sarah Mitchell', reportedType:'Self / Insured',
+    reportedDate:'2025-04-28', vehicle:'N/A — Property Claim',
+    dateOfLoss:'2025-04-28', lossType:'Wind / Hail — Roof & Interior Water Intrusion',
+    repairShop:'N/A — Property Claim',
+    rentalInfo:'N/A — Homeowner not displaced',
+    propertyAddress:'4512 Oak Ridge Dr, Plano TX 75024',
+    propertyType:'Single Family Dwelling (HO-3)',
+    peril:'Wind / Hail — Major storm Apr 28, 2025',
+    contractor:'ABC Restoration & Roofing (Alacrity Network)',
+    aleInfo:'N/A — Home habitable during repairs',
+    activeStep:6, progressPct:70,
+    statusMsg:"Rebuild is underway at your property. Roofing phase is complete. Interior drywall and insulation work started May 19. Estimated completion June 6. Framing and rough-in inspections passed.",
+    notes:[
+      { adjuster:'Maria Delgado', date:'May 12, 2025', message:'Xactimate estimate $28,400 approved. Scope: full roof replacement (38 squares, OC Duration), siding repairs (east elevation), and interior: master bedroom ceiling and closet drywall/insulation. ACV payment $24,850 issued.' },
+      { adjuster:'Maria Delgado', date:'Apr 29, 2025', message:'EagleView aerial imagery confirms severe roof damage across all slopes. Verisk storm data: 2.25" hail, 62mph winds Apr 28. CAT code DFW-2504 applied. ABC Restoration assigned via Alacrity within 24hrs.' },
+    ],
+    payments:[
+      { checkNumber:'CHK-2025-5501', payTo:'Sarah Mitchell',              grossAmount:24850, issueDate:'2025-05-13', scheduledSendDate:'',           status:'Cleared'    },
+      { checkNumber:'',              payTo:'ABC Restoration & Roofing',   grossAmount:3550,  issueDate:'',           scheduledSendDate:'2025-06-10', status:'Requesting' },
+    ],
+    contacts:[
+      { name:'Sarah Mitchell',             role:'Insured',       createdDate:'Apr 28, 2025', phone:'(972) 555-0441', email:'sarah.mitchell@email.com'          },
+      { name:'Maria Delgado',              role:'Adjuster',      createdDate:'Apr 29, 2025', phone:'(214) 555-0220', email:'maria.delgado@valuemumt.com'       },
+      { name:'ABC Restoration & Roofing',  role:'Contractor',    createdDate:'Apr 30, 2025', phone:'(972) 555-0600', email:'claims@abcrestoration.com'         },
+      { name:'City of Plano Inspections',  role:'Municipality',  createdDate:'May 09, 2025', phone:'(972) 941-7114', email:'buildingpermits@plano.gov'         },
+    ],
+    services:[
+      { serviceNumber:'SRV-750-001', serviceType:'Roof Replacement',       provider:'ABC Restoration & Roofing', serviceStatus:'Completed',   expectedCompletion:'May 09, 2025' },
+      { serviceNumber:'SRV-750-002', serviceType:'Siding Repair',          provider:'ABC Restoration & Roofing', serviceStatus:'Completed',   expectedCompletion:'May 12, 2025' },
+      { serviceNumber:'SRV-750-003', serviceType:'Interior Drywall/Insulation', provider:'ABC Restoration & Roofing', serviceStatus:'In Progress', expectedCompletion:'Jun 06, 2025' },
+      { serviceNumber:'SRV-750-004', serviceType:'Interior Paint & Finish', provider:'ABC Restoration & Roofing', serviceStatus:'Pending',     expectedCompletion:'Jun 06, 2025' },
+      { serviceNumber:'SRV-750-005', serviceType:'Xactimate Estimating',   provider:'Verisk / Xactimate',        serviceStatus:'Completed',   expectedCompletion:'May 10, 2025' },
+    ],
+    timeline:[
+      { id:1,  category:'General',    title:'FNOL Submitted — Wind/Hail Damage, #000-00-000750',       sub:'Claim created. Verisk Geomni storm data confirms Apr 28 DFW storm: 2.25" hail, 62mph wind. CAT code DFW-2504 applied. ISO ClaimSearch: clear. Confirmation sent to sarah.mitchell@email.com.',    date:'Apr 28, 2025 · 11:30 PM', status:'done',     badge:'✓ Filed'       },
+      { id:2,  category:'General',    title:'Maria Delgado Assigned — HiMarley Thread Opened',         sub:'Maria Delgado (CAT — Team SW) assigned. Direct: (214) 555-0220. HiMarley thread opened. Member prompted to upload damage photos via text.',                                                        date:'Apr 29, 2025 · 8:00 AM',  status:'done',     badge:'✓ Complete'    },
+      { id:3,  category:'Inspection', title:'EagleView Aerial Imagery Ordered & Delivered',             sub:'EagleView Premium Report ordered via API. Delivered within 4 hrs: roof pitch, 38 squares total, all slope measurements, penetration count (chimney, vents, skylights). Loaded directly into Xactimate.', date:'Apr 29, 2025',           status:'done',     badge:'✓ Complete'    },
+      { id:4,  category:'General',    title:'ABC Restoration Assigned via Alacrity Network',            sub:'Carrier-approved contractor ABC Restoration assigned via Alacrity within 24-hr CAT SLA. HiMarley: "ABC Restoration has been assigned. They will contact you within 2 hours."',                     date:'Apr 30, 2025',           status:'done',     badge:'✓ Assigned'    },
+      { id:5,  category:'Inspection', title:'Field Inspection Completed — Cause of Loss Confirmed',     sub:'On-site inspection by Maria Delgado. Symbility mobile app: full damage scope documented (exterior + interior water intrusion in master bedroom and closet). Photos geo-tagged.',                    date:'May 01, 2025',           status:'done',     badge:'✓ Complete'    },
+      { id:6,  category:'Inspection', title:'Estimate Built in Xactimate — $28,400 Approved',           sub:'Full Xactimate line items: Roofing 38 sq OC Duration ($14,200), siding east elevation ($5,800), interior drywall/insulation ($6,400), paint ($2,000). ACV $24,850 (depreciation $3,550). Approved by Maria Delgado.', date:'May 10–12, 2025',        status:'done',     badge:'✓ Approved'    },
+      { id:7,  category:'Payment',    title:'ACV Payment Issued — $24,850 to Sarah Mitchell',           sub:'Initial ACV payment $24,850 issued via OneInc ACH. HiMarley: "Payment sent. You will receive the remaining $3,550 (recoverable depreciation) once repairs are complete."',                        date:'May 13, 2025',           status:'done',     badge:'✓ Cleared'     },
+      { id:8,  category:'Rebuild',    title:'Emergency Roof Tarping — Dry-in Complete',                 sub:'ABC Restoration tarped roof May 1 to prevent further water intrusion while permit was pulled. Dry-in complete. Interior protected.',                                                                date:'May 01–02, 2025',        status:'done',     badge:'✓ Complete'    },
+      { id:9,  category:'Rebuild',    title:'Building Permit Pulled — City of Plano',                   sub:'Permit #PLN-2025-04419 issued by City of Plano. Roofing, siding, and interior structural work authorized. Required before structural repairs begin.',                                              date:'May 06, 2025',           status:'done',     badge:'✓ Issued'      },
+      { id:10, category:'Rebuild',    title:'Roof Replacement Complete — 38 Squares OC Duration',       sub:'Full tear-off and replacement: OC Duration shingles, synthetic underlayment, ice & water shield, ridge cap, drip edge, all flashing. Passed City of Plano roof inspection May 10.',               date:'May 07–09, 2025',        status:'done',     badge:'✓ Complete'    },
+      { id:11, category:'Rebuild',    title:'Siding Repairs — East Elevation Complete',                  sub:'East elevation siding replaced. Color matched to existing. Passed final siding inspection.',                                                                                                       date:'May 12, 2025',           status:'done',     badge:'✓ Complete'    },
+      { id:12, category:'Rebuild',    title:'Interior Demo & Drywall Underway',                          sub:'Damaged drywall and insulation removed from master bedroom ceiling and closet. New insulation installed. Drywall phase started May 19. ABC Restoration update: "Framing and rough-in inspections passed."', date:'May 15–21, 2025',        status:'active',   badge:'● In Progress' },
+      { id:13, category:'Rebuild',    title:'Paint & Interior Finish',                                   sub:'Final paint and finish work after drywall complete. Color matching documented. Flooring reinstalled if needed. Punch list completed.',                                                              date:'Est. May 28 – Jun 4',    status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:14, category:'Rebuild',    title:'Final Punch List & Member Walkthrough',                     sub:'Sarah signs off on completed work. Digital completion certificate uploaded to Alacrity. Triggers RCV holdback release.',                                                                          date:'Est. Jun 5, 2025',        status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:15, category:'Payment',    title:'RCV Holdback Released — $3,550',                            sub:'Recoverable depreciation of $3,550 released after completion certificate received. Disbursed via OneInc. HiMarley: "Your final payment is on its way."',                                         date:'Est. Jun 6, 2025',        status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:16, category:'General',    title:'Member Satisfaction Survey & Claim Closed',                 sub:'5-star SMS survey via HiMarley. Closing summary: repair total $28,400, your out-of-pocket ($0 — no deductible for wind/hail), ACV $24,850 + RCV $3,550, reopen window 60 days.',               date:'Est. ~Jun 8, 2025',       status:'upcoming', badge:'⏳ Scheduled'  },
+    ],
+  },
+
+  /* ── PROP 2: James & Carol Webb — Burst Pipe, ALE active — AMBER ── */
+  '000-00-000751': {
+    claimNumber:'000-00-000751', insuredName:'James & Carol Webb',
+    policyNumber:'7702345601', claimStatus:'Open', statusType:'action-needed', lobType:'property',
+    adjusterName:'Kevin Tran', adjusterPhone:'(214) 555-0233',
+    reporterName:'James Webb', reportedType:'Self / Insured',
+    reportedDate:'2025-05-02', vehicle:'N/A — Property Claim',
+    dateOfLoss:'2025-05-02', lossType:'Water Damage — Burst Pipe (2nd Floor Bathroom)',
+    repairShop:'N/A — Property Claim',
+    rentalInfo:'N/A — Property Claim',
+    propertyAddress:'2201 Willow Creek Rd, Frisco TX 75034',
+    propertyType:'Single Family Dwelling (HO-3)',
+    peril:'Water Damage — Burst supply line, 2nd floor bathroom',
+    contractor:'ServiceMaster by Cornerstone (Alacrity Network)',
+    aleInfo:'Extended Stay America, Frisco — ALE approved $3,200/mo · $2,100 used · $1,100 remaining',
+    activeStep:5, progressPct:55,
+    statusMsg:'Action needed: Please provide your contractor selection by May 24 to avoid rebuild delays. Dry-out is complete. Mold clearance passed. Demo phase is complete and property is ready for rebuild.',
+    notes:[
+      { adjuster:'Kevin Tran', date:'May 16, 2025', message:'Mold clearance test results received — CLEAR per industrial hygienist report. Demo complete. Xactimate rebuild estimate $41,200 approved. ACV payment $36,100 issued. Member has not yet selected rebuild contractor from approved list — follow-up required.' },
+      { adjuster:'Kevin Tran', date:'May 03, 2025', message:'Burst supply line behind 2nd floor bathroom vanity. Approximately 6 hours of water flow before discovered. ISO: clear. Affected areas: 2nd floor bathroom, hallway, and 1st floor kitchen ceiling below. ALE authorized — family displaced. ServiceMaster assigned via Alacrity within 4 hrs.' },
+    ],
+    payments:[
+      { checkNumber:'CHK-2025-6601', payTo:'James & Carol Webb',              grossAmount:36100, issueDate:'2025-05-18', scheduledSendDate:'',           status:'Cleared'    },
+      { checkNumber:'',              payTo:'ServiceMaster by Cornerstone',    grossAmount:4800,  issueDate:'2025-05-16', scheduledSendDate:'',           status:'Cleared'    },
+      { checkNumber:'',              payTo:'Rebuild Contractor (TBD)',        grossAmount:5100,  issueDate:'',           scheduledSendDate:'2025-07-01', status:'Requesting' },
+    ],
+    contacts:[
+      { name:'James Webb',                       role:'Insured',     createdDate:'May 02, 2025', phone:'(469) 555-0881', email:'james.webb@email.com'              },
+      { name:'Carol Webb',                       role:'Insured',     createdDate:'May 02, 2025', phone:'(469) 555-0882', email:'carol.webb@email.com'              },
+      { name:'Kevin Tran',                       role:'Adjuster',    createdDate:'May 03, 2025', phone:'(214) 555-0233', email:'kevin.tran@valuemumt.com'          },
+      { name:'ServiceMaster by Cornerstone',     role:'Contractor',  createdDate:'May 03, 2025', phone:'(972) 555-0710', email:'frisco@servicemastercornerstone.com'},
+      { name:'Extended Stay America Frisco',     role:'ALE Housing', createdDate:'May 03, 2025', phone:'(972) 555-0900', email:'frisco@extendedstay.com'          },
+    ],
+    services:[
+      { serviceNumber:'SRV-751-001', serviceType:'Emergency Water Extraction',  provider:'ServiceMaster by Cornerstone', serviceStatus:'Completed',  expectedCompletion:'May 03, 2025' },
+      { serviceNumber:'SRV-751-002', serviceType:'Dry-out (Air Movers/Dehumid)',provider:'ServiceMaster by Cornerstone', serviceStatus:'Completed',  expectedCompletion:'May 10, 2025' },
+      { serviceNumber:'SRV-751-003', serviceType:'Demo / Tearout',              provider:'ServiceMaster by Cornerstone', serviceStatus:'Completed',  expectedCompletion:'May 14, 2025' },
+      { serviceNumber:'SRV-751-004', serviceType:'Mold Assessment & Clearance', provider:'ProTech IH Consultants',       serviceStatus:'Completed',  expectedCompletion:'May 16, 2025' },
+      { serviceNumber:'SRV-751-005', serviceType:'Rebuild & Reconstruction',    provider:'TBD — Awaiting Selection',     serviceStatus:'Pending',    expectedCompletion:'Est. Jul 2025'},
+      { serviceNumber:'SRV-751-006', serviceType:'ALE Housing',                 provider:'Extended Stay America Frisco', serviceStatus:'Active',     expectedCompletion:'During rebuild'},
+    ],
+    timeline:[
+      { id:1,  category:'General',    title:'FNOL — Burst Pipe, Water Damage, #000-00-000751',      sub:'Burst supply line discovered May 2 behind 2nd floor bathroom vanity. ~6 hrs flow. ISO ClaimSearch: clear. HiMarley opened. ALE authorized immediately — family displaced. Confirmation to james.webb@email.com.',  date:'May 02, 2025 · 11:15 PM', status:'done',     badge:'✓ Filed'       },
+      { id:2,  category:'General',    title:'Kevin Tran Assigned — ALE & Contractor Dispatched',    sub:'Kevin Tran (Water — Team E). Direct: (214) 555-0233. ALE authorized ($3,200/mo). ServiceMaster by Cornerstone assigned via Alacrity within 4 hrs of FNOL. HiMarley: "ServiceMaster is on the way."',              date:'May 03, 2025 · 1:00 AM',  status:'done',     badge:'✓ Complete'    },
+      { id:3,  category:'ALE',        title:'ALE Housing Arranged — Extended Stay America',          sub:'James and Carol checked into Extended Stay America, Frisco. ALE authorized: up to $3,200/month. HiMarley: "Keep all hotel, meal, and laundry receipts. Text photos here — no email needed."',                      date:'May 03, 2025',           status:'active',   badge:'● Active'      },
+      { id:4,  category:'Mitigation', title:'Emergency Water Extraction Started',                    sub:'ServiceMaster on-site. Emergency water extraction begun: 2nd floor bath, hallway, and 1st floor kitchen ceiling. Industrial extractors deployed. Moisture meter baseline readings documented at all surfaces.',        date:'May 03, 2025 · 3:30 AM',  status:'done',     badge:'✓ Complete'    },
+      { id:5,  category:'Mitigation', title:'Dry-out Equipment Installed — 8 Air Movers, 3 Dehumidifiers', sub:'Equipment deployed at all affected areas. Daily moisture readings begun. ServiceMaster targets IICRC S500 standard (Goal: ≤12% moisture). HiMarley daily updates sent.',                                   date:'May 03, 2025',           status:'done',     badge:'✓ Complete'    },
+      { id:6,  category:'Inspection', title:'Field Inspection Completed — Damage Scope Documented', sub:'Kevin Tran on-site with Symbility mobile app. Full scope: 2nd floor bathroom (complete gutting), hallway flooring (150 sq ft), 1st floor kitchen ceiling (drywall, insulation). Photos mapped per room.',           date:'May 05, 2025',           status:'done',     badge:'✓ Complete'    },
+      { id:7,  category:'Mitigation', title:'Dry-out Complete — Moisture Targets Achieved',          sub:'Final readings: all surfaces ≤12% moisture per IICRC S500. Equipment removed May 10. Site cleared for demolition. ServiceMaster daily readings logged: Days 1–7.',                                                 date:'May 10, 2025',           status:'done',     badge:'✓ Complete'    },
+      { id:8,  category:'Rebuild',    title:'Demo / Tearout Complete',                               sub:'Damaged drywall, insulation, vanity, flooring removed from all affected areas. Disposal receipts captured. Site ready for mold assessment.',                                                                         date:'May 14, 2025',           status:'done',     badge:'✓ Complete'    },
+      { id:9,  category:'Inspection', title:'Estimate Built in Xactimate — $41,200 Approved',       sub:'Full Xactimate rebuild estimate: bathroom rebuild $18,400, hallway flooring $4,200, kitchen ceiling $5,800, plumbing repair $4,100, painting $3,200, contents $5,500. ACV $36,100. Approved May 18.',              date:'May 15–18, 2025',        status:'done',     badge:'✓ Approved'    },
+      { id:10, category:'Mitigation', title:'Mold Assessment — CLEAR',                               sub:'Industrial hygienist (ProTech IH) clearance test: all samples below action levels. Mold-free clearance issued May 16. Rebuild can proceed.',                                                                        date:'May 16, 2025',           status:'done',     badge:'✓ Cleared'     },
+      { id:11, category:'Payment',    title:'ACV Payment Issued — $36,100 to Webbs',                 sub:'ACV payment $36,100 via OneInc ACH. HiMarley: "Payment sent. You will receive $5,100 recoverable depreciation after rebuild is complete." Mitigation payment $4,800 to ServiceMaster issued same day.',           date:'May 18, 2025',           status:'done',     badge:'✓ Cleared'     },
+      { id:12, category:'ALE',        title:'⚡ Action Needed — Select Rebuild Contractor by May 24', sub:'Please select a contractor from the approved list sent to james.webb@email.com. Delay in selection will extend your ALE stay and rebuild timeline. Kevin Tran available to assist: (214) 555-0233.',              date:'May 20, 2025',           status:'active',   badge:'● Action Needed'},
+      { id:13, category:'Rebuild',    title:'Rebuild Begins — Plumbing, Framing, Drywall',           sub:'Once contractor selected: permit pulled, plumbing repair, framing, insulation, drywall. Estimated 6–8 weeks for full rebuild. Weekly HiMarley updates during rebuild.',                                           date:'Est. late May 2025',      status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:14, category:'ALE',        title:'ALE Balance Update',                                    sub:'Current ALE usage: $2,100 of $3,200 monthly allowance. Estimated 6–8 more weeks of ALE needed during rebuild. Kevin will request ALE extension if rebuild exceeds current authorization.',                         date:'May 24, 2025',           status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:15, category:'Contents',   title:'Contents Settlement',                                   sub:'Contents inventory submitted. Xactimate contents module valuation in progress. ACV and RCV calculated per item. Separate settlement will be issued.',                                                                 date:'In progress',            status:'upcoming', badge:'⏳ In Progress'},
+      { id:16, category:'Rebuild',    title:'Final Inspection & Member Walkthrough',                  sub:'Final contractor sign-off. Municipal final inspection. Completion certificate triggers RCV holdback ($5,100) release.',                                                                                              date:'Est. Jul 2025',           status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:17, category:'Payment',    title:'RCV Holdback — $5,100 Released',                        sub:'Recoverable depreciation released after completion. Disbursed via OneInc.',                                                                                                                                         date:'After rebuild complete',  status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:18, category:'ALE',        title:'Member Returns Home — ALE Closed',                      sub:'HiMarley: "Has your family moved back in? Reply YES to close your ALE, or let us know if you need more time." ALE closure confirmed.',                                                                              date:'After rebuild complete',  status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:19, category:'General',    title:'Claim Closed',                                           sub:'HiMarley closing summary: total claim paid, ACV + RCV, ALE days used, rebuild complete date, contractor, reopen window 60 days.',                                                                                  date:'Est. ~Jul 15, 2025',      status:'upcoming', badge:'⏳ Scheduled'  },
+    ],
+  },
+
+  /* ── PROP 3: Robert Chen — Fire, fully closed — STEEL ── */
+  '000-00-000752': {
+    claimNumber:'000-00-000752', insuredName:'Robert Chen',
+    policyNumber:'9901234567', claimStatus:'Closed', statusType:'closed', lobType:'property',
+    adjusterName:'Patricia Vasquez', adjusterPhone:'(214) 555-0244',
+    reporterName:'Robert Chen', reportedType:'Self / Insured',
+    reportedDate:'2024-08-14', vehicle:'N/A — Property Claim',
+    dateOfLoss:'2024-08-14', lossType:'Fire — Kitchen Grease Fire',
+    repairShop:'N/A — Property Claim',
+    rentalInfo:'N/A — Property Claim',
+    propertyAddress:'5801 Clearwater Blvd, Allen TX 75013',
+    propertyType:'Single Family Dwelling (HO-3)',
+    peril:'Fire — Kitchen grease fire, smoke damage throughout',
+    contractor:'Servpro of Allen / McKinney (Alacrity Network)',
+    aleInfo:'Closed — ALE total used: $8,400 over 42 days. Fully covered.',
+    activeStep:8, progressPct:100,
+    statusMsg:'Your claim is closed. Fire damage fully remediated and rebuilt by Servpro. Final settlement of $62,400 paid. ALE covered 42 days ($8,400). Thank you — your home has been fully restored.',
+    notes:[
+      { adjuster:'Patricia Vasquez', date:'Nov 08, 2024', message:'Claim closed. Final settlement: dwelling $52,800 + contents $9,600. RCV holdback $7,200 released after completion. ALE $8,400 (42 days). Total claim paid: $71,400. Member satisfaction: 5 stars.' },
+      { adjuster:'Patricia Vasquez', date:'Aug 15, 2024', message:'Kitchen grease fire Aug 14. Fire dept confirmed. Smoke damage to kitchen, living room, and HVAC system. ISO ClaimSearch: clear. ALE authorized. Servpro assigned via Alacrity for emergency board-up and smoke mitigation.' },
+    ],
+    payments:[
+      { checkNumber:'CHK-2024-9210', payTo:'Robert Chen (ACV dwelling)',   grossAmount:45600, issueDate:'2024-09-05',  scheduledSendDate:'', status:'Cleared' },
+      { checkNumber:'CHK-2024-9310', payTo:'Robert Chen (Contents ACV)',   grossAmount:7200,  issueDate:'2024-09-05',  scheduledSendDate:'', status:'Cleared' },
+      { checkNumber:'CHK-2024-9841', payTo:'Servpro Allen/McKinney',       grossAmount:4800,  issueDate:'2024-09-10',  scheduledSendDate:'', status:'Cleared' },
+      { checkNumber:'CHK-2024-0221', payTo:'Robert Chen (RCV holdback)',   grossAmount:7200,  issueDate:'2024-11-01',  scheduledSendDate:'', status:'Cleared' },
+      { checkNumber:'CHK-2024-0310', payTo:'Robert Chen (Contents RCV)',   grossAmount:2400,  issueDate:'2024-11-01',  scheduledSendDate:'', status:'Cleared' },
+    ],
+    contacts:[
+      { name:'Robert Chen',                  role:'Insured',     createdDate:'Aug 14, 2024', phone:'(972) 555-0301', email:'robert.chen@email.com'              },
+      { name:'Patricia Vasquez',             role:'Adjuster',    createdDate:'Aug 15, 2024', phone:'(214) 555-0244', email:'patricia.vasquez@valuemumt.com'     },
+      { name:'Servpro of Allen / McKinney',  role:'Contractor',  createdDate:'Aug 15, 2024', phone:'(972) 555-0800', email:'allen@servpro.com'                  },
+      { name:'City of Allen Building Dept.', role:'Municipality',createdDate:'Aug 20, 2024', phone:'(214) 509-4730', email:'buildingpermits@allenusa.org'       },
+    ],
+    services:[
+      { serviceNumber:'SRV-752-001', serviceType:'Emergency Board-up & Securing',       provider:'Servpro Allen / McKinney', serviceStatus:'Completed', expectedCompletion:'Aug 15, 2024' },
+      { serviceNumber:'SRV-752-002', serviceType:'Smoke & Soot Mitigation',             provider:'Servpro Allen / McKinney', serviceStatus:'Completed', expectedCompletion:'Aug 25, 2024' },
+      { serviceNumber:'SRV-752-003', serviceType:'Kitchen Demo & Rebuild',              provider:'Servpro Allen / McKinney', serviceStatus:'Completed', expectedCompletion:'Oct 28, 2024' },
+      { serviceNumber:'SRV-752-004', serviceType:'HVAC Cleaning & Replacement',         provider:'Servpro Allen / McKinney', serviceStatus:'Completed', expectedCompletion:'Sep 20, 2024' },
+      { serviceNumber:'SRV-752-005', serviceType:'Contents Cleaning & Pack-out',        provider:'Servpro Allen / McKinney', serviceStatus:'Completed', expectedCompletion:'Sep 05, 2024' },
+      { serviceNumber:'SRV-752-006', serviceType:'ALE Housing',                         provider:'Marriott Towneplace Allen', serviceStatus:'Completed', expectedCompletion:'Sep 25, 2024' },
+    ],
+    timeline:[
+      { id:1,  category:'General',    title:'FNOL — Kitchen Fire, #000-00-000752',                sub:'Fire dept confirmed kitchen grease fire. Smoke throughout kitchen, living room, HVAC. ISO ClaimSearch: clear. ALE authorized immediately. Confirmation to robert.chen@email.com.',             date:'Aug 14, 2024 · 9:45 PM',  status:'done', badge:'✓ Filed'     },
+      { id:2,  category:'General',    title:'Patricia Vasquez Assigned — Emergency Response',      sub:'Patricia Vasquez (Fire — Team F). Servpro Allen/McKinney dispatched via Alacrity within 2 hrs. HiMarley: "Servpro is on the way for emergency board-up and smoke assessment."',            date:'Aug 15, 2024 · 1:00 AM',  status:'done', badge:'✓ Complete'  },
+      { id:3,  category:'ALE',        title:'ALE Authorized — Marriott Towneplace Allen',          sub:'ALE authorized: $4,200/month. Robert checked into Marriott Towneplace Allen. HiMarley: receipt collection via text thread — hotel, meals, laundry covered.',                               date:'Aug 15, 2024',            status:'done', badge:'✓ Active'    },
+      { id:4,  category:'Mitigation', title:'Emergency Board-up & Property Secured',               sub:'Servpro emergency board-up completed. Kitchen opening secured. Property protected from weather and intrusion.',                                                                               date:'Aug 15, 2024',            status:'done', badge:'✓ Complete'  },
+      { id:5,  category:'Inspection', title:'Field Inspection — Damage Scope Documented',          sub:'Patricia Vasquez on-site with Symbility mobile app. Full fire and smoke damage scope: kitchen (total loss), living room (smoke/soot), HVAC system (smoke contamination), contents.',      date:'Aug 16, 2024',            status:'done', badge:'✓ Complete'  },
+      { id:6,  category:'Mitigation', title:'Smoke & Soot Mitigation Started',                     sub:'Servpro began smoke and soot cleaning. HEPA air scrubbers deployed. HVAC system isolated to prevent further smoke spread throughout home.',                                                 date:'Aug 17, 2024',            status:'done', badge:'✓ Complete'  },
+      { id:7,  category:'Contents',   title:'Contents Pack-out & Inventory',                        sub:'Salvageable contents packed out by Servpro. ContentsTrack mobile app: 847 items photographed and cataloged. AI auto-populated item descriptions and replacement values. Delivered to climate storage.', date:'Aug 20–25, 2024',        status:'done', badge:'✓ Complete'  },
+      { id:8,  category:'Inspection', title:'Xactimate Estimate Approved — $52,800 ACV Dwelling', sub:'Full Xactimate line items: kitchen rebuild $28,400, living room $8,200, HVAC replacement $9,800, smoke remediation $6,400. ACV $52,800 (depreciation $7,200). Approved Sep 3.',           date:'Sep 01–03, 2024',         status:'done', badge:'✓ Approved'  },
+      { id:9,  category:'Payment',    title:'ACV Payments Issued — $45,600 Dwelling + $7,200 Contents', sub:'$45,600 (dwelling ACV) + $7,200 (contents ACV) issued via OneInc ACH Sep 5. Mitigation payment $4,800 to Servpro Sep 10. HiMarley payment confirmation sent.',                    date:'Sep 05, 2024',            status:'done', badge:'✓ Cleared'   },
+      { id:10, category:'Rebuild',    title:'Building Permit & Rebuild Begins',                    sub:'City of Allen permit #ALN-2024-08891 issued Sep 8. Kitchen demo, framing, and HVAC rough-in started. Servpro weekly progress photos uploaded to Alacrity portal.',                       date:'Sep 08, 2024',            status:'done', badge:'✓ Started'   },
+      { id:11, category:'Rebuild',    title:'Kitchen Rebuild & HVAC Complete',                     sub:'New kitchen (cabinets, countertops, appliances, tile), new HVAC unit installed and tested. All rough-in inspections passed.',                                                               date:'Oct 15, 2024',            status:'done', badge:'✓ Complete'  },
+      { id:12, category:'ALE',        title:'Member Returns Home — ALE Closed',                    sub:'Robert returned home Sep 25 after smoke mitigation and initial rebuild phase complete. ALE total: 42 days, $8,400. Fully covered. HiMarley ALE closure confirmed.',                     date:'Sep 25, 2024',            status:'done', badge:'✓ Closed'    },
+      { id:13, category:'Rebuild',    title:'Final Punch List & Member Walkthrough',               sub:'Robert signed off on all completed work Oct 28. Digital completion certificate uploaded. Triggers RCV holdback release.',                                                                  date:'Oct 28, 2024',            status:'done', badge:'✓ Complete'  },
+      { id:14, category:'Contents',   title:'Contents Return & Replacement Settlement',             sub:'Cleaned contents returned. Replacement items settled: $9,600 ACV + $2,400 RCV (on replaced items). Both issued via OneInc.',                                                              date:'Nov 01, 2024',            status:'done', badge:'✓ Settled'   },
+      { id:15, category:'Payment',    title:'RCV Holdback Released — $7,200 Dwelling + $2,400 Contents', sub:'Recoverable depreciation released after walkthrough sign-off. OneInc disbursement. HiMarley: "Your final payments are on the way. Your home is fully restored."',             date:'Nov 01, 2024',            status:'done', badge:'✓ Cleared'   },
+      { id:16, category:'General',    title:'5-Star Survey & Claim Closed',                        sub:'HiMarley 5-star rating received. Claim closed Nov 8, 2024. Final summary: total claim paid $71,400 (dwelling $52,800 + contents $9,600 + ALE $8,400 + RCV $7,200). Reopen 60 days.',  date:'Nov 08, 2024',            status:'done', badge:'✓ Closed'    },
     ],
   },
 }
@@ -425,33 +613,40 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
 /* ── MOCK POLICIES ── */
 const MOCK_POLICIES: Record<string,PolicyClaim[]> = {
   '7407354463': [
-    { claimNumber:'000-00-000480', insuredName:'Rosario Marinello', adjusterName:'Emily Rodriguez', status:'Open',   createdDate:'2024-09-15', vehicle:'2022 Honda CR-V EX-L', lossType:'Collision'      },
-    { claimNumber:'000-00-000312', insuredName:'Rosario Marinello', adjusterName:'Jonah Egertson',  status:'Closed', createdDate:'2023-06-22', vehicle:'2022 Honda CR-V EX-L', lossType:'Hail / Weather' },
-    { claimNumber:'000-00-000201', insuredName:'Rosario Marinello', adjusterName:'Spencer Dunn',    status:'Closed', createdDate:'2022-11-04', vehicle:'2019 Honda Civic LX',  lossType:'Glass / Chip'   },
+    { claimNumber:'000-00-000480', insuredName:'Rosario Marinello', adjusterName:'Emily Rodriguez', status:'Open',   createdDate:'2024-09-15', vehicle:'2022 Honda CR-V EX-L',   lossType:'Collision',     lobType:'auto' },
+    { claimNumber:'000-00-000312', insuredName:'Rosario Marinello', adjusterName:'Jonah Egertson',  status:'Closed', createdDate:'2023-06-22', vehicle:'2022 Honda CR-V EX-L',   lossType:'Hail / Weather',lobType:'auto' },
+    { claimNumber:'000-00-000201', insuredName:'Rosario Marinello', adjusterName:'Spencer Dunn',    status:'Closed', createdDate:'2022-11-04', vehicle:'2019 Honda Civic LX',    lossType:'Glass / Chip',  lobType:'auto' },
   ],
   '8812047291': [
-    { claimNumber:'000-00-000521', insuredName:'Marcus T. Williams', adjusterName:'Scott Henson',   status:'Open',   createdDate:'2025-04-10', vehicle:'2021 Ford F-150 XLT 4WD', lossType:'Hail / Weather' },
-    { claimNumber:'000-00-000398', insuredName:'Marcus T. Williams', adjusterName:'Jonah Egertson', status:'Closed', createdDate:'2024-03-15', vehicle:'2021 Ford F-150 XLT 4WD', lossType:'Collision'      },
+    { claimNumber:'000-00-000521', insuredName:'Marcus T. Williams', adjusterName:'Scott Henson',   status:'Open',   createdDate:'2025-04-10', vehicle:'2021 Ford F-150 XLT 4WD',lossType:'Hail / Weather',lobType:'auto' },
+    { claimNumber:'000-00-000398', insuredName:'Marcus T. Williams', adjusterName:'Jonah Egertson', status:'Closed', createdDate:'2024-03-15', vehicle:'2021 Ford F-150 XLT 4WD',lossType:'Collision',     lobType:'auto' },
   ],
   '5503819042': [
-    { claimNumber:'000-00-000612', insuredName:'Jennifer K. Okafor', adjusterName:'Linda Park', status:'Closed', createdDate:'2025-01-08', vehicle:'2020 Toyota Camry SE', lossType:'Vehicle Theft' },
+    { claimNumber:'000-00-000612', insuredName:'Jennifer K. Okafor', adjusterName:'Linda Park', status:'Closed', createdDate:'2025-01-08', vehicle:'2020 Toyota Camry SE', lossType:'Vehicle Theft', lobType:'auto' },
+  ],
+  '6601234500': [
+    { claimNumber:'000-00-000750', insuredName:'Sarah Mitchell', adjusterName:'Maria Delgado',   status:'Open',   createdDate:'2025-04-28', vehicle:'4512 Oak Ridge Dr, Plano TX',     lossType:'Wind / Hail',   lobType:'property' },
+  ],
+  '7702345601': [
+    { claimNumber:'000-00-000751', insuredName:'James & Carol Webb', adjusterName:'Kevin Tran',  status:'Open',   createdDate:'2025-05-02', vehicle:'2201 Willow Creek Rd, Frisco TX', lossType:'Water / Burst Pipe', lobType:'property' },
   ],
   '9901234567': [
-    { claimNumber:'000-00-006000', insuredName:'David Chen', adjusterName:'Lynzi Farrell',    status:'Open',   createdDate:'2025-05-05', vehicle:'2023 Tesla Model 3 LR',    lossType:'Collision'      },
-    { claimNumber:'000-00-006001', insuredName:'David Chen', adjusterName:'Trevor Gunderson', status:'Closed', createdDate:'2025-02-18', vehicle:'2022 BMW X5 xDrive40i',    lossType:'Hail / Weather' },
-    { claimNumber:'000-00-006002', insuredName:'David Chen', adjusterName:'Spencer Dunn',     status:'Closed', createdDate:'2024-11-12', vehicle:'2021 Audi A4 Premium Plus', lossType:'Glass'          },
-    ...Array.from({ length:22 }, (_,i) => ({
+    { claimNumber:'000-00-006000', insuredName:'David Chen', adjusterName:'Lynzi Farrell',    status:'Open',   createdDate:'2025-05-05', vehicle:'2023 Tesla Model 3 LR',    lossType:'Collision',     lobType:'auto'     },
+    { claimNumber:'000-00-006001', insuredName:'David Chen', adjusterName:'Trevor Gunderson', status:'Closed', createdDate:'2025-02-18', vehicle:'2022 BMW X5 xDrive40i',    lossType:'Hail / Weather',lobType:'auto'     },
+    { claimNumber:'000-00-006002', insuredName:'David Chen', adjusterName:'Spencer Dunn',     status:'Closed', createdDate:'2024-11-12', vehicle:'2021 Audi A4 Premium Plus', lossType:'Glass',         lobType:'auto'     },
+    { claimNumber:'000-00-000752', insuredName:'Robert Chen', adjusterName:'Patricia Vasquez',status:'Closed', createdDate:'2024-08-14', vehicle:'5801 Clearwater Blvd, Allen TX', lossType:'Fire',     lobType:'property' },
+    ...Array.from({ length:21 }, (_,i) => ({
       claimNumber:`000-00-00${6003+i}`,
       insuredName: i%3===0?'David Chen':'Sarah Chen',
       adjusterName:['Emily Rodriguez','Scott Henson','Linda Park','Jonah Egertson','Spencer Dunn'][i%5],
       status:'Closed', createdDate:`2024-${String(Math.floor(i/3)+1).padStart(2,'0')}-${String((i%28)+1).padStart(2,'0')}`,
       vehicle:['2023 Tesla Model 3','2022 BMW X5','2021 Audi A4'][i%3],
       lossType:['Collision','Hail','Glass','Collision','Hail'][i%5],
+      lobType:'auto' as LobType,
     })),
   ],
 }
 
-/* ── Demo reference ── */
 const DEMO_CLAIMS  = [
   { num:'000-00-000480', desc:'Rosario — CR-V — Repair In Progress + Rental (Green card)' },
   { num:'000-00-000521', desc:'Marcus  — F-150 — Hail, Action Needed (Amber card)'         },
@@ -548,20 +743,32 @@ function StatusCard({ claim }: { claim:ClaimData }) {
    DOMINO TRACKER
    ═══════════════════════════════════════════════════════════════ */
 function ClaimTracker({ claim }: { claim:ClaimData }) {
-  const isClosed = claim.statusType === 'closed'
-  const pct = claim.progressPct
+  const isClosed  = claim.statusType === 'closed'
+  const pct       = claim.progressPct
+  const STEPS     = claim.lobType === 'property' ? PROP_STEPS : AUTO_STEPS
+  const lobBadge  = claim.lobType === 'property'
+    ? { label:'Property', bg:'#E1F5EE', color:'#0F6E56' }
+    : { label:'Auto',     bg:C.bluePale, color:C.navy }
   return (
     <div style={{ background:C.white,borderBottom:`1px solid ${C.border}`,padding:'14px 20px 12px' }}>
+      <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:10 }}>
+        <span style={{ fontSize:11,fontWeight:700,padding:'2px 10px',borderRadius:12,background:lobBadge.bg,color:lobBadge.color,border:`1px solid ${lobBadge.color}33` }}>
+          {lobBadge.label} Claim
+        </span>
+        {claim.lobType==='property'&&claim.propertyAddress&&(
+          <span style={{ fontSize:11,color:C.muted }}>📍 {claim.propertyAddress}</span>
+        )}
+      </div>
       <StatusCard claim={claim} />
       <div style={{ fontSize:10,fontWeight:700,color:C.faint,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8 }}>Claim Progress</div>
       <div style={{ display:'grid',gridTemplateColumns:'repeat(8,1fr)',gap:2,marginBottom:7 }}>
-        {TRACKER_STEPS.map((s,i)=>{
+        {STEPS.map((s,i)=>{
           const n=i+1,done=n<claim.activeStep||isClosed,act=n===claim.activeStep&&!isClosed
           return <div key={s} style={{ textAlign:'center',fontSize:10,fontWeight:600,lineHeight:1.3,color:done||isClosed?'#1B5E20':act?C.navy:C.faint }}>{s.split('\n').map((l,j)=><div key={j}>{l}</div>)}</div>
         })}
       </div>
       <div style={{ display:'grid',gridTemplateColumns:'repeat(8,1fr)',gap:2,height:38,borderRadius:7,overflow:'hidden',background:'#E8EDF2' }}>
-        {TRACKER_STEPS.map((_,i)=>{
+        {STEPS.map((_,i)=>{
           const n=i+1,done=n<claim.activeStep||isClosed,act=n===claim.activeStep&&!isClosed
           return (
             <div key={i} style={{ display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden',borderRadius:3,background:done||isClosed?C.green:act?C.navy:'#DDE3EA',animation:act?'pulse-seg 2s ease-out infinite':'none' }}>
@@ -601,7 +808,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
   const [svcPage,setSvcPage]= useState(1)
 
   const TH = { background:C.tblHead }
-  const catColor = (c:EvtCategory) => c==='Repair'?C.orange:c==='Rental'?C.purple:c==='Payment'?C.blue:c==='Inspection'?C.green:C.text
+  const catColor = (c:EvtCategory) => c==='Repair'?C.orange:c==='Rental'?C.purple:c==='Payment'?C.blue:c==='Inspection'?C.green:c==='Mitigation'?'#A32D2D':c==='Rebuild'?'#26215C':c==='ALE'?'#633806':c==='Contents'?'#854F0B':C.text
   const dotColor = (s:string) => s==='done'?C.green:s==='active'?C.navy:'transparent'
   const badgeSt  = (s:string): React.CSSProperties => ({
     display:'inline-flex',fontSize:9.5,fontWeight:700,padding:'1px 7px',borderRadius:10,marginTop:3,
@@ -610,7 +817,9 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
     border:`1px solid ${s==='done'?C.greenBorder:s==='active'?C.blueBorder:'#BFDBFE'}`,
   })
 
-  const cats: EvtCategory[] = ['General','Repair','Rental','Payment','Inspection']
+  const cats: EvtCategory[] = claim.lobType==='property'
+    ? ['General','Inspection','Mitigation','Rebuild','ALE','Contents','Payment']
+    : ['General','Repair','Rental','Payment','Inspection']
   const filtTl = claim.timeline.filter(e=>tlFilter==='All Events'||e.category===tlFilter)
   const sortTl = [...filtTl].sort((a,b)=>tlSort==='latest'?b.id-a.id:a.id-b.id)
   const compTl = sortTl.filter(e=>e.status!=='upcoming')
@@ -636,19 +845,30 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
       {/* LEFT */}
       <div style={{ borderRight:`1px solid ${C.border}`,display:'flex',flexDirection:'column',overflow:'hidden' }}>
         <div style={{ overflowY:'auto',flex:1,padding:'14px 16px' }}>
-          {FIELD('Insured Name',  claim.insuredName,   '🔌 GW: claim.insured.displayName')}
-          {FIELD('Policy Number', claim.policyNumber,  '🔌 GW: claim.policy.policyNumber')}
-          {FIELD('Claim Status',  claim.claimStatus,   '🔌 GW: claim.state')}
-          {FIELD('Adjuster',      claim.adjusterName,  '🔌 GW: claim.assignedUser.displayName')}
-          {FIELD('Adj. Phone',    claim.adjusterPhone, '🔌 GW: claim.assignedUser.phoneNumber')}
-          {FIELD('Reporter',      claim.reporterName,  '🔌 GW: claim.reporter.displayName')}
-          {FIELD('Reported Type', claim.reportedType,  '🔌 GW: claim.reportedByType')}
-          {FIELD('Reported Date', claim.reportedDate,  '🔌 GW: claim.reportedDate')}
-          {FIELD('Vehicle',       claim.vehicle,       '🔌 GW: claim.vehicle.displayName')}
-          {FIELD('Date of Loss',  claim.dateOfLoss,    '🔌 GW: claim.dateOfLoss')}
-          {FIELD('Loss Type',     claim.lossType,      '🔌 GW: claim.lossType')}
-          {FIELD('Repair Shop',   claim.repairShop,    '🔌 CCC Secure Share: shop.name')}
-          {FIELD('Rental',        claim.rentalInfo,    '🔌 Enterprise ARMS: reservation.summary')}
+          {FIELD('Insured Name',  claim.insuredName,  '🔌 GW: claim.insured.displayName')}
+          {FIELD('Policy Number', claim.policyNumber, '🔌 GW: claim.policy.policyNumber')}
+          {FIELD('Claim Status',  claim.claimStatus,  '🔌 GW: claim.state')}
+          {FIELD('Adjuster',      claim.adjusterName, '🔌 GW: claim.assignedUser.displayName')}
+          {FIELD('Adj. Phone',    claim.adjusterPhone,'🔌 GW: claim.assignedUser.phoneNumber')}
+          {FIELD('Reporter',      claim.reporterName, '🔌 GW: claim.reporter.displayName')}
+          {FIELD('Reported Type', claim.reportedType, '🔌 GW: claim.reportedByType')}
+          {FIELD('Reported Date', claim.reportedDate, '🔌 GW: claim.reportedDate')}
+          {FIELD('Date of Loss',  claim.dateOfLoss,   '🔌 GW: claim.dateOfLoss')}
+          {FIELD('Loss Type',     claim.lossType,     '🔌 GW: claim.lossType')}
+          {claim.lobType==='property'
+            ? <>
+                {FIELD('Property Address', claim.propertyAddress||'—',  '🔌 GW: claim.property.address')}
+                {FIELD('Property Type',    claim.propertyType||'—',     '🔌 GW: claim.property.type')}
+                {FIELD('Peril',            claim.peril||'—',            '🔌 GW: claim.peril')}
+                {FIELD('Contractor',       claim.contractor||'—',       '🔌 Alacrity: contractor.name')}
+                {FIELD('ALE Status',       claim.aleInfo||'N/A',        '🔌 GW: claim.ale.summary')}
+              </>
+            : <>
+                {FIELD('Vehicle',      claim.vehicle,    '🔌 GW: claim.vehicle.displayName')}
+                {FIELD('Repair Shop',  claim.repairShop, '🔌 CCC Secure Share: shop.name')}
+                {FIELD('Rental',       claim.rentalInfo, '🔌 Enterprise ARMS: reservation.summary')}
+              </>
+          }
           <div style={{ fontSize:11,fontWeight:700,color:C.text,textTransform:'uppercase',letterSpacing:'.04em',margin:'14px 0 6px' }}>📝 Notes</div>
           <div style={{ background:C.tblHead,borderRadius:'5px 5px 0 0',padding:'6px 10px',display:'flex',alignItems:'center',gap:5 }}>
             <Search size={13} color="rgba(255,255,255,.6)"/>
@@ -870,7 +1090,7 @@ function PolicyList({ policyNum, onSelect }:{ policyNum:string; onSelect:(c:Poli
       </div>
       <div style={{ overflowX:'auto' }}>
         <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12.5 }}>
-          <thead style={{ background:C.tblHead }}><tr><STH label="Claim Number" col="claimNumber"/><STH label="Insured Name" col="insuredName"/><STH label="Vehicle" col="vehicle"/><STH label="Loss Type" col="lossType"/><STH label="Adjuster" col="adjusterName"/><STH label="Status" col="status"/><STH label="Created" col="createdDate"/></tr></thead>
+          <thead style={{ background:C.tblHead }}><tr><STH label="Claim Number" col="claimNumber"/><STH label="Insured Name" col="insuredName"/><STH label="LOB" col="lobType"/><STH label="Property / Vehicle" col="vehicle"/><STH label="Loss Type" col="lossType"/><STH label="Adjuster" col="adjusterName"/><STH label="Status" col="status"/><STH label="Created" col="createdDate"/></tr></thead>
           <tbody>
             {paged.map((c,i)=>(
               <tr key={i} onClick={()=>onSelect(c)} style={{ background:i%2?C.rowAlt:C.white,cursor:'pointer' }}
@@ -878,7 +1098,15 @@ function PolicyList({ policyNum, onSelect }:{ policyNum:string; onSelect:(c:Poli
                 onMouseLeave={e=>(e.currentTarget as HTMLTableRowElement).style.background=i%2?C.rowAlt:C.white}>
                 <td style={{ padding:'8px 12px',color:C.blue,fontWeight:700 }}>{c.claimNumber}</td>
                 <td style={{ padding:'8px 12px',color:C.text }}>{c.insuredName}</td>
-                <td style={{ padding:'8px 12px',color:C.text }}>{c.vehicle}</td>
+                <td style={{ padding:'8px 12px' }}>
+                  <span style={{ fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,
+                    background:c.lobType==='property'?'#E1F5EE':C.bluePale,
+                    color:c.lobType==='property'?'#0F6E56':C.navy,
+                    border:`1px solid ${c.lobType==='property'?'#9FE1CB':C.blueBorder}` }}>
+                    {c.lobType==='property'?'Property':'Auto'}
+                  </span>
+                </td>
+                <td style={{ padding:'8px 12px',color:C.text,fontSize:11.5 }}>{c.vehicle}</td>
                 <td style={{ padding:'8px 12px',color:C.text }}>{c.lossType}</td>
                 <td style={{ padding:'8px 12px',color:C.text }}>{c.adjusterName}</td>
                 <td style={{ padding:'8px 12px' }}><span style={{ fontSize:11,fontWeight:700,padding:'2px 9px',borderRadius:12,background:c.status==='Open'?C.greenLight:'#F5F5F5',color:c.status==='Open'?'#1B5E20':'#718096',border:`1px solid ${c.status==='Open'?C.greenBorder:'#E0E0E0'}` }}>{c.status}</span></td>
@@ -898,6 +1126,7 @@ function PolicyList({ policyNum, onSelect }:{ policyNum:string; onSelect:(c:Poli
    MAIN PAGE
    ═══════════════════════════════════════════════════════════════ */
 export default function ClaimSearch() {
+export default function ClaimSearch() {
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
   const [searchTab,  setSearchTab]  = useState<'claim'|'policy'>('claim')
@@ -915,7 +1144,7 @@ export default function ClaimSearch() {
     setError(''); reset()
     const c = MOCK_CLAIMS[claimInput.trim()]
     if (c) setFoundClaim(c)
-    else if (claimInput.trim()) setError(`Claim "${claimInput}" not found. Try: ${Object.keys(MOCK_CLAIMS).slice(0,3).join(', ')}`)
+    else if (claimInput.trim()) setError(`Claim "${claimInput}" not found. Try: 000-00-000480 (Auto), 000-00-000750 (Property), or 000-00-000751 (Property-water)`)
     else setError('Please enter a claim number.')
   }
 
@@ -923,7 +1152,7 @@ export default function ClaimSearch() {
     setError(''); reset()
     if (!policyInput.trim()) { setError('Please enter a policy number.'); return }
     if (MOCK_POLICIES[policyInput.trim()]) { setPolicyNum(policyInput.trim()); setShowPolicy(true) }
-    else setError(`Policy "${policyInput}" not found. Try: ${Object.keys(MOCK_POLICIES).join(', ')}`)
+    else setError(`Policy "${policyInput}" not found. Try: 7407354463 (Auto-3 claims), 6601234500 (Property), 9901234567 (Mixed-25 claims)`)
   }
 
   const handlePolicyClaimSelect = (c:PolicyClaim) => {
