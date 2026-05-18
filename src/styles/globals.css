@@ -32,17 +32,17 @@
   }
   /* Old names — keep working */
   .btn-primary {
-    @apply bg-primary text-white hover:bg-primary-bright hover:-translate-y-px;
+    @apply bg-blue text-white hover:bg-blue hover:-translate-y-px;
     box-shadow: 0 4px 16px rgba(2,84,204,.25);
   }
   .btn-ghost {
-    @apply bg-transparent text-slate border border-border hover:border-primary hover:text-primary hover:bg-primary-pale;
+    @apply bg-transparent text-slate border border-border hover:border-blue hover:text-blue hover:bg-blue-light;
   }
   .btn-navy {
-    @apply bg-navy text-white hover:bg-navy-light;
+    @apply bg-navy text-white hover:opacity-90;
   }
   .btn-green {
-    @apply bg-green text-white hover:bg-green-dark hover:-translate-y-px;
+    @apply bg-green text-white hover:opacity-90 hover:-translate-y-px;
     box-shadow: 0 4px 16px rgba(46,177,36,.25);
   }
   /* New accent button — VM Gold */
@@ -76,12 +76,12 @@
   }
 
   /* ── Chips ──────────────────────────────────────────────── */
-  .chip    { @apply text-xs font-semibold px-3 py-1.5 rounded-full border border-border text-slate cursor-pointer transition-all bg-white select-none hover:bg-primary-pale hover:border-primary hover:text-primary; }
-  .chip-on { @apply bg-primary-pale border-primary text-primary; }
+  .chip    { @apply text-xs font-semibold px-3 py-1.5 rounded-full border border-border text-slate cursor-pointer transition-all bg-white select-none hover:bg-blue-light hover:border-primary hover:text-primary; }
+  .chip-on { @apply bg-blue-light border-primary text-primary; }
 
   /* ── Info boxes ─────────────────────────────────────────── */
   .info-box     { @apply flex gap-3 p-3 rounded-xl mb-3.5 items-start text-[12.5px] leading-relaxed; }
-  .info-blue    { @apply bg-primary-pale border border-primary/20 text-navy; }
+  .info-blue    { @apply bg-blue-light border border-blue/20 text-navy; }
   .info-green   { @apply bg-green-light border border-green-mid text-[#064E3B]; }
   .info-amber   { @apply bg-amber-light border border-[#FDE68A] text-[#92400E]; }
   .info-red     { @apply bg-red-light border border-red-mid text-red-dark; }
@@ -92,12 +92,12 @@
   .drop-zone {
     @apply border-2 border-dashed border-border rounded-xl min-h-[115px] flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all bg-bg;
   }
-  .drop-zone:hover { @apply border-primary border-solid bg-primary-pale; }
+  .drop-zone:hover { @apply border-primary border-solid bg-blue-light; }
 
   /* ── Incident / LOB cards ───────────────────────────────── */
   .inc-card      { @apply border border-border rounded-xl p-3.5 cursor-pointer text-center transition-all bg-white relative; }
-  .inc-card:hover { @apply border-primary bg-primary-pale -translate-y-px; }
-  .inc-card-on   { @apply border-primary bg-primary-pale ring-2 ring-primary/10; }
+  .inc-card:hover { @apply border-primary bg-blue-light -translate-y-px; }
+  .inc-card-on   { @apply border-primary bg-blue-light ring-2 ring-blue/10; }
 
   /* ── Step navigation ────────────────────────────────────── */
   .step-nav { @apply flex items-center justify-between pt-5 border-t border-border mt-2; }
@@ -109,7 +109,7 @@
   .toggle-knob { @apply absolute top-[3px] w-[17px] h-[17px] rounded-full bg-white shadow transition-all duration-200; }
 
   /* ── Icon wrapper ───────────────────────────────────────── */
-  .icon-box-blue  { @apply w-10 h-10 rounded-xl bg-primary-pale flex items-center justify-center flex-shrink-0; }
+  .icon-box-blue  { @apply w-10 h-10 rounded-xl bg-blue-light flex items-center justify-center flex-shrink-0; }
   .icon-box-green { @apply w-10 h-10 rounded-xl bg-green-light flex items-center justify-center flex-shrink-0; }
   .icon-box-gold  { @apply w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0; }
   .icon-box-navy  { @apply w-10 h-10 rounded-xl bg-navy flex items-center justify-center flex-shrink-0; }
