@@ -102,7 +102,7 @@ export default function Home() {
     <div className="min-h-screen font-body flex flex-col" style={{ background:'#F5F8FF' }}>
 
       {/* NAV */}
-      <nav className="h-16 bg-primary-deep flex items-center justify-between px-5 md:px-8 sticky top-0 z-40"
+      <nav className="h-16 bg-navy flex items-center justify-between px-5 md:px-8 sticky top-0 z-40"
         style={{ boxShadow:'0 2px 20px rgba(2,64,153,.3)' }}>
         <Link to="/"><VMlogo size="md" variant="full-light" /></Link>
         <div className="flex items-center gap-3">
@@ -128,12 +128,12 @@ export default function Home() {
 
       {/* BRAND PANEL */}
       {showBrand && (
-        <div className="bg-primary-deep border-b border-white/10 px-5 md:px-8 py-4 z-30">
+        <div className="bg-navy border-b border-white/10 px-5 md:px-8 py-4 z-30">
           <div className="text-[11px] font-bold text-white/40 uppercase tracking-widest mb-3">Brand Switcher — Demo Tool</div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(presets).map(([key, p]) => (
               <button key={key} onClick={() => { setLogo(key); setShowBrand(false) }}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-semibold border cursor-pointer transition-all ${logoKey===key?'bg-white text-primary-deep border-white':'bg-transparent text-white/60 border-white/20 hover:border-white/50'}`}>
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-semibold border cursor-pointer transition-all ${logoKey===key?'bg-white text-navy border-white':'bg-transparent text-white/60 border-white/20 hover:border-white/50'}`}>
                 <div className="w-5 h-5 rounded flex items-center justify-center text-[9px] font-black text-white" style={{ background: p.primaryColor }}>{p.initials}</div>
                 {p.name}
               </button>
@@ -143,13 +143,13 @@ export default function Home() {
       )}
 
       {/* HERO */}
-      <div className="bg-primary-deep px-5 md:px-[60px] py-16 md:py-20 relative overflow-hidden">
+      <div className="bg-navy px-5 md:px-[60px] py-16 md:py-20 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none"
           style={{ background:'radial-gradient(ellipse 55% 60% at 75% 35%, rgba(250,189,0,.07) 0%, transparent 65%), radial-gradient(ellipse 40% 40% at 20% 70%, rgba(5,107,252,.1) 0%, transparent 60%)' }} />
         <div className="max-w-[560px] relative z-10">
           <div className="inline-flex items-center gap-2 border border-white/12 rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold text-white/70 mb-6"
             style={{ background:'rgba(250,189,0,.08)', borderColor:'rgba(250,189,0,.2)' }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
             Claims team available 24/7
           </div>
           <h1 className="font-display font-extrabold text-[34px] md:text-[46px] text-white leading-[1.1] mb-4 tracking-tight">
@@ -161,7 +161,7 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-3 mb-8">
             <button onClick={() => navigate('/file-claim')}
-              className="font-bold text-[15px] px-7 py-3.5 rounded-full border-none cursor-pointer transition-all text-primary-deep"
+              className="font-bold text-[15px] px-7 py-3.5 rounded-full border-none cursor-pointer transition-all text-navy"
               style={{ background:'#FABD00', boxShadow:'0 4px 20px rgba(250,189,0,.3)' }}>
               File a Claim
             </button>
@@ -185,39 +185,39 @@ export default function Home() {
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 bg-white border-b border-ui-border">
+      <div className="grid grid-cols-2 md:grid-cols-4 bg-white border-b border-border">
         {[
           { Icon:Clock,        val:'< 2 hrs', label:'Adjuster assigned'      },
           { Icon:Car,          val:'7 Days',  label:'Avg. auto resolution'   },
           { Icon:ThumbsUp,     val:'98.4%',   label:'Customer satisfaction'  },
           { Icon:HeadphonesIcon, val:'24/7',  label:'Claims team available'  },
         ].map(({ Icon, val, label }) => (
-          <div key={label} className="text-center py-8 px-4 border-r border-ui-border last:border-r-0">
+          <div key={label} className="text-center py-8 px-4 border-r border-border last:border-r-0">
             <div className="flex justify-center mb-2">
               <Icon size={18} color="#0254CC" />
             </div>
-            <div className="font-display font-extrabold text-[26px] md:text-[30px] text-primary-deep">{val}</div>
-            <div className="text-[12.5px] text-text-muted mt-1">{label}</div>
+            <div className="font-display font-extrabold text-[26px] md:text-[30px] text-navy">{val}</div>
+            <div className="text-[12.5px] text-muted mt-1">{label}</div>
           </div>
         ))}
       </div>
 
       {/* LOB GRID */}
-      <div className="px-5 md:px-[60px] py-12 bg-white border-b border-ui-border">
-        <h2 className="font-display font-extrabold text-[22px] md:text-[28px] text-text mb-2">What can we help you with?</h2>
-        <p className="text-[14px] text-text-muted mb-8">Select the type of claim to get started.</p>
+      <div className="px-5 md:px-[60px] py-12 bg-white border-b border-border">
+        <h2 className="font-display font-extrabold text-[22px] md:text-[28px] text-navy mb-2">What can we help you with?</h2>
+        <p className="text-[14px] text-muted mb-8">Select the type of claim to get started.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {LOBS.map((lob, i) => (
             <div key={i}
               onClick={() => lob.active && navigate(lob.href)}
-              className={`border border-ui-border rounded-2xl p-6 bg-white transition-all relative ${lob.active ? 'cursor-pointer hover:border-primary hover:bg-primary-pale hover:-translate-y-0.5 shadow-card' : 'opacity-50 cursor-not-allowed'}`}>
-              {!lob.active && <span className="absolute top-3 right-3 text-[10px] bg-ui-bg border border-ui-border text-text-faint px-2 py-px rounded-full font-bold">Coming Soon</span>}
+              className={`border border-border rounded-2xl p-6 bg-white transition-all relative ${lob.active ? 'cursor-pointer hover:border-blue hover:bg-blue-light hover:-translate-y-0.5 shadow-[0_1px_4px_rgba(0,0,0,.06),0_4px_16px_rgba(0,0,0,.08)]' : 'opacity-50 cursor-not-allowed'}`}>
+              {!lob.active && <span className="absolute top-3 right-3 text-[10px] bg-bg border border-border text-faint px-2 py-px rounded-full font-bold">Coming Soon</span>}
               {lob.tag && <span className="absolute top-3 right-3 text-[10px] px-2 py-px rounded-full font-bold" style={{ background:'#EDFAEB', color:'#2EB124', border:'1px solid #A8E4A2' }}>{lob.tag}</span>}
               <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 flex-shrink-0" style={{ background:lob.bg }}>
                 <lob.Icon size={20} color={lob.color} strokeWidth={1.75} />
               </div>
-              <div className="text-[15px] font-bold text-text mb-1">{lob.label}</div>
-              <div className="text-[12.5px] text-text-muted leading-relaxed">{lob.desc}</div>
+              <div className="text-[15px] font-bold text-navy mb-1">{lob.label}</div>
+              <div className="text-[12.5px] text-muted leading-relaxed">{lob.desc}</div>
               {lob.active && (
                 <div className="mt-3 text-[13px] font-bold" style={{ color:'#0254CC' }}>→</div>
               )}
@@ -228,8 +228,8 @@ export default function Home() {
 
       {/* FAQ */}
       <div className="px-5 md:px-[60px] py-14 flex-1" style={{ background:'#F5F8FF' }}>
-        <div className="text-[11.5px] font-bold text-text-muted uppercase tracking-widest mb-2">Frequently Asked Questions</div>
-        <h2 className="font-display font-extrabold text-[24px] md:text-[30px] text-text mb-8">What can we help you with?</h2>
+        <div className="text-[11.5px] font-bold text-muted uppercase tracking-widest mb-2">Frequently Asked Questions</div>
+        <h2 className="font-display font-extrabold text-[24px] md:text-[30px] text-navy mb-8">What can we help you with?</h2>
 
         {/* LOB tabs */}
         <div className="flex flex-wrap gap-2 mb-8">
@@ -238,8 +238,8 @@ export default function Home() {
               onClick={() => { setActiveLOB(tab.id); setOpenFAQ(0) }}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold border cursor-pointer transition-all ${
                 activeLOB === tab.id
-                  ? 'text-white border-primary-deep bg-primary-deep'
-                  : 'bg-white text-text-secondary border-ui-border hover:border-primary hover:text-primary'
+                  ? 'text-white border-navy bg-navy'
+                  : 'bg-white text-slate border-border hover:border-blue hover:text-blue'
               }`}>
               <tab.Icon size={14} strokeWidth={2} />
               {tab.label}
@@ -250,21 +250,21 @@ export default function Home() {
         {/* FAQ accordion */}
         <div className="max-w-[760px]">
           {FAQS[activeLOB].map((item, i) => (
-            <div key={i} className="border-t border-ui-border last:border-b">
+            <div key={i} className="border-t border-border last:border-b">
               <button onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
                 className="w-full flex items-center justify-between py-4 text-left bg-transparent border-none cursor-pointer group">
-                <span className={`text-[14.5px] font-semibold pr-6 leading-snug transition-colors ${openFAQ===i?'text-primary-deep':'text-text-secondary group-hover:text-text'}`}>
+                <span className={`text-[14.5px] font-semibold pr-6 leading-snug transition-colors ${openFAQ===i?'text-navy':'text-slate group-hover:text-navy'}`}>
                   {item.q}
                 </span>
-                <span className={`flex-shrink-0 w-6 h-6 rounded-full border flex items-center justify-center transition-all ${openFAQ===i?'border-primary-deep text-primary-deep':'border-ui-border text-text-muted group-hover:border-primary group-hover:text-primary'}`}>
+                <span className={`flex-shrink-0 w-6 h-6 rounded-full border flex items-center justify-center transition-all ${openFAQ===i?'border-navy text-navy':'border-border text-muted group-hover:border-blue group-hover:text-blue'}`}>
                   {openFAQ===i ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                 </span>
               </button>
               {openFAQ === i && (
                 <div className="pb-5 pr-10">
-                  <p className="text-[13.5px] text-text-secondary leading-[1.75]">{item.a}</p>
+                  <p className="text-[13.5px] text-slate leading-[1.75]">{item.a}</p>
                   <button onClick={() => navigate('/file-claim')}
-                    className="mt-4 text-[12.5px] font-bold text-primary hover:underline bg-transparent border-none cursor-pointer">
+                    className="mt-4 text-[12.5px] font-bold text-blue hover:underline bg-transparent border-none cursor-pointer">
                     File a {LOB_TABS.find(t => t.id === activeLOB)?.label} claim →
                   </button>
                 </div>
@@ -273,7 +273,7 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-3 mt-8 max-w-[760px] pt-6 border-t border-ui-border">
+        <div className="flex flex-wrap gap-3 mt-8 max-w-[760px] pt-6 border-t border-border">
           <button onClick={() => setChatOpen(true)}
             className="btn btn-primary flex items-center gap-2 text-[13px]">
             <MessageSquare size={14} />Chat with us
@@ -291,20 +291,20 @@ export default function Home() {
 
       {/* CHAT */}
       <button onClick={() => setChatOpen(v => !v)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center text-primary-deep border-none cursor-pointer transition-all z-50"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center text-navy border-none cursor-pointer transition-all z-50"
         style={{ background:'#FABD00', boxShadow:'0 4px 20px rgba(250,189,0,.4)' }}>
         {chatOpen ? <ChevronDown size={22} color="#024099" /> : <MessageSquare size={22} color="#024099" />}
       </button>
 
       {chatOpen && (
-        <div className="fixed bottom-24 right-6 w-[320px] bg-white rounded-2xl z-50 flex flex-col overflow-hidden border border-ui-border"
+        <div className="fixed bottom-24 right-6 w-[320px] bg-white rounded-2xl z-50 flex flex-col overflow-hidden border border-border"
           style={{ boxShadow:'0 8px 40px rgba(2,64,153,.18)' }}>
-          <div className="bg-primary-deep px-4 py-3 flex items-center gap-3">
+          <div className="bg-navy px-4 py-3 flex items-center gap-3">
             <VMlogo size="sm" />
             <div>
               <div className="text-[13px] font-bold text-white">Claims Assistant</div>
-              <div className="flex items-center gap-1.5 text-[11px] text-success-bright">
-                <span className="w-1.5 h-1.5 rounded-full bg-success-bright animate-pulse" />Online
+              <div className="flex items-center gap-1.5 text-[11px] text-green">
+                <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />Online
               </div>
             </div>
             <button onClick={() => setChatOpen(false)} className="ml-auto text-white/40 hover:text-white bg-transparent border-none cursor-pointer text-[18px]">×</button>
@@ -312,18 +312,18 @@ export default function Home() {
           <div className="flex flex-col gap-3 p-3.5 max-h-[220px] overflow-y-auto" style={{ background:'#F5F8FF' }}>
             {chatHistory.map((m,i) => (
               <div key={i} className={`max-w-[85%] ${m.from==='user'?'self-end':'self-start'}`}>
-                <div className={`px-3.5 py-2.5 rounded-xl text-[12.5px] leading-relaxed ${m.from==='agent'?'bg-white border border-ui-border text-text':'bg-primary-deep text-white/90'}`}>{m.text}</div>
+                <div className={`px-3.5 py-2.5 rounded-xl text-[12.5px] leading-relaxed ${m.from==='agent'?'bg-white border border-border text-navy':'bg-navy text-white/90'}`}>{m.text}</div>
               </div>
             ))}
           </div>
-          <div className="flex gap-2 p-3 border-t border-ui-border">
+          <div className="flex gap-2 p-3 border-t border-border">
             <input value={chatMsg} onChange={e => setChatMsg(e.target.value)}
               onKeyDown={e => e.key==='Enter' && sendChat()}
               placeholder="Type a message…"
-              className="flex-1 text-[12.5px] border border-ui-border rounded-lg px-3 py-2 outline-none font-body text-text"
+              className="flex-1 text-[12.5px] border border-border rounded-lg px-3 py-2 outline-none font-body text-navy"
               style={{ background:'#F5F8FF' }} />
             <button onClick={sendChat}
-              className="text-primary-deep border-none rounded-lg px-3 py-2 cursor-pointer text-[12px] font-bold"
+              className="text-navy border-none rounded-lg px-3 py-2 cursor-pointer text-[12px] font-bold"
               style={{ background:'#FABD00' }}>Send</button>
           </div>
         </div>
