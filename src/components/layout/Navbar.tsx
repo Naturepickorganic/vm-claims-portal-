@@ -8,7 +8,7 @@ interface NavbarProps {
 
 export default function Navbar({ crumb, secondCrumb }: NavbarProps) {
   return (
-    <nav className="h-[60px] bg-primary-deep flex items-center justify-between px-4 md:px-7 sticky top-0 z-50"
+    <nav className="h-[60px] bg-navy flex items-center justify-between px-4 md:px-7 sticky top-0 z-50"
       style={{ boxShadow:'0 2px 20px rgba(2,64,153,.3)' }}>
 
       <Link to="/" className="flex items-center">
@@ -30,7 +30,7 @@ export default function Navbar({ crumb, secondCrumb }: NavbarProps) {
           Secure
         </div>
         <div className="hidden md:flex items-center gap-1.5 text-[11px] text-white/30">
-          <span className="w-1.5 h-1.5 rounded-full bg-success-bright animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
           Progress saved
         </div>
         <Link to="/" className="text-[12px] text-white/40 hover:text-white/70 transition-colors">
