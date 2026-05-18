@@ -1335,7 +1335,6 @@ function PolicyList({ policyNum, onSelect }:{ policyNum:string; onSelect:(c:Poli
    MAIN PAGE
    ═══════════════════════════════════════════════════════════════ */
 export default function ClaimSearch() {
-export default function ClaimSearch() {
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
   const [searchTab,  setSearchTab]  = useState<'claim'|'policy'>('claim')
