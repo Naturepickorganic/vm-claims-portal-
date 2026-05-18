@@ -288,19 +288,45 @@ function ClaimTracker({ claim }: { claim: ClaimData }) {
 
   return (
     <div style={{ background:C.white, borderBottom:`1px solid ${C.border}`, padding:'14px 20px 12px' }}>
-      {/* Status bubble */}
-      <div style={{ display:'flex', gap:10, background: isClosed ? '#F0FFF4' : C.greenLight,
-        border:`1px solid ${isClosed ? '#86EFAC' : C.greenBorder}`, borderRadius:8,
-        padding:'10px 14px', marginBottom:12, alignItems:'flex-start' }}>
-        <div style={{ width:24, height:24, borderRadius:'50%', background:C.green, color:C.white,
-          display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0, marginTop:1 }}>✓</div>
-        <div>
-          <div style={{ fontSize:12.5, fontWeight:700, color:'#1B5E20', marginBottom:2 }}>
-            {isClosed ? 'Claim closed successfully' : 'You\'re on track — no action needed'}
+      {/* Status card — gradient banner */}
+      {(() => {
+        const isAmber  = false // 🔌 set true when action needed from GW/vendor data
+        const bg       = isClosed ? 'linear-gradient(135deg,#1A2744 0%,#1E3A6B 60%,#24488A 100%)'
+                       : isAmber  ? 'linear-gradient(135deg,#7C3A00 0%,#B85A00 60%,#D97706 100%)'
+                       :            'linear-gradient(135deg,#0A5C2E 0%,#1B8A4B 60%,#25A85C 100%)'
+        const icon     = isClosed ? '🎉' : isAmber ? '⚡' : '✓'
+        const title    = isClosed ? 'Claim fully resolved'
+                       : isAmber  ? 'Action needed — please review'
+                       : "You're on track — no action needed"
+        const etaLabel = isClosed ? 'Claim closed' : 'Est. completion May 28'
+        return (
+          <div style={{ background:bg, borderRadius:12, padding:'14px 18px', marginBottom:12,
+            position:'relative', overflow:'hidden', display:'flex', alignItems:'center', gap:16,
+            boxShadow:'0 4px 16px rgba(0,0,0,.15)' }}>
+            {[{w:120,h:120,t:-40,r:120,b:undefined},{w:80,h:80,t:undefined,b:-30,r:60},{w:60,h:60,t:-20,b:undefined,r:20}].map((c,i)=>(
+              <div key={i} style={{ position:'absolute', borderRadius:'50%', background:'rgba(255,255,255,.07)',
+                width:c.w, height:c.h, top:c.t, bottom:c.b, right:c.r, pointerEvents:'none' as const }} />
+            ))}
+            <div style={{ width:50, height:50, borderRadius:'50%', flexShrink:0, zIndex:1,
+              background:'rgba(255,255,255,.15)', border:'2px solid rgba(255,255,255,.3)',
+              display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>{icon}</div>
+            <div style={{ flex:1, zIndex:1, minWidth:0 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:'#fff', marginBottom:3 }}>{title}</div>
+              <div style={{ fontSize:12, color:'rgba(255,255,255,.85)', lineHeight:1.55 }}>{claim.statusMsg}</div>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column' as const, alignItems:'flex-end', gap:6, zIndex:1, flexShrink:0 }}>
+              <div style={{ background:'rgba(255,255,255,.15)', border:'1px solid rgba(255,255,255,.3)',
+                borderRadius:20, padding:'4px 12px', fontSize:11, fontWeight:700, color:'#fff', whiteSpace:'nowrap' as const }}>
+                {etaLabel}
+              </div>
+              <div style={{ textAlign:'right' as const }}>
+                <div style={{ fontSize:22, fontWeight:800, color:'rgba(255,255,255,.95)', lineHeight:1 }}>{claim.progressPct}%</div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,.6)', marginTop:2 }}>Complete</div>
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize:11.5, color:'#2E7D32', lineHeight:1.5 }}>{claim.statusMsg}</div>
-        </div>
-      </div>
+        )
+      })()}      </div>
 
       <div style={{ fontSize:10, fontWeight:700, color:C.faint, letterSpacing:'.1em', textTransform:'uppercase', marginBottom:8 }}>
         Claim Progress
@@ -396,7 +422,7 @@ function ClaimDetail({ claim }: { claim: ClaimData }) {
   const orderedTl   = tlSort === 'latest' ? [...completedTl, ...upcomingTl] : [...upcomingTl, ...completedTl]
 
   const dotColor = (s: TimelineEvent['status']) =>
-    s === 'done' ? C.green : s === 'active' ? C.navy : '#DDE3EA'
+    s === 'done' ? C.green : s === 'active' ? C.navy : 'transparent'
   const badgeStyle = (s: TimelineEvent['status']): React.CSSProperties => ({
     display:'inline-flex', fontSize:9.5, fontWeight:700, padding:'1px 7px', borderRadius:10, marginTop:3,
     background: s==='done'?C.greenLight : s==='active'?C.bluePale : '#F5F5F5',
@@ -519,29 +545,34 @@ function ClaimDetail({ claim }: { claim: ClaimData }) {
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', width:14, flexShrink:0 }}>
                     <div style={{ width:9, height:9, borderRadius:'50%', marginTop:4, flexShrink:0,
                       background: dotColor(evt.status),
+                      border: isPend ? '2px solid #4A8FD4' : 'none',
                       boxShadow: isActive ? `0 0 0 3px rgba(2,64,153,.2)` : 'none' }} />
                     {i < orderedTl.length-1 && (
-                      <div style={{ width:1.5, flex:1, marginTop:3,
-                        background: evt.status==='done'?C.green : isActive?`linear-gradient(${C.navy},#DDE3EA)`:'#DDE3EA' }} />
+                      <div style={{ width:2, flex:1, marginTop:3,
+                        background: evt.status==='done' ? C.green
+                          : isActive ? `linear-gradient(${C.navy},#93C5FD)`
+                          : isPend   ? 'repeating-linear-gradient(to bottom,#93C5FD 0,#93C5FD 4px,transparent 4px,transparent 8px)'
+                          : '#DDE3EA' }} />
                     )}
                   </div>
                   {/* Content */}
-                  <div style={{ flex:1, ...(isActive ? {
-                    background:C.bluePale, borderRadius:7, padding:'8px 10px', margin:'-2px -4px'
-                  } : {}) }}>
-                    <div style={{ fontSize:9.5, fontWeight:700, textTransform:'uppercase', letterSpacing:'.05em',
-                      color: isPend ? '#B0BEC5' : catColor(evt.category), marginBottom:1 }}>
-                      {evt.category}
+                  <div style={{ flex:1,
+                    ...(isActive ? { background:C.bluePale, borderRadius:7, padding:'8px 10px', margin:'-2px -4px' } : {}),
+                    ...(isPend  ? { background:'#F8FBFF', borderRadius:7, padding:'6px 8px', margin:'-2px -4px', borderLeft:'3px solid #93C5FD' } : {}),
+                  }}>
+                    <div style={{ fontSize:9.5, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'.05em',
+                      color: isPend ? '#2563EB' : catColor(evt.category), marginBottom:1 }}>
+                      {evt.category}{isPend ? ' · Upcoming' : ''}
                     </div>
-                    <div style={{ fontSize:12, fontWeight: isPend?500:600,
-                      color: isActive?C.navy : isPend?'#B0BEC5':C.text, lineHeight:1.3, marginBottom:1 }}>
+                    <div style={{ fontSize:12, fontWeight:600,
+                      color: isActive?C.navy : isPend?'#1E40AF':C.text, lineHeight:1.3, marginBottom:1 }}>
                       {evt.title}
                     </div>
-                    <div style={{ fontSize:11, color: isActive?C.blue : isPend?'#C5CDD8':C.mid, lineHeight:1.4 }}>
+                    <div style={{ fontSize:11, color: isActive?C.blue : isPend?'#3B5998':C.mid, lineHeight:1.4 }}>
                       {evt.sub}
                     </div>
-                    <div style={{ fontSize:10, color: isActive?'#6B8EC7' : C.faint, marginTop:2 }}>{evt.date}</div>
-                    <span style={badgeStyle(evt.status)}>{evt.badge}</span>
+                    <div style={{ fontSize:10, color: isActive?'#6B8EC7' : isPend?'#60A5FA':C.faint, marginTop:2 }}>{evt.date}</div>
+                    <span style={badgeStyle(evt.status)}>{isPend ? '⏳ Scheduled' : evt.badge}</span>
                   </div>
                 </div>
                 {showDiv && (
@@ -842,31 +873,6 @@ export default function ClaimSearch() {
               <li key={b} style={{ fontSize:12.5, color:C.muted, marginBottom:2 }}>{b}</li>
             ))}
           </ul>
-
-          {/* Demo hints */}
-          <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:8, padding:'10px 14px', marginBottom:14 }}>
-            <div style={{ fontSize:11, fontWeight:700, color:'#92400E', marginBottom:6 }}>Demo — Try these sample claims &amp; policies:</div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              <div>
-                <div style={{ fontSize:10.5, fontWeight:700, color:'#92400E', marginBottom:3 }}>CLAIM NUMBERS:</div>
-                {DEMO_CLAIMS.map(d=>(
-                  <div key={d.num} onClick={()=>{setSearchTab('claim');setClaimInput(d.num)}}
-                    style={{ fontSize:11.5, color:C.blue, cursor:'pointer', marginBottom:2, fontWeight:500 }}>
-                    <strong>{d.num}</strong> — {d.label}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div style={{ fontSize:10.5, fontWeight:700, color:'#92400E', marginBottom:3 }}>POLICY NUMBERS:</div>
-                {DEMO_POLICIES.map(d=>(
-                  <div key={d.num} onClick={()=>{setSearchTab('policy');setPolicyInput(d.num)}}
-                    style={{ fontSize:11.5, color:C.blue, cursor:'pointer', marginBottom:2, fontWeight:500 }}>
-                    <strong>{d.num}</strong> — {d.label}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
           {/* Search tabs */}
           <div style={{ display:'flex', borderBottom:`1px solid ${C.border}`, marginBottom:14 }}>
