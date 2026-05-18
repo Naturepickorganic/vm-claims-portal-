@@ -44,17 +44,17 @@ const CERTS = [
 export default function Footer() {
   const year = new Date().getFullYear()
   return (
-    <footer className="bg-primary-deep border-t border-white/8">
+    <footer className="bg-navy border-t border-white/10">
 
       {/* Emergency bar — VM Gold */}
       <div className="px-5 md:px-[60px] py-3.5 flex flex-col sm:flex-row items-center justify-between gap-2"
         style={{ background:'#FABD00' }}>
-        <div className="flex items-center gap-2.5 text-primary-deep text-[13px] font-bold">
+        <div className="flex items-center gap-2.5 text-navy text-[13px] font-bold">
           <AlertTriangle size={16} />
           24/7 Claims Emergency Line
         </div>
         <a href="tel:18008262534"
-          className="font-black text-[16px] text-primary-deep hover:opacity-80 transition-opacity"
+          className="font-black text-[16px] text-navy hover:opacity-80 transition-opacity"
           style={{ fontFamily:'DM Sans, sans-serif' }}>
           1-800-VM-CLAIMS
         </a>
@@ -102,7 +102,7 @@ export default function Footer() {
         </div>
 
         {/* Certifications */}
-        <div className="flex flex-wrap gap-2.5 mb-8 pt-8 border-t border-white/8">
+        <div className="flex flex-wrap gap-2.5 mb-8 pt-8 border-t border-white/10">
           {CERTS.map(c => (
             <div key={c.label}
               className="flex items-center gap-1.5 text-[11px] text-white/35 border border-white/10 px-3 py-1.5 rounded-full">
@@ -115,7 +115,7 @@ export default function Footer() {
         </div>
 
         {/* Legal disclaimer */}
-        <div className="bg-white/4 border border-white/8 rounded-xl p-4 mb-6">
+        <div className="bg-white/4 border border-white/10 rounded-xl p-4 mb-6">
           <p className="text-[11px] text-white/25 leading-relaxed">
             <strong className="text-white/35">Legal Disclaimer:</strong>{' '}
             Coverage availability and claim outcomes are subject to the terms, conditions, and exclusions of your
