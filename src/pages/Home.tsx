@@ -102,7 +102,7 @@ export default function Home() {
     <div className="min-h-screen font-body flex flex-col" style={{ background:'#F5F8FF' }}>
 
       {/* NAV */}
-      <nav className="h-16 bg-navy flex items-center justify-between px-5 md:px-8 sticky top-0 z-40"
+      <nav className="h-16 flex items-center justify-between px-5 md:px-8 sticky top-0 z-40" style={{ background:'#024099', boxShadow:'0 2px 20px rgba(2,64,153,.3)' }}
         style={{ boxShadow:'0 2px 20px rgba(2,64,153,.3)' }}>
         <Link to="/"><VMlogo size="md" variant="full-light" /></Link>
         <div className="flex items-center gap-3">
@@ -128,7 +128,7 @@ export default function Home() {
 
       {/* BRAND PANEL */}
       {showBrand && (
-        <div className="bg-navy border-b border-white/10 px-5 md:px-8 py-4 z-30">
+        <div className="border-b border-white/10 px-5 md:px-8 py-4 z-30" style={{ background:'#024099' }}>
           <div className="text-[11px] font-bold text-white/40 uppercase tracking-widest mb-3">Brand Switcher — Demo Tool</div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(presets).map(([key, p]) => (
@@ -143,7 +143,7 @@ export default function Home() {
       )}
 
       {/* HERO */}
-      <div className="bg-navy px-5 md:px-[60px] py-16 md:py-20 relative overflow-hidden">
+      <div className="px-5 md:px-[60px] py-16 md:py-20 relative overflow-hidden" style={{ background:'#024099' }}>
         <div className="absolute inset-0 pointer-events-none"
           style={{ background:'radial-gradient(ellipse 55% 60% at 75% 35%, rgba(250,189,0,.07) 0%, transparent 65%), radial-gradient(ellipse 40% 40% at 20% 70%, rgba(5,107,252,.1) 0%, transparent 60%)' }} />
         <div className="max-w-[560px] relative z-10">
@@ -182,24 +182,6 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* STATS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 bg-white border-b border-border">
-        {[
-          { Icon:Clock,        val:'< 2 hrs', label:'Adjuster assigned'      },
-          { Icon:Car,          val:'7 Days',  label:'Avg. auto resolution'   },
-          { Icon:ThumbsUp,     val:'98.4%',   label:'Customer satisfaction'  },
-          { Icon:HeadphonesIcon, val:'24/7',  label:'Claims team available'  },
-        ].map(({ Icon, val, label }) => (
-          <div key={label} className="text-center py-8 px-4 border-r border-border last:border-r-0">
-            <div className="flex justify-center mb-2">
-              <Icon size={18} color="#0254CC" />
-            </div>
-            <div className="font-display font-extrabold text-[26px] md:text-[30px] text-navy">{val}</div>
-            <div className="text-[12.5px] text-muted mt-1">{label}</div>
-          </div>
-        ))}
       </div>
 
       {/* LOB GRID */}
