@@ -345,7 +345,7 @@ function ClaimTracker({ claim }: { claim: ClaimData }) {
   return (
     <div style={{ background:C.white, borderBottom:`1px solid ${C.border}`, padding:'14px 20px 12px' }}>
       {/* Status card — gradient banner */}
-      <StatusCard claim={claim} isClosed={isClosed} />      </div>
+      <StatusCard claim={claim} isClosed={isClosed} />
 
       <div style={{ fontSize:10, fontWeight:700, color:C.faint, letterSpacing:'.1em', textTransform:'uppercase', marginBottom:8 }}>
         Claim Progress
