@@ -618,7 +618,7 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
   /* ── AUTO 10: Diana Torres — Chevy Tahoe — Police report, QC fail, deductible at shop — STEEL ── */
   '000-00-000830': {
     claimNumber:'000-00-000830', insuredName:'Diana Torres',
-    policyNumber:'5504321098', claimStatus:'Closed', statusType:'closed', lobType:'auto' as LobType,
+    policyNumber:'5504321098', claimStatus:'Closed', statusType:'closed', lobType:'auto' as const,
     adjusterName:'Carlos Mendez', adjusterPhone:'(214) 555-0261',
     reporterName:'Diana Torres', reportedType:'Self / Insured',
     reportedDate:'2025-03-10', vehicle:'2023 Chevrolet Tahoe LT 4WD',
@@ -673,7 +673,7 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
   /* ── PROPERTY 4: Michael & Susan Park — Hail + Ordinance & Law, ROR, XactAnalysis — GREEN ── */
   '000-00-000831': {
     claimNumber:'000-00-000831', insuredName:'Michael & Susan Park',
-    policyNumber:'8803210099', claimStatus:'Open', statusType:'on-track', lobType:'property' as LobType,
+    policyNumber:'8803210099', claimStatus:'Open', statusType:'on-track', lobType:'property' as const,
     adjusterName:'Rachel Kim', adjusterPhone:'(214) 555-0277',
     reporterName:'Michael Park', reportedType:'Self / Insured',
     reportedDate:'2025-03-22', vehicle:'N/A — Property Claim',
@@ -740,7 +740,7 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
   /* ── PROPERTY 5: Elena Vasquez — Water (frozen pipe) + Contents + ALE closed — STEEL ── */
   '000-00-000832': {
     claimNumber:'000-00-000832', insuredName:'Elena Vasquez',
-    policyNumber:'3302198700', claimStatus:'Closed', statusType:'closed', lobType:'property' as LobType,
+    policyNumber:'3302198700', claimStatus:'Closed', statusType:'closed', lobType:'property' as const,
     adjusterName:'David Nguyen', adjusterPhone:'(214) 555-0288',
     reporterName:'Elena Vasquez', reportedType:'Self / Insured',
     reportedDate:'2025-01-19', vehicle:'N/A — Property Claim',
@@ -836,25 +836,11 @@ const MOCK_POLICIES: Record<string,PolicyClaim[]> = {
       status:'Closed', createdDate:`2024-${String(Math.floor(i/3)+1).padStart(2,'0')}-${String((i%28)+1).padStart(2,'0')}`,
       vehicle:['2023 Tesla Model 3','2022 BMW X5','2021 Audi A4'][i%3],
       lossType:['Collision','Hail','Glass','Collision','Hail'][i%5],
-      lobType:'auto' as LobType,
+      lobType:'auto' as const,
     })),
   ],
 }
 
-const DEMO_CLAIMS  = [
-  { num:'000-00-000480', desc:'Rosario — CR-V — Repair In Progress + Rental (Green card)' },
-  { num:'000-00-000521', desc:'Marcus  — F-150 — Hail, Action Needed (Amber card)'         },
-  { num:'000-00-000612', desc:'Jennifer — Camry — Total Loss, Fully Closed (Steel card)'   },
-  { num:'000-00-006000', desc:'David — Tesla — EV Repair, Step 5/8 (Green card)'           },
-  { num:'000-00-006001', desc:'David — BMW X5 — Hail, Closed (Steel card)'                 },
-  { num:'000-00-006002', desc:'David — Audi A4 — Glass, Closed (Steel card)'               },
-]
-const DEMO_POLICIES = [
-  { num:'7407354463', desc:'Rosario Marinello — 3 claims (1 open, 2 closed)' },
-  { num:'8812047291', desc:'Marcus T. Williams — 2 claims (1 open, 1 closed)' },
-  { num:'5503819042', desc:'Jennifer K. Okafor — 1 claim (closed)'            },
-  { num:'9901234567', desc:'David Chen — 25 claims (pagination demo)'          },
-]
 
 /* ═══════════════════════════════════════════════════════════════
    PAGINATION
@@ -1109,8 +1095,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
         <div style={{ overflowY:'auto',flex:1,padding:'8px 14px' }}>
           {ordTl.map((evt,i)=>{
             const isPend=evt.status==='upcoming', isAct=evt.status==='active'
-            const next=ordTl[i+1]
-            const showDiv = ordTl[i-1]?.status==='done' && evt.status==='active' || ordTl[i-1]?.status==='active' && evt.status==='upcoming'
+                        const showDiv = (ordTl[i-1]?.status==='done' && evt.status==='active') || (ordTl[i-1]?.status==='active' && evt.status==='upcoming')
             return (
               <div key={evt.id}>
                 <div style={{ display:'flex',gap:8,padding:'9px 0',borderBottom:i<ordTl.length-1?`1px solid ${C.bg}`:'none' }}>
@@ -1384,7 +1369,7 @@ export default function ClaimSearch() {
     const full = MOCK_CLAIMS[c.claimNumber]
     if (full) { setSelClaim(full); setShowPolicy(false) }
     else {
-      setSelClaim({ claimNumber:c.claimNumber, insuredName:c.insuredName, policyNumber:policyInput, claimStatus:c.status, statusType:c.status==='Closed'?'closed':'on-track', lobType:c.lobType||'auto' as LobType, adjusterName:c.adjusterName, adjusterPhone:'—', reporterName:c.insuredName, reportedType:'Self / Insured', reportedDate:c.createdDate, vehicle:c.vehicle, dateOfLoss:c.createdDate, lossType:c.lossType, repairShop:'—', rentalInfo:'—', activeStep:c.status==='Closed'?8:3, progressPct:c.status==='Closed'?100:30, statusMsg:c.status==='Closed'?'This claim is closed. Contact your adjuster for full details.':'Your claim is in progress. Contact your adjuster for details.', notes:[], payments:[], contacts:[], services:[], timeline:[] })
+      setSelClaim({ claimNumber:c.claimNumber, insuredName:c.insuredName, policyNumber:policyInput, claimStatus:c.status, statusType:c.status==='Closed'?'closed':'on-track', lobType:(c.lobType || 'auto') as LobType, adjusterName:c.adjusterName, adjusterPhone:'—', reporterName:c.insuredName, reportedType:'Self / Insured', reportedDate:c.createdDate, vehicle:c.vehicle, dateOfLoss:c.createdDate, lossType:c.lossType, repairShop:'—', rentalInfo:'—', activeStep:c.status==='Closed'?8:3, progressPct:c.status==='Closed'?100:30, statusMsg:c.status==='Closed'?'This claim is closed. Contact your adjuster for full details.':'Your claim is in progress. Contact your adjuster for details.', notes:[], payments:[], contacts:[], services:[], timeline:[] })
       setShowPolicy(false)
     }
   }
