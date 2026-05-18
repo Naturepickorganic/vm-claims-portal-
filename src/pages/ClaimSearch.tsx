@@ -281,6 +281,62 @@ function Pagination({ total, page, pageSize, pageSizeOpts, onPage, onPageSize }:
 /* ═══════════════════════════════════════════════════════════════
    DOMINO PROGRESS TRACKER
    ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   STATUS CARD COMPONENT
+   ═══════════════════════════════════════════════════════════════ */
+function StatusCard({ claim, isClosed }: { claim: ClaimData; isClosed: boolean }) {
+  const isAmber  = false // 🔌 set true when action needed from GW/vendor data
+  const bg       = isClosed
+    ? 'linear-gradient(135deg,#1A2744 0%,#1E3A6B 60%,#24488A 100%)'
+    : isAmber
+    ? 'linear-gradient(135deg,#7C3A00 0%,#B85A00 60%,#D97706 100%)'
+    : 'linear-gradient(135deg,#0A5C2E 0%,#1B8A4B 60%,#25A85C 100%)'
+  const icon     = isClosed ? '🎉' : isAmber ? '⚡' : '✓'
+  const title    = isClosed
+    ? 'Claim fully resolved'
+    : isAmber
+    ? 'Action needed — please review'
+    : "You're on track — no action needed"
+  const etaLabel = isClosed ? 'Claim closed' : 'Est. completion May 28'
+
+  const circles = [
+    { w:120, h:120, top:-40,        bottom:'auto', right:120 },
+    { w:80,  h:80,  top:'auto',     bottom:-30,    right:60  },
+    { w:60,  h:60,  top:-20,        bottom:'auto', right:20  },
+  ]
+
+  return (
+    <div style={{ background:bg, borderRadius:12, padding:'14px 18px', marginBottom:12,
+      position:'relative', overflow:'hidden', display:'flex', alignItems:'center', gap:16,
+      boxShadow:'0 4px 16px rgba(0,0,0,.15)' }}>
+      {circles.map((c,i) => (
+        <div key={i} style={{ position:'absolute', borderRadius:'50%',
+          background:'rgba(255,255,255,.07)', width:c.w, height:c.h,
+          top:c.top as number, bottom:c.bottom as number, right:c.right, pointerEvents:'none' }} />
+      ))}
+      <div style={{ width:50, height:50, borderRadius:'50%', flexShrink:0, zIndex:1,
+        background:'rgba(255,255,255,.15)', border:'2px solid rgba(255,255,255,.3)',
+        display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>
+        {icon}
+      </div>
+      <div style={{ flex:1, zIndex:1, minWidth:0 }}>
+        <div style={{ fontSize:14, fontWeight:700, color:'#fff', marginBottom:3 }}>{title}</div>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,.85)', lineHeight:1.55 }}>{claim.statusMsg}</div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6, zIndex:1, flexShrink:0 }}>
+        <div style={{ background:'rgba(255,255,255,.15)', border:'1px solid rgba(255,255,255,.3)',
+          borderRadius:20, padding:'4px 12px', fontSize:11, fontWeight:700, color:'#fff', whiteSpace:'nowrap' }}>
+          {etaLabel}
+        </div>
+        <div style={{ textAlign:'right' }}>
+          <div style={{ fontSize:22, fontWeight:800, color:'rgba(255,255,255,.95)', lineHeight:1 }}>{claim.progressPct}%</div>
+          <div style={{ fontSize:10, color:'rgba(255,255,255,.6)', marginTop:2 }}>Complete</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ClaimTracker({ claim }: { claim: ClaimData }) {
   const isOpen   = claim.claimStatus === 'Open'
   const isClosed = claim.claimStatus === 'Closed'
@@ -289,44 +345,7 @@ function ClaimTracker({ claim }: { claim: ClaimData }) {
   return (
     <div style={{ background:C.white, borderBottom:`1px solid ${C.border}`, padding:'14px 20px 12px' }}>
       {/* Status card — gradient banner */}
-      {(() => {
-        const isAmber  = false // 🔌 set true when action needed from GW/vendor data
-        const bg       = isClosed ? 'linear-gradient(135deg,#1A2744 0%,#1E3A6B 60%,#24488A 100%)'
-                       : isAmber  ? 'linear-gradient(135deg,#7C3A00 0%,#B85A00 60%,#D97706 100%)'
-                       :            'linear-gradient(135deg,#0A5C2E 0%,#1B8A4B 60%,#25A85C 100%)'
-        const icon     = isClosed ? '🎉' : isAmber ? '⚡' : '✓'
-        const title    = isClosed ? 'Claim fully resolved'
-                       : isAmber  ? 'Action needed — please review'
-                       : "You're on track — no action needed"
-        const etaLabel = isClosed ? 'Claim closed' : 'Est. completion May 28'
-        return (
-          <div style={{ background:bg, borderRadius:12, padding:'14px 18px', marginBottom:12,
-            position:'relative', overflow:'hidden', display:'flex', alignItems:'center', gap:16,
-            boxShadow:'0 4px 16px rgba(0,0,0,.15)' }}>
-            {[{w:120,h:120,t:-40,r:120,b:undefined},{w:80,h:80,t:undefined,b:-30,r:60},{w:60,h:60,t:-20,b:undefined,r:20}].map((c,i)=>(
-              <div key={i} style={{ position:'absolute', borderRadius:'50%', background:'rgba(255,255,255,.07)',
-                width:c.w, height:c.h, top:c.t, bottom:c.b, right:c.r, pointerEvents:'none' as const }} />
-            ))}
-            <div style={{ width:50, height:50, borderRadius:'50%', flexShrink:0, zIndex:1,
-              background:'rgba(255,255,255,.15)', border:'2px solid rgba(255,255,255,.3)',
-              display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>{icon}</div>
-            <div style={{ flex:1, zIndex:1, minWidth:0 }}>
-              <div style={{ fontSize:14, fontWeight:700, color:'#fff', marginBottom:3 }}>{title}</div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,.85)', lineHeight:1.55 }}>{claim.statusMsg}</div>
-            </div>
-            <div style={{ display:'flex', flexDirection:'column' as const, alignItems:'flex-end', gap:6, zIndex:1, flexShrink:0 }}>
-              <div style={{ background:'rgba(255,255,255,.15)', border:'1px solid rgba(255,255,255,.3)',
-                borderRadius:20, padding:'4px 12px', fontSize:11, fontWeight:700, color:'#fff', whiteSpace:'nowrap' as const }}>
-                {etaLabel}
-              </div>
-              <div style={{ textAlign:'right' as const }}>
-                <div style={{ fontSize:22, fontWeight:800, color:'rgba(255,255,255,.95)', lineHeight:1 }}>{claim.progressPct}%</div>
-                <div style={{ fontSize:10, color:'rgba(255,255,255,.6)', marginTop:2 }}>Complete</div>
-              </div>
-            </div>
-          </div>
-        )
-      })()}      </div>
+      <StatusCard claim={claim} isClosed={isClosed} />      </div>
 
       <div style={{ fontSize:10, fontWeight:700, color:C.faint, letterSpacing:'.1em', textTransform:'uppercase', marginBottom:8 }}>
         Claim Progress
