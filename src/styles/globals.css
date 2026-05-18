@@ -19,113 +19,101 @@
 
   /* ── Cards ─────────────────────────────────────────────── */
   .card {
-    @apply bg-white border border-ui-border rounded-2xl p-6 mb-4;
+    @apply bg-white border border-border rounded-2xl p-6 mb-4;
     box-shadow: 0 1px 4px rgba(2,64,153,.06), 0 4px 16px rgba(2,64,153,.08);
   }
   .card-title {
-    @apply text-[13.5px] font-bold text-text flex items-center gap-2;
+    @apply text-[13.5px] font-bold text-navy flex items-center gap-2;
   }
 
-  /* ── Buttons ────────────────────────────────────────────── */
+  /* ── Buttons ── (both old and new names work) ───────────── */
   .btn {
     @apply inline-flex items-center gap-2 font-semibold text-[13px] px-5 py-2.5 rounded-xl cursor-pointer border-none transition-all duration-200;
   }
+  /* Old names — keep working */
   .btn-primary {
     @apply bg-primary text-white hover:bg-primary-bright hover:-translate-y-px;
     box-shadow: 0 4px 16px rgba(2,84,204,.25);
   }
-  .btn-accent {
-    @apply bg-accent text-primary-deep font-bold hover:bg-accent-dark hover:-translate-y-px;
-    box-shadow: 0 4px 16px rgba(250,189,0,.25);
-  }
   .btn-ghost {
-    @apply bg-transparent text-text-secondary border border-ui-border hover:border-primary hover:text-primary hover:bg-primary-pale;
+    @apply bg-transparent text-slate border border-border hover:border-primary hover:text-primary hover:bg-primary-pale;
   }
   .btn-navy {
-    @apply bg-primary-deep text-white hover:bg-primary;
+    @apply bg-navy text-white hover:bg-navy-light;
   }
-  .btn-success {
-    @apply bg-success text-white hover:bg-success-dark hover:-translate-y-px;
+  .btn-green {
+    @apply bg-green text-white hover:bg-green-dark hover:-translate-y-px;
     box-shadow: 0 4px 16px rgba(46,177,36,.25);
   }
+  /* New accent button — VM Gold */
+  .btn-accent {
+    @apply font-bold hover:-translate-y-px;
+    background: #FABD00;
+    color: #024099;
+    box-shadow: 0 4px 16px rgba(250,189,0,.25);
+  }
   .btn-danger {
-    @apply bg-danger text-white hover:bg-danger-dark hover:-translate-y-px;
+    @apply bg-red text-white hover:bg-red-dark hover:-translate-y-px;
   }
 
   /* ── Form fields ────────────────────────────────────────── */
   .field        { @apply flex flex-col gap-1.5; }
-  .field-label  { @apply text-[11.5px] font-semibold text-text-secondary flex items-center gap-1.5 flex-wrap; }
+  .field-label  { @apply text-[11.5px] font-semibold text-slate flex items-center gap-1.5 flex-wrap; }
   .field-input  {
-    @apply w-full text-[13px] text-text border border-ui-border rounded-xl px-3.5 py-2.5 bg-white outline-none
-           transition-all font-body;
+    @apply w-full text-[13px] text-navy border border-border rounded-xl px-3.5 py-2.5 bg-white outline-none transition-all font-body;
   }
   .field-input:focus {
     @apply border-primary;
-    box-shadow: 0 0 0 3px rgba(2,84,204,.12);
+    box-shadow: 0 0 0 3px rgba(2,84,204,.10);
   }
   .field-select   { @apply field-input appearance-none; }
   .field-textarea { @apply field-input resize-y min-h-[90px] leading-relaxed; }
-  .prefilled      { @apply bg-success-light border-success-mid; }
-  .field-hint     { @apply text-[11px] text-text-faint leading-snug; }
-  .err-msg        { @apply text-[11px] text-danger font-semibold; }
+  .prefilled      { @apply bg-green-light border-green-mid; }
+  .field-hint     { @apply text-[11px] text-faint leading-snug; }
+  .err-msg        { @apply text-[11px] text-red font-semibold; }
   .prefill-badge  {
-    @apply inline-flex items-center text-[9.5px] font-bold text-success bg-success-light border border-success-mid px-1.5 py-px rounded-full ml-1;
+    @apply inline-flex items-center text-[9.5px] font-bold text-green bg-green-light border border-green-mid px-1.5 py-px rounded-full ml-1;
   }
 
-  /* ── Icon wrapper — replaces emoji pattern ──────────────── */
-  .icon-box-blue  { @apply w-10 h-10 rounded-xl bg-primary-pale flex items-center justify-center flex-shrink-0; }
-  .icon-box-green { @apply w-10 h-10 rounded-xl bg-success-light flex items-center justify-center flex-shrink-0; }
-  .icon-box-gold  { @apply w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0; }
-  .icon-box-navy  { @apply w-10 h-10 rounded-xl bg-primary-deep flex items-center justify-center flex-shrink-0; }
-
   /* ── Chips ──────────────────────────────────────────────── */
-  .chip    { @apply text-xs font-semibold px-3 py-1.5 rounded-full border border-ui-border text-text-secondary cursor-pointer transition-all bg-white select-none hover:bg-primary-pale hover:border-primary hover:text-primary; }
+  .chip    { @apply text-xs font-semibold px-3 py-1.5 rounded-full border border-border text-slate cursor-pointer transition-all bg-white select-none hover:bg-primary-pale hover:border-primary hover:text-primary; }
   .chip-on { @apply bg-primary-pale border-primary text-primary; }
 
   /* ── Info boxes ─────────────────────────────────────────── */
   .info-box     { @apply flex gap-3 p-3 rounded-xl mb-3.5 items-start text-[12.5px] leading-relaxed; }
-  .info-blue    { @apply bg-primary-pale border border-primary/20 text-primary-deep; }
-  .info-green   { @apply bg-success-light border border-success-mid text-[#064E3B]; }
-  .info-amber   { @apply bg-accent-light border border-accent-mid text-[#92400E]; }
-  .info-red     { @apply bg-danger-light border border-danger-mid text-danger-dark; }
+  .info-blue    { @apply bg-primary-pale border border-primary/20 text-navy; }
+  .info-green   { @apply bg-green-light border border-green-mid text-[#064E3B]; }
+  .info-amber   { @apply bg-amber-light border border-[#FDE68A] text-[#92400E]; }
+  .info-red     { @apply bg-red-light border border-red-mid text-red-dark; }
   .info-neutral { @apply bg-[#FAFBFF] border border-[#D6DEFF] text-[#2C3E7A]; }
   .info-teal    { @apply bg-[#ECFEFF] border border-[#A5F3FC] text-[#164E63]; }
 
   /* ── Upload drop zone ───────────────────────────────────── */
   .drop-zone {
-    @apply border-2 border-dashed border-ui-border rounded-xl min-h-[115px] flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all bg-ui-bg;
+    @apply border-2 border-dashed border-border rounded-xl min-h-[115px] flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all bg-bg;
   }
   .drop-zone:hover { @apply border-primary border-solid bg-primary-pale; }
 
   /* ── Incident / LOB cards ───────────────────────────────── */
-  .inc-card {
-    @apply border border-ui-border rounded-xl p-3.5 cursor-pointer text-center transition-all bg-white relative;
-  }
-  .inc-card:hover    { @apply border-primary bg-primary-pale -translate-y-px; }
-  .inc-card-on       { @apply border-primary bg-primary-pale ring-2 ring-primary/10; }
-  .lob-card          { @apply border border-ui-border rounded-2xl p-6 bg-white cursor-pointer transition-all relative; }
-  .lob-card:hover    { @apply border-primary bg-primary-pale -translate-y-0.5 shadow-card; }
-  .lob-card-cs       { @apply opacity-50 cursor-not-allowed; }
+  .inc-card      { @apply border border-border rounded-xl p-3.5 cursor-pointer text-center transition-all bg-white relative; }
+  .inc-card:hover { @apply border-primary bg-primary-pale -translate-y-px; }
+  .inc-card-on   { @apply border-primary bg-primary-pale ring-2 ring-primary/10; }
 
   /* ── Step navigation ────────────────────────────────────── */
-  .step-nav { @apply flex items-center justify-between pt-5 border-t border-ui-border mt-2; }
+  .step-nav { @apply flex items-center justify-between pt-5 border-t border-border mt-2; }
 
   /* ── Toggle switch ──────────────────────────────────────── */
   .toggle      { @apply w-[42px] h-[23px] rounded-full relative flex-shrink-0 transition-colors duration-200; }
-  .toggle-on   { @apply bg-success; }
-  .toggle-off  { @apply bg-ui-border; }
+  .toggle-on   { @apply bg-green; }
+  .toggle-off  { @apply bg-border; }
   .toggle-knob { @apply absolute top-[3px] w-[17px] h-[17px] rounded-full bg-white shadow transition-all duration-200; }
 
-  /* ── Status badges ──────────────────────────────────────── */
-  .badge-blue    { @apply text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary-pale text-primary border border-primary/20; }
-  .badge-green   { @apply text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-success-light text-success border border-success-mid; }
-  .badge-gold    { @apply text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-accent-light text-accent-dark border border-accent-mid; }
-  .badge-danger  { @apply text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-danger-light text-danger border border-danger-mid; }
-  .badge-neutral { @apply text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-ui-bg text-text-faint border border-ui-border; }
+  /* ── Icon wrapper ───────────────────────────────────────── */
+  .icon-box-blue  { @apply w-10 h-10 rounded-xl bg-primary-pale flex items-center justify-center flex-shrink-0; }
+  .icon-box-green { @apply w-10 h-10 rounded-xl bg-green-light flex items-center justify-center flex-shrink-0; }
+  .icon-box-gold  { @apply w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0; }
+  .icon-box-navy  { @apply w-10 h-10 rounded-xl bg-navy flex items-center justify-center flex-shrink-0; }
 
-  /* ── Nav sidebar ────────────────────────────────────────── */
-  .sidebar      { @apply hidden md:flex w-72 bg-primary-deep flex-col sticky top-[60px] h-[calc(100vh-60px)] overflow-y-auto border-r border-white/8 flex-shrink-0; }
-  .sidebar-link { @apply w-full flex items-center gap-2.5 px-5 py-2.5 border-l-[3px] transition-all text-left bg-transparent border-t-0 border-r-0 border-b-0 cursor-pointer; }
-  .sidebar-link-on   { @apply bg-accent/10 border-accent; }
-  .sidebar-link-off  { @apply border-transparent hover:bg-white/5; }
+  /* ── Max width helper ───────────────────────────────────── */
+  .max-w-content { @apply max-w-[860px]; }
 }
