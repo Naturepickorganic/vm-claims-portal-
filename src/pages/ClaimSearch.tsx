@@ -608,8 +608,6 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
       { id:16, category:'General',    title:'5-Star Survey & Claim Closed',                        sub:'HiMarley 5-star rating received. Claim closed Nov 8, 2024. Final summary: total claim paid $71,400 (dwelling $52,800 + contents $9,600 + ALE $8,400 + RCV $7,200). Reopen 60 days.',  date:'Nov 08, 2024',            status:'done', badge:'✓ Closed'    },
     ],
   },
-}
-
 
   /* ════════════════════════════════════════════════════════
      NEW CLAIMS — Full event coverage for all HTML doc scenarios
@@ -803,6 +801,7 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
       { id:20, category:'General',    title:'5-Star Survey & Claim Closed',                                   sub:'HiMarley 5-star rating received. Closing summary: dwelling $25,500 + mitigation $3,800 + contents $10,200 + ALE $4,200 = $43,700 total (includes RCV). Reopen 60 days.',                                                               date:'Apr 02, 2025',            status:'done', badge:'✓ Closed'    },
     ],
   },
+}
 
 /* ── MOCK POLICIES ── */
 const MOCK_POLICIES: Record<string,PolicyClaim[]> = {
