@@ -610,6 +610,200 @@ const MOCK_CLAIMS: Record<string,ClaimData> = {
   },
 }
 
+
+  /* ════════════════════════════════════════════════════════
+     NEW CLAIMS — Full event coverage for all HTML doc scenarios
+     ════════════════════════════════════════════════════════ */
+
+  /* ── AUTO 10: Diana Torres — Chevy Tahoe — Police report, QC fail, deductible at shop — STEEL ── */
+  '000-00-000830': {
+    claimNumber:'000-00-000830', insuredName:'Diana Torres',
+    policyNumber:'5504321098', claimStatus:'Closed', statusType:'closed', lobType:'auto' as LobType,
+    adjusterName:'Carlos Mendez', adjusterPhone:'(214) 555-0261',
+    reporterName:'Diana Torres', reportedType:'Self / Insured',
+    reportedDate:'2025-03-10', vehicle:'2023 Chevrolet Tahoe LT 4WD',
+    dateOfLoss:'2025-03-10', lossType:'Collision — Intersection (Other Driver At Fault)',
+    repairShop:'Hendrick Collision Center — Dallas (5700 LBJ Fwy)',
+    rentalInfo:'Enterprise — Closed Apr 3, 2025. 24 days fully covered.',
+    activeStep:8, progressPct:100,
+    statusMsg:'Your claim is closed. Repairs completed at Hendrick Collision. Settlement of $11,840 paid. Other driver 100% at fault — subrogation demand filed for your $500 deductible recovery.',
+    notes:[
+      { adjuster:'Carlos Mendez', date:'Mar 28, 2025', message:'QC inspection failed Mar 26 — paint texture mismatch on rear quarter panel. Shop scheduled rework. QC passed Mar 28. Vehicle delivered Mar 31.' },
+      { adjuster:'Carlos Mendez', date:'Mar 12, 2025', message:'Police report #DPD-2025-03891 received via LexisNexis automated retrieval. Other driver cited for running red light. 100% liability confirmed. Subrogation to recover Diana's $500 deductible.' },
+      { adjuster:'Carlos Mendez', date:'Mar 10, 2025', message:'Intersection collision, other driver at fault per Diana's statement (collected via HiMarley guided questionnaire) and witness corroboration. $500 collision deductible applies pending subrogation.' },
+    ],
+    payments:[
+      { checkNumber:'CHK-2025-7741', payTo:'Hendrick Collision Center', grossAmount:11340, issueDate:'2025-04-01', scheduledSendDate:'', status:'Cleared' },
+    ],
+    contacts:[
+      { name:'Diana Torres',                role:'Insured',         createdDate:'Mar 10, 2025', phone:'(469) 555-0501', email:'diana.torres@email.com'         },
+      { name:'Carlos Mendez',               role:'Adjuster',        createdDate:'Mar 10, 2025', phone:'(214) 555-0261', email:'carlos.mendez@valuemumt.com'    },
+      { name:'Hendrick Collision Dallas',   role:'Repair Shop',     createdDate:'Mar 14, 2025', phone:'(214) 555-0900', email:'dallas@hendrickcollision.com'   },
+      { name:'Enterprise Rent-A-Car',       role:'Rental Provider', createdDate:'Mar 11, 2025', phone:'(469) 555-0400', email:'dallas.rental@enterprise.com'  },
+      { name:'Other Driver (John Keller)',  role:'Third Party',     createdDate:'Mar 10, 2025', phone:'(214) 555-0999', email:'—'                              },
+    ],
+    services:[
+      { serviceNumber:'SRV-830-001', serviceType:'Collision Repair',     provider:'Hendrick Collision Dallas', serviceStatus:'Completed',   expectedCompletion:'Mar 28, 2025' },
+      { serviceNumber:'SRV-830-002', serviceType:'Rental Vehicle',       provider:'Enterprise Rent-A-Car',    serviceStatus:'Completed',   expectedCompletion:'Apr 03, 2025' },
+      { serviceNumber:'SRV-830-003', serviceType:'Subrogation Recovery', provider:'ISO ARB Forum',             serviceStatus:'In Progress', expectedCompletion:'Ongoing'      },
+    ],
+    timeline:[
+      { id:1,  category:'General',    title:'FNOL Submitted — Intersection Collision, #000-00-000830',         sub:'Claim created. Collision coverage confirmed. $500 deductible applies. ISO ClaimSearch: no prior claims on VIN or identity. HiMarley thread opened.',                                                                  date:'Mar 10, 2025 · 4:22 PM',  status:'done', badge:'✓ Filed'       },
+      { id:2,  category:'General',    title:'Carlos Mendez Assigned — Liability Investigation Opened',          sub:'Carlos Mendez (Collision — Team C). HiMarley guided statement questionnaire sent to Diana. Statement completed in 8 minutes: intersection diagram, signal status, witness contact info collected.',                    date:'Mar 10, 2025 · 5:00 PM',  status:'done', badge:'✓ Complete'    },
+      { id:3,  category:'General',    title:'Police Report Retrieved — LexisNexis Automated Retrieval',         sub:'Police report #DPD-2025-03891 retrieved automatically via LexisNexis API (eliminates manual DMV follow-up). Other driver cited for running red light. Witness statement attached. 100% liability confirmed.',        date:'Mar 12, 2025',            status:'done', badge:'✓ Retrieved'   },
+      { id:4,  category:'General',    title:'Liability Determined — Other Driver 100% At Fault',                sub:'Police report + Diana's HiMarley statement + witness confirm John Keller ran red light. Subrogation initiated via ISO ARB Forum to recover Diana's $500 deductible.',                                              date:'Mar 12, 2025',            status:'done', badge:'✓ Confirmed'   },
+      { id:5,  category:'Rental',     title:'Enterprise Rental Reserved & Picked Up',                           sub:'Enterprise ARMS: Reservation confirmed (#ENT-20341). 2023 Chevy Equinox. Pickup Mar 11, 9:00 AM. ARMS confirms pickup event — rental clock started.',                                                               date:'Mar 11, 2025',            status:'done', badge:'✓ Active'      },
+      { id:6,  category:'Inspection', title:'DRP Shop Assigned — Hendrick Collision Dallas',                    sub:'Hendrick Collision selected via CCC Engage DRP network. OEM-certified for GM vehicles. Shop notified via Mitchell WorkCenter. Drop-off: Mar 14.',                                                                    date:'Mar 13, 2025',            status:'done', badge:'✓ Assigned'    },
+      { id:7,  category:'Inspection', title:'Vehicle Received — Teardown & Disassembly Started',                sub:'Vehicle checked in via CCC ONE Mar 14, 8:45 AM. Initial teardown started. Hidden damage discovery phase. Member prompted not to call shop — CCC UpdatePlus will notify proactively.',                                date:'Mar 14, 2025 · 8:45 AM',  status:'done', badge:'✓ Complete'    },
+      { id:8,  category:'Inspection', title:'Estimate Completed & Approved — $12,340 (CCC Estimate STP)',      sub:'Full CCC line-item estimate: structural repair rear frame $4,200, body $3,800, paint $2,100, ADAS sensors $2,240. Approved by Carlos Mendez. Repairs begin Mar 17.',                                                 date:'Mar 15–16, 2025',         status:'done', badge:'✓ Approved'    },
+      { id:9,  category:'Repair',     title:'Parts Ordered — GM OEM Parts, ETA Mar 19',                        sub:'GM OEM structural, body, and ADAS parts ordered via CCC ONE integrated parts ordering. Supplier ETA confirmed Mar 19. Body work begins on arrival.',                                                                  date:'Mar 16, 2025',            status:'done', badge:'✓ Ordered'     },
+      { id:10, category:'Repair',     title:'Body Repair Started',                                              sub:'CCC ONE UpdatePlus: "Repairs have started on your Tahoe." Body repair phase logged in Mitchell RepairCenter.',                                                                                                        date:'Mar 19, 2025',            status:'done', badge:'✓ Started'     },
+      { id:11, category:'Repair',     title:'Vehicle in Paint Booth',                                           sub:'CCC ONE UpdatePlus: "Your Tahoe is in the paint booth — typically 2 days." Mitchell RepairCenter paint phase observable via OData API.',                                                                              date:'Mar 24, 2025',            status:'done', badge:'✓ In Progress' },
+      { id:12, category:'Repair',     title:'QC Failed — Paint Texture Mismatch, Rework Ordered',               sub:'QC inspection Mar 26: rear quarter panel paint texture mismatch vs. OEM finish. Shop assigned rework task. Completion date revised to Mar 28. HiMarley: "A minor quality issue was found — your shop is correcting it at no cost or delay to you."', date:'Mar 26, 2025',  status:'done', badge:'✓ Rework'      },
+      { id:13, category:'Repair',     title:'QC Rework Complete — Second Inspection Passed',                    sub:'Rework completed. Second QC inspection passed Mar 28. CCC ONE: paint texture and color match confirmed. Vehicle cleared for delivery.',                                                                               date:'Mar 28, 2025',            status:'done', badge:'✓ QC Passed'   },
+      { id:14, category:'Repair',     title:'Member Notified — Vehicle Ready for Pickup',                       sub:'CCC ONE Engage pickup notification: shop hours, address, deductible ($500) due at pickup, payment methods. HiMarley + Enterprise ARMS rental return instructions in one SMS.',                                       date:'Mar 28, 2025',            status:'done', badge:'✓ Ready'       },
+      { id:15, category:'Repair',     title:'Deductible Collected at Shop — $500',                              sub:'Diana paid $500 deductible directly to Hendrick Collision at vehicle pickup. OneInc integration: deductible payment logged and routed.',                                                                               date:'Mar 31, 2025',            status:'done', badge:'✓ Paid'        },
+      { id:16, category:'Rental',     title:'Rental Returned — 24 Days, Fully Covered',                         sub:'Enterprise rental returned Apr 3. ARMS confirms: 24 days, fully covered, no charges to Diana. Billing summary generated.',                                                                                            date:'Apr 03, 2025',            status:'done', badge:'✓ Closed'      },
+      { id:17, category:'Payment',    title:'Final Invoice Reconciled — $11,340 to Hendrick via OneInc',        sub:'CCC electronic invoice reconciled against approved estimate. Payment authorized in GW ClaimCenter. Disbursed via OneInc ACH to Hendrick Collision. Cleared Apr 3.',                                                  date:'Apr 01–03, 2025',         status:'done', badge:'✓ Cleared'     },
+      { id:18, category:'Payment',    title:'Reserve Adjustment — Final Incurred Costs Reconciled',              sub:'GW ClaimCenter: final reserves adjusted to match actual incurred costs ($12,340 estimate vs $11,340 final — ADAS recal not required). Actuarial reserve released.',                                                 date:'Apr 05, 2025',            status:'done', badge:'✓ Complete'    },
+      { id:19, category:'General',    title:'5-Star Survey & Claim Closed — Subrogation Ongoing',               sub:'HiMarley 5-star survey: Diana rated 5 stars. Claim closed Apr 5, 2025. Closing summary sent. ISO ARB Forum subrogation active — we will notify Diana when $500 deductible is recovered.',                          date:'Apr 05, 2025',            status:'done', badge:'✓ Closed'      },
+    ],
+  },
+
+  /* ── PROPERTY 4: Michael & Susan Park — Hail + Ordinance & Law, ROR, XactAnalysis — GREEN ── */
+  '000-00-000831': {
+    claimNumber:'000-00-000831', insuredName:'Michael & Susan Park',
+    policyNumber:'8803210099', claimStatus:'Open', statusType:'on-track', lobType:'property' as LobType,
+    adjusterName:'Rachel Kim', adjusterPhone:'(214) 555-0277',
+    reporterName:'Michael Park', reportedType:'Self / Insured',
+    reportedDate:'2025-03-22', vehicle:'N/A — Property Claim',
+    dateOfLoss:'2025-03-22', lossType:'Wind / Hail — Roof, Siding + Ordinance & Law (Code Upgrade)',
+    repairShop:'N/A — Property Claim',
+    rentalInfo:'N/A — Property Claim',
+    propertyAddress:'9210 Stonegate Dr, McKinney TX 75070',
+    propertyType:'Single Family Dwelling (HO-3 + Ordinance & Law endorsement)',
+    peril:'Wind / Hail — Major storm Mar 22, 2025. CAT code DFW-2503.',
+    contractor:'Texas Star Roofing & Restoration (Alacrity Network)',
+    aleInfo:'N/A — Home habitable during repairs',
+    activeStep:6, progressPct:68,
+    statusMsg:"Rebuild is in progress. Roofing and siding phases are complete. Interior drywall underway. Ordinance & Law supplement for code-required drip edge and ridge vent upgrades approved. Estimated completion June 12.",
+    notes:[
+      { adjuster:'Rachel Kim', date:'Apr 15, 2025', message:'XactAnalysis flagged estimate line item for ridge cap labor hours as 12% above regional benchmark. Reviewed and confirmed: steeper-than-average roof pitch (8/12) justifies the variance. Estimate approved as submitted at $34,600 ACV. O&L supplement $4,200 approved separately.' },
+      { adjuster:'Rachel Kim', date:'Mar 24, 2025', message:'EagleView Premium Report delivered within 2 hrs: 42 sq roof, 8/12 pitch, 4 penetrations. Verisk storm data: 2.1" hail, 58mph wind Mar 22 McKinney. CAT DFW-2503 applied. Symbility 3D property sketch generated remotely — no field inspection required for initial estimate. ROR letter issued pending O&L coverage confirmation.' },
+    ],
+    payments:[
+      { checkNumber:'CHK-2025-8831', payTo:'Michael & Susan Park',              grossAmount:30240, issueDate:'2025-04-20', scheduledSendDate:'',           status:'Cleared'    },
+      { checkNumber:'',              payTo:'Texas Star Roofing & Restoration',  grossAmount:4360,  issueDate:'',           scheduledSendDate:'2025-06-15', status:'Requesting' },
+    ],
+    contacts:[
+      { name:'Michael Park',                     role:'Insured',      createdDate:'Mar 22, 2025', phone:'(972) 555-0610', email:'michael.park@email.com'           },
+      { name:'Susan Park',                        role:'Insured',      createdDate:'Mar 22, 2025', phone:'(972) 555-0611', email:'susan.park@email.com'             },
+      { name:'Rachel Kim',                        role:'Adjuster',     createdDate:'Mar 23, 2025', phone:'(214) 555-0277', email:'rachel.kim@valuemumt.com'         },
+      { name:'Texas Star Roofing & Restoration',  role:'Contractor',   createdDate:'Mar 25, 2025', phone:'(972) 555-0700', email:'claims@texasstarroofing.com'      },
+      { name:'City of McKinney Inspections',      role:'Municipality', createdDate:'Apr 05, 2025', phone:'(972) 547-7400', email:'permits@mckinneytexas.org'        },
+    ],
+    services:[
+      { serviceNumber:'SRV-831-001', serviceType:'EagleView Aerial Imagery',        provider:'EagleView / Verisk',         serviceStatus:'Completed',   expectedCompletion:'Mar 23, 2025' },
+      { serviceNumber:'SRV-831-002', serviceType:'3D Property Scan (Symbility)',     provider:'Symbility / CoreLogic',      serviceStatus:'Completed',   expectedCompletion:'Mar 24, 2025' },
+      { serviceNumber:'SRV-831-003', serviceType:'Xactimate Estimating + XactAnalysis QA', provider:'Verisk / Xactimate', serviceStatus:'Completed',   expectedCompletion:'Apr 12, 2025' },
+      { serviceNumber:'SRV-831-004', serviceType:'Roof Replacement (42 sq)',        provider:'Texas Star Roofing',         serviceStatus:'Completed',   expectedCompletion:'May 02, 2025' },
+      { serviceNumber:'SRV-831-005', serviceType:'Siding Repair',                   provider:'Texas Star Roofing',         serviceStatus:'Completed',   expectedCompletion:'May 08, 2025' },
+      { serviceNumber:'SRV-831-006', serviceType:'Interior Drywall & Finish',       provider:'Texas Star Roofing',         serviceStatus:'In Progress', expectedCompletion:'Jun 12, 2025' },
+      { serviceNumber:'SRV-831-007', serviceType:'Ordinance & Law Code Upgrades',   provider:'Texas Star Roofing',         serviceStatus:'Completed',   expectedCompletion:'May 02, 2025' },
+    ],
+    timeline:[
+      { id:1,  category:'General',    title:'FNOL — Wind/Hail, #000-00-000831',                                sub:'Claim created. Verisk Geomni geocoding: property matched to CAT DFW-2503 storm footprint (2.1" hail, 58mph wind). CAT code applied automatically. ISO ClaimSearch: clear. HiMarley thread opened. Member uploaded damage photos via text.',    date:'Mar 22, 2025 · 8:30 PM', status:'done',     badge:'✓ Filed'      },
+      { id:2,  category:'General',    title:'Rachel Kim Assigned — Subrogation Review Initiated',              sub:'Rachel Kim (CAT — Team NE). HiMarley: adjuster name and direct line shared. Verisk weather data confirms storm cause. Third-party subrogation review initiated (was roofing contractor doing work on roof? No — natural event).',              date:'Mar 23, 2025',           status:'done',     badge:'✓ Complete'   },
+      { id:3,  category:'Inspection', title:'EagleView Aerial Imagery Delivered — 42 Sq, 8/12 Pitch',         sub:'EagleView Premium Report via API (2 hr delivery): 42 squares total, 8/12 pitch (steep), 4 penetrations, all slope measurements. Measurements loaded directly into Xactimate — no manual entry.',                                              date:'Mar 23, 2025',           status:'done',     badge:'✓ Delivered'  },
+      { id:4,  category:'Inspection', title:'Verisk Storm Data Pulled — 2.1" Hail, 58mph Wind Confirmed',     sub:'Hail size and wind speed at exact property location corroborated vs. member-reported cause of loss. Eliminates coverage dispute. Confirms peril is wind/hail, not pre-existing wear.',                                                         date:'Mar 23, 2025',           status:'done',     badge:'✓ Confirmed'  },
+      { id:5,  category:'Inspection', title:'3D Property Scan Generated — Symbility Remote Sketch',            sub:'Symbility / CoreLogic 3D remote sketch: exterior dimensions, room layout, garage, detached structures — all structured for estimating. Full remote scope without field visit. Saved 3–5 days vs. traditional field inspection approach.',         date:'Mar 24, 2025',           status:'done',     badge:'✓ Complete'   },
+      { id:6,  category:'General',    title:'Reservation of Rights Letter Issued',                             sub:'O&L endorsement coverage under review — confirmation of when house was built vs. current code requirements needed. ROR issued to Michael and Susan. HiMarley: "We sent a letter explaining we are reviewing one aspect of coverage. This does not mean your claim is denied."', date:'Mar 25, 2025', status:'done', badge:'✓ Issued'    },
+      { id:7,  category:'General',    title:'Texas Star Roofing Assigned — Alacrity Network',                  sub:'Texas Star Roofing assigned within Alacrity 48-hr CAT SLA. HiMarley: "Texas Star Roofing has been assigned. They will contact you within 2 hours to schedule site visit."',                                                                    date:'Mar 25, 2025',           status:'done',     badge:'✓ Assigned'   },
+      { id:8,  category:'Inspection', title:'Pre-Inspection Reminder & Inspector En Route Notification',       sub:'HiMarley reminder 24 hrs before: "Your inspection is tomorrow Mar 27 at 10 AM." Morning of: "Your inspector David Ruiz is 20 minutes away." Reduces no-shows and missed appointments.',                                                      date:'Mar 26–27, 2025',        status:'done',     badge:'✓ Complete'   },
+      { id:9,  category:'Inspection', title:'On-Site Inspection Completed — Cause of Loss & Scope Documented', sub:'Rachel Kim on-site with Symbility mobile app. Full exterior scope: roof (all slopes), siding (north and west elevations), gutters and downspouts. Interior: attic moisture check, no active leak. Photos geo-tagged and mapped to damage zones.', date:'Mar 27, 2025',          status:'done',     badge:'✓ Complete'   },
+      { id:10, category:'Inspection', title:'O&L Coverage Confirmed — Ordinance & Law Endorsement Active',    sub:'House built 2003. Current McKinney code requires: drip edge on all eaves (not in original construction), ridge vent system (original had box vents). O&L endorsement covers required upgrades. ROR resolved — full coverage confirmed.',         date:'Apr 02, 2025',           status:'done',     badge:'✓ Confirmed'  },
+      { id:11, category:'Inspection', title:'Xactimate Estimate Built — $34,600 (Roof + Siding + Interior)',  sub:'Full Xactimate line items: Roofing 42 sq ($17,800 + O&L upgrades $4,200), siding north/west ($7,400), interior attic-related ceiling repair ($3,200), gutters/downspouts ($2,000). Separate O&L supplement.',                                date:'Apr 10, 2025',           status:'done',     badge:'✓ Built'      },
+      { id:12, category:'Inspection', title:'XactAnalysis QA Review — Estimate Approved',                     sub:'Verisk XactAnalysis flagged ridge cap labor hours as 12% above regional benchmark. Rachel Kim reviewed: steep 8/12 pitch justifies variance. Approved as-is. O&L supplement $4,200 separately authorized.',                                    date:'Apr 12–15, 2025',        status:'done',     badge:'✓ Approved'   },
+      { id:13, category:'Inspection', title:'Estimate Approved — ACV $30,240 + O&L $4,200 Authorized',       sub:'Total scope: $34,600 dwelling + $4,200 O&L upgrades. ACV payment $30,240 (depreciation $4,360 recoverable). O&L $4,200 paid in full (not subject to depreciation). Texas Star notified to begin repairs.',                                    date:'Apr 18, 2025',           status:'done',     badge:'✓ Authorized' },
+      { id:14, category:'Payment',    title:'ACV Payment Issued — $30,240 + O&L $4,200',                     sub:'ACV $30,240 + O&L supplement $4,200 disbursed via OneInc ACH. HiMarley: "Payment sent. You will receive $4,360 (recoverable depreciation) after repairs are complete."',                                                                       date:'Apr 20, 2025',           status:'done',     badge:'✓ Cleared'    },
+      { id:15, category:'Rebuild',    title:'Building Permit Issued — City of McKinney',                       sub:'Permit #MCK-2025-03991 issued by City of McKinney. Roofing, siding, and O&L code upgrades authorized. Texas Star roofing crew mobilized.',                                                                                                     date:'Apr 24, 2025',           status:'done',     badge:'✓ Issued'     },
+      { id:16, category:'Rebuild',    title:'Roof Replacement Complete — 42 Sq + O&L Upgrades',               sub:'Full tear-off and replacement: OC Duration Pro shingles, synthetic underlayment, ice & water shield, drip edge (O&L), continuous ridge vent system (O&L). City of McKinney roof inspection passed May 2.',                                    date:'Apr 28 – May 2, 2025',   status:'done',     badge:'✓ Complete'   },
+      { id:17, category:'Rebuild',    title:'Ordinance & Law — Final Code Inspection Passed',                  sub:'City of McKinney final O&L inspection: drip edge and ridge vent system confirmed code-compliant. Permit closed. O&L portion of claim fully satisfied.',                                                                                          date:'May 02, 2025',           status:'done',     badge:'✓ Passed'     },
+      { id:18, category:'Rebuild',    title:'Siding Repairs Complete',                                         sub:'North and west elevations re-sided. Color matched to existing. Texas Star contractor portal: completion photos uploaded and approved.',                                                                                                           date:'May 08, 2025',           status:'done',     badge:'✓ Complete'   },
+      { id:19, category:'Rebuild',    title:'Interior Drywall & Finish In Progress',                           sub:'Ceiling repair in attic-adjacent bedroom underway. Drywall, texture, and paint. Texas Star weekly HiMarley update: "Interior finish work is progressing on schedule."',                                                                          date:'May 12–21, 2025',        status:'active',   badge:'● In Progress'},
+      { id:20, category:'Rebuild',    title:'Final Punch List & Member Walkthrough',                           sub:'Michael and Susan sign off on all completed work. Digital completion certificate triggers RCV holdback ($4,360) release.',                                                                                                                        date:'Est. Jun 10, 2025',       status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:21, category:'Payment',    title:'RCV Holdback Released — $4,360',                                  sub:'Recoverable depreciation $4,360 released via OneInc after completion certificate. HiMarley: "Your final payment is on its way."',                                                                                                               date:'Est. Jun 12, 2025',       status:'upcoming', badge:'⏳ Scheduled'  },
+      { id:22, category:'General',    title:'5-Star Survey & Claim Closed',                                    sub:'HiMarley closing summary: repair total $34,600 + O&L $4,200, your out-of-pocket $0 (no deductible for wind/hail), ACV + RCV breakdown, rebuild dates, reopen window 60 days.',                                                              date:'Est. ~Jun 14, 2025',      status:'upcoming', badge:'⏳ Scheduled'  },
+    ],
+  },
+
+  /* ── PROPERTY 5: Elena Vasquez — Water (frozen pipe) + Contents + ALE closed — STEEL ── */
+  '000-00-000832': {
+    claimNumber:'000-00-000832', insuredName:'Elena Vasquez',
+    policyNumber:'3302198700', claimStatus:'Closed', statusType:'closed', lobType:'property' as LobType,
+    adjusterName:'David Nguyen', adjusterPhone:'(214) 555-0288',
+    reporterName:'Elena Vasquez', reportedType:'Self / Insured',
+    reportedDate:'2025-01-19', vehicle:'N/A — Property Claim',
+    dateOfLoss:'2025-01-19', lossType:'Water Damage — Frozen/Burst Pipe (Winter Storm)',
+    repairShop:'N/A — Property Claim',
+    rentalInfo:'N/A — Property Claim',
+    propertyAddress:'1802 Pinewood Ct, Garland TX 75044',
+    propertyType:'Single Family Dwelling (HO-3)',
+    peril:'Water Damage — Frozen supply pipe burst during Winter Storm Ezra, Jan 19, 2025',
+    contractor:'PuroClean of Garland + Allied Restoration Group',
+    aleInfo:'Closed — ALE total: $4,200 over 21 days. Hilton Garden Inn Garland. Fully covered.',
+    activeStep:8, progressPct:100,
+    statusMsg:'Your claim is closed. Frozen pipe water damage fully remediated. Rebuild and contents settled. Total claim paid: $38,700. ALE covered 21 days. Thank you — your home is fully restored.',
+    notes:[
+      { adjuster:'David Nguyen', date:'Apr 02, 2025', message:'Claim closed. Final settlement: dwelling ACV $22,400 + RCV holdback $3,100 released Apr 2. Contents ACV $8,800 + contents RCV $1,400. ALE $4,200. Total: $39,900. Member satisfaction: 5 stars.' },
+      { adjuster:'David Nguyen', date:'Jan 22, 2025', message:'Winter Storm Ezra: frozen supply pipe in unheated garage wall burst, affecting garage, utility room, and adjacent kitchen. ISO ClaimSearch: no prior water losses on address. PuroClean dispatched via Alacrity within 3 hrs. ALE authorized — kitchen and utility not functional.' },
+    ],
+    payments:[
+      { checkNumber:'CHK-2025-1920', payTo:'Elena Vasquez (ACV Dwelling)',  grossAmount:22400, issueDate:'2025-02-10', scheduledSendDate:'', status:'Cleared' },
+      { checkNumber:'CHK-2025-1921', payTo:'Elena Vasquez (Contents ACV)',  grossAmount:8800,  issueDate:'2025-02-10', scheduledSendDate:'', status:'Cleared' },
+      { checkNumber:'CHK-2025-2210', payTo:'PuroClean of Garland',          grossAmount:3800,  issueDate:'2025-02-12', scheduledSendDate:'', status:'Cleared' },
+      { checkNumber:'CHK-2025-3301', payTo:'Elena Vasquez (RCV Dwelling)',  grossAmount:3100,  issueDate:'2025-04-02', scheduledSendDate:'', status:'Cleared' },
+      { checkNumber:'CHK-2025-3302', payTo:'Elena Vasquez (Contents RCV)',  grossAmount:1400,  issueDate:'2025-04-02', scheduledSendDate:'', status:'Cleared' },
+    ],
+    contacts:[
+      { name:'Elena Vasquez',              role:'Insured',     createdDate:'Jan 19, 2025', phone:'(972) 555-0740', email:'elena.vasquez@email.com'          },
+      { name:'David Nguyen',               role:'Adjuster',    createdDate:'Jan 20, 2025', phone:'(214) 555-0288', email:'david.nguyen@valuemumt.com'       },
+      { name:'PuroClean of Garland',       role:'Contractor',  createdDate:'Jan 19, 2025', phone:'(972) 555-0815', email:'garland@puroclean.com'            },
+      { name:'Allied Restoration Group',   role:'Contractor',  createdDate:'Jan 28, 2025', phone:'(972) 555-0820', email:'claims@alliedrestoration.com'     },
+      { name:'Hilton Garden Inn Garland',  role:'ALE Housing', createdDate:'Jan 19, 2025', phone:'(972) 555-0950', email:'garland@hiltongarden.com'         },
+    ],
+    services:[
+      { serviceNumber:'SRV-832-001', serviceType:'Emergency Water Extraction',       provider:'PuroClean of Garland',     serviceStatus:'Completed', expectedCompletion:'Jan 20, 2025' },
+      { serviceNumber:'SRV-832-002', serviceType:'Dry-out (Air Movers/Dehumidifiers)',provider:'PuroClean of Garland',     serviceStatus:'Completed', expectedCompletion:'Jan 27, 2025' },
+      { serviceNumber:'SRV-832-003', serviceType:'Mold Assessment',                  provider:'EnviroCheck IH Services',  serviceStatus:'Completed', expectedCompletion:'Jan 28, 2025' },
+      { serviceNumber:'SRV-832-004', serviceType:'Demo & Rebuild',                   provider:'Allied Restoration Group', serviceStatus:'Completed', expectedCompletion:'Mar 25, 2025' },
+      { serviceNumber:'SRV-832-005', serviceType:'Contents Pack-out & Cleaning',     provider:'PuroClean of Garland',     serviceStatus:'Completed', expectedCompletion:'Jan 25, 2025' },
+      { serviceNumber:'SRV-832-006', serviceType:'ALE Housing',                      provider:'Hilton Garden Inn Garland',serviceStatus:'Completed', expectedCompletion:'Feb 09, 2025' },
+    ],
+    timeline:[
+      { id:1,  category:'General',    title:'FNOL — Frozen Pipe Burst, Winter Storm, #000-00-000832',        sub:'Burst pipe in garage wall during Winter Storm Ezra. ~4 hrs of water flow. ISO ClaimSearch: no prior water losses on address. ALE authorized immediately. Hilton Garden Inn Garland booked.',                                              date:'Jan 19, 2025 · 11:00 PM', status:'done', badge:'✓ Filed'      },
+      { id:2,  category:'General',    title:'David Nguyen Assigned — PuroClean Dispatched 3 hrs',            sub:'David Nguyen (Water — Team G). Direct: (214) 555-0288. PuroClean of Garland dispatched via Alacrity within 3 hrs of FNOL. HiMarley: "PuroClean is on the way. They will arrive by 2 AM."',                                            date:'Jan 19, 2025',            status:'done', badge:'✓ Complete'  },
+      { id:3,  category:'ALE',        title:'ALE Authorized — Hilton Garden Inn Garland',                    sub:'ALE authorized up to $200/night. Elena and family checked in Jan 19. HiMarley: "Keep all hotel, meal, and laundry receipts — text photos here. We cover up to $200/night." ALE receipt collection via HiMarley thread begins.',         date:'Jan 19, 2025',            status:'done', badge:'✓ Active'    },
+      { id:4,  category:'Mitigation', title:'Emergency Water Extraction & Pipe Emergency Repair',             sub:'PuroClean on-site by 2:15 AM. Emergency plumber dispatched to stop source. Water extraction: garage (500 sq ft), utility room (120 sq ft), kitchen floor (partial). Moisture baseline readings documented at all surfaces.',             date:'Jan 19–20, 2025',         status:'done', badge:'✓ Complete'  },
+      { id:5,  category:'Mitigation', title:'Dry-out Equipment Deployed — 12 Air Movers, 4 Dehumidifiers',  sub:'Equipment deployed at all affected areas per IICRC S500. Daily moisture readings: Day 1 readings 28–45% at affected surfaces. Target: ≤12%. HiMarley daily update: "Moisture levels: Day 1 of drying. Estimated 6–8 days."',             date:'Jan 20, 2025',            status:'done', badge:'✓ Complete'  },
+      { id:6,  category:'ALE',        title:'ALE Receipts Collected — Day 3 Balance Update',                 sub:'Elena texted hotel, meal, and laundry receipts via HiMarley thread (no email needed). Day 3 balance: $800 of $4,200 total estimated allowance used. HiMarley: "You have used $800 of your ALE allowance so far."',                      date:'Jan 22, 2025',            status:'done', badge:'✓ Tracked'   },
+      { id:7,  category:'Inspection', title:'Field Inspection — Damage Scope Documented',                    sub:'David Nguyen on-site with Symbility mobile app. Scope: garage drywall (3 walls), utility room (complete), kitchen subflooring (partial). Plumbing repair scope documented. Photos geo-tagged per room.',                                  date:'Jan 21, 2025',            status:'done', badge:'✓ Complete'  },
+      { id:8,  category:'Mitigation', title:'Dry-out Complete — Day 7, All Surfaces ≤12%',                   sub:'Final PuroClean moisture readings: all surfaces ≤12% per IICRC S500. Equipment removed Jan 27. Site cleared for mold assessment and demo.',                                                                                               date:'Jan 27, 2025',            status:'done', badge:'✓ Complete'  },
+      { id:9,  category:'Mitigation', title:'Mold Assessment — CLEAR (EnviroCheck IH)',                       sub:'Industrial hygienist EnviroCheck conducted air sampling and surface sampling. Results: all below action levels. Mold-free clearance issued Jan 28. Rebuild can proceed.',                                                                 date:'Jan 28, 2025',            status:'done', badge:'✓ Cleared'   },
+      { id:10, category:'Contents',   title:'Contents Pack-out — 312 Items Inventoried via ContentsTrack',   sub:'PuroClean contents pack-out team: 312 salvageable items photographed, cataloged, and cleaned. ContentsTrack mobile app AI auto-populated item descriptions, brands, ages, and replacement values. Items delivered to climate-controlled storage.', date:'Jan 24–25, 2025',    status:'done', badge:'✓ Complete'  },
+      { id:11, category:'Inspection', title:'Xactimate Estimate — $25,500 ACV + $3,800 Mitigation Approved', sub:'Full Xactimate rebuild estimate: garage drywall/insulation $5,800, utility room complete $7,200, kitchen subfloor $3,400, plumbing repair $2,800, painting $3,100, miscellaneous $3,200. ACV $25,500. Mitigation $3,800. Both approved Feb 9.',  date:'Feb 05–09, 2025',         status:'done', badge:'✓ Approved'  },
+      { id:12, category:'Contents',   title:'Contents Valuation — ACV $8,800 + RCV Available',               sub:'Xactimate Contents module: 312 items valued. ACV $8,800 (depreciation $1,400 recoverable). RCV available after replacement receipts submitted. Items: kitchen appliances, garage tools, utility room equipment. Settlement issued.',          date:'Feb 09, 2025',            status:'done', badge:'✓ Complete'  },
+      { id:13, category:'ALE',        title:'ALE Balance Alert — $3,600 Used, $600 Remaining',               sub:'HiMarley ALE balance alert: "You have used $3,600 of your $4,200 ALE allowance. Estimated $600 remaining. Your rebuild is progressing on schedule — you should be home by Feb 10."',                                                     date:'Feb 06, 2025',            status:'done', badge:'✓ Alert'     },
+      { id:14, category:'Payment',    title:'ACV Payments Issued — $22,400 Dwelling + $8,800 Contents',      sub:'$22,400 dwelling ACV + $8,800 contents ACV issued via OneInc ACH Feb 10. PuroClean mitigation: $3,800 paid directly. HiMarley: "Payment sent. Keep contents replacement receipts to claim the additional $1,400."',                    date:'Feb 10–12, 2025',         status:'done', badge:'✓ Cleared'   },
+      { id:15, category:'Rebuild',    title:'Rebuild Started — Allied Restoration Group',                     sub:'Allied Restoration Group assigned after PuroClean mitigation. Building permit #GRL-2025-00441 issued by City of Garland. Demo, plumbing repair, framing, and drywall begun Jan 28.',                                                       date:'Jan 28, 2025',            status:'done', badge:'✓ Started'   },
+      { id:16, category:'ALE',        title:'Member Returns Home — ALE Closed (21 Days, $4,200)',             sub:'Elena and family returned home Feb 9. Kitchen and utility room restored. ALE total: 21 days, $4,200 — fully covered. HiMarley: "Has your family moved back in? Reply YES." Elena replied YES. ALE closed.',                               date:'Feb 09, 2025',            status:'done', badge:'✓ Closed'    },
+      { id:17, category:'Rebuild',    title:'Rebuild Complete — City of Garland Inspection Passed',           sub:'Allied Restoration: all scope complete. City of Garland final inspection passed Mar 25. Permit closed. Elena signed digital completion certificate via Alacrity portal.',                                                                   date:'Mar 25, 2025',            status:'done', badge:'✓ Complete'  },
+      { id:18, category:'Contents',   title:'Contents Returned + RCV Supplement for Replaced Items',          sub:'Cleaned contents returned Mar 28. Elena submitted replacement receipts (appliances, tools) totaling $1,400. Contents RCV supplement issued. No contents left in storage.',                                                                  date:'Mar 28 – Apr 2, 2025',    status:'done', badge:'✓ Complete'  },
+      { id:19, category:'Payment',    title:'RCV Holdback Released — $3,100 Dwelling + $1,400 Contents',     sub:'Completion certificate confirmed. RCV holdback: $3,100 dwelling + $1,400 contents. Both issued via OneInc Apr 2. Total claim paid: $39,900.',                                                                                             date:'Apr 02, 2025',            status:'done', badge:'✓ Cleared'   },
+      { id:20, category:'General',    title:'5-Star Survey & Claim Closed',                                   sub:'HiMarley 5-star rating received. Closing summary: dwelling $25,500 + mitigation $3,800 + contents $10,200 + ALE $4,200 = $43,700 total (includes RCV). Reopen 60 days.',                                                               date:'Apr 02, 2025',            status:'done', badge:'✓ Closed'    },
+    ],
+  },
+
 /* ── MOCK POLICIES ── */
 const MOCK_POLICIES: Record<string,PolicyClaim[]> = {
   '7407354463': [
@@ -820,11 +1014,12 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
   const cats: EvtCategory[] = claim.lobType==='property'
     ? ['General','Inspection','Mitigation','Rebuild','ALE','Contents','Payment']
     : ['General','Repair','Rental','Payment','Inspection']
-  const filtTl = claim.timeline.filter(e=>tlFilter==='All Events'||e.category===tlFilter)
-  const sortTl = [...filtTl].sort((a,b)=>tlSort==='latest'?b.id-a.id:a.id-b.id)
-  const compTl = sortTl.filter(e=>e.status!=='upcoming')
-  const upTl   = sortTl.filter(e=>e.status==='upcoming')
-  const ordTl  = tlSort==='latest'?[...compTl,...upTl]:[...upTl,...compTl]
+  const filtTl  = claim.timeline.filter(e=>tlFilter==='All Events'||e.category===tlFilter)
+  // Group into 3 sections — never mix statuses
+  const doneTl  = [...filtTl.filter(e=>e.status==='done')].sort((a,b)=>tlSort==='latest'?b.id-a.id:a.id-b.id)
+  const activeTl= filtTl.filter(e=>e.status==='active')
+  const upTl    = filtTl.filter(e=>e.status==='upcoming')
+  const ordTl   = [...doneTl, ...activeTl, ...upTl]
 
   const filtPay = claim.payments.filter(p=>[p.payTo,p.status,String(p.grossAmount)].some(v=>v.toLowerCase().includes(payQ.toLowerCase())))
   const pagedPay = filtPay.slice((payPage-1)*paySize,payPage*paySize)
@@ -915,7 +1110,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
           {ordTl.map((evt,i)=>{
             const isPend=evt.status==='upcoming', isAct=evt.status==='active'
             const next=ordTl[i+1]
-            const showDiv=!isPend&&next?.status==='upcoming'&&tlSort==='latest'
+            const showDiv = ordTl[i-1]?.status==='done' && evt.status==='active' || ordTl[i-1]?.status==='active' && evt.status==='upcoming'
             return (
               <div key={evt.id}>
                 <div style={{ display:'flex',gap:8,padding:'9px 0',borderBottom:i<ordTl.length-1?`1px solid ${C.bg}`:'none' }}>
@@ -934,7 +1129,12 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
                     <span style={badgeSt(evt.status)}>{isPend?'⏳ Scheduled':evt.badge}</span>
                   </div>
                 </div>
-                {showDiv&&<div style={{ textAlign:'center',padding:'6px 0',fontSize:10,fontWeight:600,color:C.faint,letterSpacing:'.06em',textTransform:'uppercase',borderTop:`1px dashed ${C.border}`,margin:'2px 0' }}>Upcoming</div>}
+                {showDiv&&(
+                  <div style={{ textAlign:'center',padding:'5px 0',fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',borderTop:`1px dashed ${C.border}`,margin:'2px 0',
+                    color: ordTl[i]?.status==='active' ? C.navy : '#60A5FA' }}>
+                    {ordTl[i]?.status==='active' ? '⟳  In Progress' : '⏳  Upcoming'}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -1054,15 +1254,40 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
           </div>
         </div>
       </div>
-      <div style={{ display:'flex',background:C.white,border:`1px solid ${C.border}`,borderTop:'none',borderBottom:'none' }}>
-        {TABS.map(t=>(
-          <button key={t.id} onClick={()=>setTab(t.id)} style={{ padding:'9px 16px',fontSize:12.5,fontWeight:600,background:'transparent',border:'none',borderBottom:`2px solid ${tab===t.id?C.navy:'transparent'}`,color:tab===t.id?C.navy:C.muted,cursor:'pointer',transition:'color .15s' }}>{t.label}</button>
-        ))}
-      </div>
-      {tab==='info'     &&<InfoTab/>}
-      {tab==='payments' &&<PaymentsTab/>}
-      {tab==='contacts' &&<ContactsTab/>}
-      {tab==='services' &&<ServicesTab/>}
+      {tabView && (
+        <div style={{ display:'flex',background:C.white,border:`1px solid ${C.border}`,borderTop:'none',borderBottom:'none' }}>
+          {TABS.map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{ padding:'9px 16px',fontSize:12.5,fontWeight:600,background:'transparent',border:'none',borderBottom:`2px solid ${tab===t.id?C.navy:'transparent'}`,color:tab===t.id?C.navy:C.muted,cursor:'pointer',transition:'color .15s' }}>{t.label}</button>
+          ))}
+        </div>
+      )}
+      {tabView ? (
+        /* ── TAB VIEW — show only the active tab ── */
+        <>
+          {tab==='info'     &&<InfoTab/>}
+          {tab==='payments' &&<PaymentsTab/>}
+          {tab==='contacts' &&<ContactsTab/>}
+          {tab==='services' &&<ServicesTab/>}
+        </>
+      ) : (
+        /* ── SCROLL VIEW — all sections stacked vertically ── */
+        <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
+          {[
+            { label:'Info',     icon:'ℹ️', content:<InfoTab/> },
+            { label:'Payments', icon:'💳', content:<PaymentsTab/> },
+            { label:'Contacts', icon:'👤', content:<ContactsTab/> },
+            { label:'Services', icon:'⚙️', content:<ServicesTab/> },
+          ].map(s => (
+            <div key={s.label} style={{ borderTop:`1px solid ${C.border}` }}>
+              <div style={{ padding:'10px 16px', background:C.bg, borderBottom:`1px solid ${C.border}`,
+                fontSize:13, fontWeight:700, color:C.text, display:'flex', alignItems:'center', gap:8 }}>
+                {s.icon} {s.label}
+              </div>
+              {s.content}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -1159,7 +1384,7 @@ export default function ClaimSearch() {
     const full = MOCK_CLAIMS[c.claimNumber]
     if (full) { setSelClaim(full); setShowPolicy(false) }
     else {
-      setSelClaim({ claimNumber:c.claimNumber, insuredName:c.insuredName, policyNumber:policyInput, claimStatus:c.status, statusType:c.status==='Closed'?'closed':'on-track', adjusterName:c.adjusterName, adjusterPhone:'—', reporterName:c.insuredName, reportedType:'Self / Insured', reportedDate:c.createdDate, vehicle:c.vehicle, dateOfLoss:c.createdDate, lossType:c.lossType, repairShop:'—', rentalInfo:'—', activeStep:c.status==='Closed'?8:3, progressPct:c.status==='Closed'?100:30, statusMsg:c.status==='Closed'?'This claim is closed. Contact your adjuster for full details.':'Your claim is in progress. Contact your adjuster for details.', notes:[], payments:[], contacts:[], services:[], timeline:[] })
+      setSelClaim({ claimNumber:c.claimNumber, insuredName:c.insuredName, policyNumber:policyInput, claimStatus:c.status, statusType:c.status==='Closed'?'closed':'on-track', lobType:c.lobType||'auto' as LobType, adjusterName:c.adjusterName, adjusterPhone:'—', reporterName:c.insuredName, reportedType:'Self / Insured', reportedDate:c.createdDate, vehicle:c.vehicle, dateOfLoss:c.createdDate, lossType:c.lossType, repairShop:'—', rentalInfo:'—', activeStep:c.status==='Closed'?8:3, progressPct:c.status==='Closed'?100:30, statusMsg:c.status==='Closed'?'This claim is closed. Contact your adjuster for full details.':'Your claim is in progress. Contact your adjuster for details.', notes:[], payments:[], contacts:[], services:[], timeline:[] })
       setShowPolicy(false)
     }
   }
