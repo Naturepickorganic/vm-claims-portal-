@@ -17,7 +17,9 @@ export default function Login() {
   const { login, isAuthenticated } = useAuth()
 
   /* After login, go to claims search (or whatever redirect param says) */
-  const redirect = params.get('redirect') ?? '/claims/search'
+  // Decode redirect URL — supports nested query params like /claims/search?claim=XXX
+  const rawRedirect = params.get('redirect')
+  const redirect = rawRedirect ? decodeURIComponent(rawRedirect) : '/claims/search'
 
   const [tab,      setTab]      = useState<'customer'|'agent'>('customer')
   const [email,    setEmail]    = useState('')
@@ -25,9 +27,19 @@ export default function Login() {
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState('')
 
+  // Redirect if already authenticated — use effect to avoid render-phase navigation
   if (isAuthenticated) {
-    navigate(redirect, { replace: true })
-    return null
+    // Already logged in — go straight to destination
+    setTimeout(() => navigate(redirect, { replace: true }), 0)
+    return (
+      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
+        background:C.bg, fontFamily:'"DM Sans",system-ui,sans-serif' }}>
+        <div style={{ textAlign:'center' }}>
+          <div style={{ fontSize:32, marginBottom:12 }}>✅</div>
+          <div style={{ fontSize:14, fontWeight:600, color:C.text }}>Already signed in — redirecting…</div>
+        </div>
+      </div>
+    )
   }
 
   const handleLogin = async (e: React.FormEvent) => {
