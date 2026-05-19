@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, AlertCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown } from 'lucide-react'
 import VMlogo from '@/components/ui/VMlogo'
+import ClaimsAssistant from '@/components/ClaimsAssistant'
 import { useAuth } from '@/lib/authContext'
 
 /* ── Brand tokens ── */
@@ -1482,5 +1483,10 @@ export default function ClaimSearch() {
         </div>
       </div>
     </div>
+
+      {/* ValueMomentum Claims Assistant — auto-injects claim context */}
+      {foundClaim && <ClaimsAssistant claimContext={foundClaim as any} mode="full"/>}
+      {selClaim   && <ClaimsAssistant claimContext={selClaim   as any} mode="full"/>}
+      {!foundClaim && !selClaim && <ClaimsAssistant mode="full"/>}
   )
 }
