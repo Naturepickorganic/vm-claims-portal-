@@ -206,7 +206,7 @@ export default function Home() {
               style={{ fontSize:12.5, color:'rgba(255,255,255,.45)', background:'transparent', border:'none', cursor:'pointer' }}>
               Claims for non-customers
             </button>
-            <button onClick={() => alert('Call 1-800-VM-CLAIMS and press 3 for roadside assistance.')}
+            <button onClick={() => navigate('/roadside')}
               style={{ fontSize:12.5, color:'rgba(255,255,255,.45)', background:'transparent', border:'none', cursor:'pointer' }}>
               Get roadside assistance
             </button>
