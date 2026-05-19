@@ -201,14 +201,20 @@ export default function Home() {
               Track a Claim
             </Link>
           </div>
-          <div style={{ display:'flex', flexWrap:'wrap' as const, gap:24 }}>
+          <div style={{ display:'flex', flexWrap:'wrap' as const, gap:10 }}>
             <button onClick={() => navigate('/claims/third-party/new')}
-              style={{ fontSize:12.5, color:'rgba(255,255,255,.45)', background:'transparent', border:'none', cursor:'pointer' }}>
-              Claims for non-customers
+              style={{ fontSize:12.5, fontWeight:600, color:'rgba(255,255,255,.85)',
+                background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.25)',
+                borderRadius:8, padding:'7px 16px', cursor:'pointer',
+                backdropFilter:'blur(4px)', letterSpacing:'.01em' }}>
+              👤 Claims for non-customers
             </button>
             <button onClick={() => navigate('/roadside')}
-              style={{ fontSize:12.5, color:'rgba(255,255,255,.45)', background:'transparent', border:'none', cursor:'pointer' }}>
-              Get roadside assistance
+              style={{ fontSize:12.5, fontWeight:600, color:'#FABD00',
+                background:'rgba(250,189,0,.1)', border:'1px solid rgba(250,189,0,.3)',
+                borderRadius:8, padding:'7px 16px', cursor:'pointer',
+                backdropFilter:'blur(4px)' }}>
+              🚛 Get roadside assistance
             </button>
           </div>
         </div>
