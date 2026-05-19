@@ -8,6 +8,7 @@ import { useLogo } from '@/lib/logoConfig'
 import { useAuth } from '@/lib/authContext'
 import Footer from '@/components/layout/Footer'
 import VMlogo from '@/components/ui/VMlogo'
+import ClaimsAssistant from '@/components/ClaimsAssistant'
 
 /* ── Brand constants — no Tailwind dependency ───────────── */
 const VM = {
@@ -343,6 +344,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      <ClaimsAssistant mode="full"/>
     </div>
   )
 }
