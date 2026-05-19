@@ -104,7 +104,8 @@ export default function TrackResult() {
       <nav style={{ background:C.navy, height:56, display:'flex', alignItems:'center',
         justifyContent:'space-between', padding:'0 28px', boxShadow:'0 2px 10px rgba(2,64,153,.3)' }}>
         <Link to="/" style={{ textDecoration:'none' }}><VMlogo size="md" variant="full-light"/></Link>
-        <Link to="/login" style={{ fontSize:13, fontWeight:600, color:C.white,
+        <Link to={`/login?redirect=${encodeURIComponent('/claims/search?claim=' + claim.claimNumber)}`}
+          style={{ fontSize:13, fontWeight:600, color:C.white,
           border:'1px solid rgba(255,255,255,.3)', padding:'6px 16px', borderRadius:8, textDecoration:'none' }}>
           Log In
         </Link>
@@ -161,7 +162,7 @@ export default function TrackResult() {
             </div>
 
             {/* CTA */}
-            <Link to="/login"
+            <Link to={`/login?redirect=${encodeURIComponent('/claims/search?claim=' + claim.claimNumber)}`}
               style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6,
                 width:'100%', background:C.navy, color:C.white, fontSize:13, fontWeight:700,
                 padding:'11px', borderRadius:9, textDecoration:'none', marginBottom:10 }}>
@@ -214,13 +215,13 @@ export default function TrackResult() {
           </div>
 
           <div style={{ padding:'14px 18px', borderTop:`1px solid ${C.border}`, background:C.bg }}>
-            <Link to="/login"
+            <Link to={`/login?redirect=${encodeURIComponent('/claims/search?claim=' + claim.claimNumber)}`}
               style={{ display:'block', width:'100%', background:C.navy, color:C.white,
                 fontSize:14, fontWeight:700, padding:'12px', borderRadius:9,
                 textDecoration:'none', textAlign:'center', marginBottom:8 }}>
               🔐 Log In to My Account
             </Link>
-            <Link to="/signup"
+            <Link to={`/signup?redirect=${encodeURIComponent('/claims/search?claim=' + claim.claimNumber)}`}
               style={{ display:'block', width:'100%', background:C.white, color:C.navy,
                 fontSize:13, fontWeight:600, padding:'10px', borderRadius:9,
                 border:`2px solid ${C.navy}`, textDecoration:'none', textAlign:'center' }}>
