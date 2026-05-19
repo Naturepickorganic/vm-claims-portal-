@@ -1309,6 +1309,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
             { label:'Payments', icon:'💳', content:<PaymentsTab/> },
             { label:'Contacts', icon:'👤', content:<ContactsTab/> },
             { label:'Services', icon:'⚙️', content:<ServicesTab/> },
+            ...(claim.lobType==='auto' ? [{ label:'Roadside', icon:'🚛', content:<RoadsideTab claim={claim}/> }] : []),
           ].map(s => (
             <div key={s.label} style={{ borderTop:`1px solid ${C.border}` }}>
               <div style={{ padding:'10px 16px', background:C.bg, borderBottom:`1px solid ${C.border}`,
