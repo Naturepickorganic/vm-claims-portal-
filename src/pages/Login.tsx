@@ -8,7 +8,7 @@ const C = {
   green:'#2EB124', greenLight:'#EDFAEB',
   border:'#E2E8F2', bg:'#F5F8FF', white:'#FFFFFF',
   text:'#1A2744', mid:'#4A5568', muted:'#718096', faint:'#A0AEC0',
-  error:'#DC2626', errorLight:'#FEF2F2',
+  error:'#DC2626', errorLight:'#FEF2F2', greenBorder:'#A8E4A2',
 }
 
 export default function Login() {
