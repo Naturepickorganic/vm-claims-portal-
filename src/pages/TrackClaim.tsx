@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/authContext'
 import VMlogo from '@/components/ui/VMlogo'
+import ClaimsAssistant from '@/components/ClaimsAssistant'
 
 const C = {
   navy:'#024099', blue:'#0254CC', bluePale:'#EBF3FF', blueBorder:'#BFDBFE',
@@ -203,6 +204,7 @@ export default function TrackClaim() {
       <div style={{ textAlign:'center', paddingBottom:24 }}>
         <Link to="/" style={{ fontSize:13, color:C.muted, textDecoration:'none' }}>← Back to Home</Link>
       </div>
+      <ClaimsAssistant mode="full"/>
     </div>
   )
 }
