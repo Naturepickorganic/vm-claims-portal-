@@ -972,8 +972,55 @@ function ClaimTracker({ claim }: { claim:ClaimData }) {
 /* ═══════════════════════════════════════════════════════════════
    CLAIM DETAIL — 4 tabs, all with real data
    ═══════════════════════════════════════════════════════════════ */
+function RoadsideTab({ claim }: { claim:ClaimData }) {
+  const navigate = useNavigate()
+  const svc = [
+    { id:'tow',  icon:'🚛', label:'Towing',       eta:'~45 min' },
+    { id:'flat', icon:'🔧', label:'Flat Tire',     eta:'~25 min' },
+    { id:'jump', icon:'🔋', label:'Jump Start',    eta:'~20 min' },
+    { id:'lock', icon:'🔑', label:'Lockout',       eta:'~30 min' },
+    { id:'fuel', icon:'⛽', label:'Fuel Delivery', eta:'~35 min' },
+  ]
+  return (
+    <div style={{ background:C.white, border:`1px solid ${C.border}`, borderTop:'none', padding:'20px 20px 24px' }}>
+      {/* Agero header */}
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16, padding:'12px 14px',
+        background:'#FEF0EC', border:'1px solid rgba(232,65,10,.2)', borderRadius:10 }}>
+        <div style={{ width:24, height:24, background:'#E8410A', borderRadius:5, flexShrink:0,
+          display:'flex', alignItems:'center', justifyContent:'center', color:C.white, fontWeight:900, fontSize:10 }}>A</div>
+        <div>
+          <div style={{ fontSize:13, fontWeight:700, color:'#E8410A' }}>Agero Roadside Assistance</div>
+          <div style={{ fontSize:11.5, color:'#718096' }}>24/7 coverage · Licensed & insured · No out-of-pocket cost · Linked to Claim #{claim.claimNumber}</div>
+        </div>
+      </div>
+      <div style={{ fontSize:13.5, fontWeight:700, color:C.text, marginBottom:12 }}>Select service needed:</div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10, marginBottom:20 }}>
+        {svc.map(s=>(
+          <button key={s.id} onClick={()=>navigate(`/roadside?claim=${claim.claimNumber}&service=${s.id}`)}
+            style={{ background:C.white, border:`2px solid ${C.border}`, borderRadius:12,
+              padding:'14px 8px', textAlign:'center', cursor:'pointer', transition:'all .2s' }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.borderColor=C.navy;(e.currentTarget as HTMLButtonElement).style.background=C.bluePale}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.borderColor=C.border;(e.currentTarget as HTMLButtonElement).style.background=C.white}}>
+            <div style={{ fontSize:26, marginBottom:6 }}>{s.icon}</div>
+            <div style={{ fontSize:11.5, fontWeight:700, color:C.text }}>{s.label}</div>
+            <div style={{ fontSize:10, color:C.faint, marginTop:2 }}>{s.eta}</div>
+          </button>
+        ))}
+      </div>
+      <button onClick={()=>navigate(`/roadside?claim=${claim.claimNumber}`)}
+        style={{ width:'100%', background:C.navy, color:C.white, fontSize:13.5, fontWeight:700,
+          padding:'12px', borderRadius:10, border:'none', cursor:'pointer' }}>
+        🚛 Request Roadside Assistance →
+      </button>
+      <p style={{ textAlign:'center', fontSize:11, color:C.faint, marginTop:8 }}>
+        Linked to Claim #{claim.claimNumber} · {claim.vehicle} · Covered under your policy
+      </p>
+    </div>
+  )
+}
+
 function ClaimDetail({ claim }: { claim:ClaimData }) {
-  const [tab,    setTab]    = useState<'info'|'payments'|'contacts'|'services'>('info')
+  const [tab,    setTab]    = useState<'info'|'payments'|'contacts'|'services'|'roadside'>('info')
   const [tabView,setTabView]= useState(true)
   const [noteQ,  setNoteQ]  = useState('')
   const [payQ,   setPayQ]   = useState('')
@@ -1225,7 +1272,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
     </div>
   )
 
-  const TABS = [{id:'info' as const,label:'Info'},{id:'payments' as const,label:'Payments'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'}]
+  const TABS = [{id:'info' as const,label:'Info'},{id:'payments' as const,label:'Payments'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'},...(claim.lobType==='auto'?[{id:'roadside' as const,label:'🚛 Roadside'}]:[]) ]
 
   return (
     <div style={{ marginTop:16 }}>
@@ -1249,6 +1296,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
         /* ── TAB VIEW — show only the active tab ── */
         <>
           {tab==='info'     &&<InfoTab/>}
+      {tab==='roadside' &&<RoadsideTab claim={claim}/>}
           {tab==='payments' &&<PaymentsTab/>}
           {tab==='contacts' &&<ContactsTab/>}
           {tab==='services' &&<ServicesTab/>}
