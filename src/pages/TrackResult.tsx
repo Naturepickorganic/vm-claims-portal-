@@ -1,5 +1,6 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import VMlogo from '@/components/ui/VMlogo'
+import ClaimsAssistant from '@/components/ClaimsAssistant'
 
 const C = {
   navy:'#024099', blue:'#0254CC', bluePale:'#EBF3FF', blueBorder:'#BFDBFE',
@@ -234,6 +235,7 @@ export default function TrackResult() {
         </div>
 
       </div>
+      <ClaimsAssistant mode="full"/>
     </div>
   )
 }
