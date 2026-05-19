@@ -446,7 +446,10 @@ async function executeTool(name: string, input: any, sessionId: string): Promise
 
       try {
         const payload = buildGWPayload(session, lt)
+        console.log('[GW] Calling POST', GW_BASE + '/claim/v1/claims')
+        console.log('[GW] Payload:', JSON.stringify(payload).slice(0,600))
         const gw = await gwFetch('/claim/v1/claims', 'POST', payload)
+        console.log('[GW] Response:', gw.status, JSON.stringify(gw.data).slice(0,400))
         if (gw.ok && gw.status === 201) {
           const attrs = gw.data?.data?.attributes || {}
           const claimId  = attrs.id
@@ -456,12 +459,17 @@ async function executeTool(name: string, input: any, sessionId: string): Promise
           fnolSessions.set(sessionId, session)
           return JSON.stringify({ success:true, source:'guidewire', claimId, claimNumber:claimNum, message:`Draft claim created: ${claimNum}` })
         }
-        /* GW failed — return mock success for demo */
-        const mockNum = `DEMO-${Date.now().toString().slice(-6)}`
-        session._draftClaimId  = mockNum
-        session._draftClaimNum = mockNum
-        fnolSessions.set(sessionId, session)
-        return JSON.stringify({ success:true, source:'demo', claimId:mockNum, claimNumber:mockNum, gwStatus:gw.status, message:`Demo draft created: ${mockNum}` })
+        /* GW call failed — return actual error for debugging */
+        const errBody = JSON.stringify(gw.data).slice(0, 800)
+        console.error(`[GW] create_draft_claim failed: ${gw.status}`, errBody)
+        return JSON.stringify({
+          success: false,
+          source:  'guidewire',
+          gwStatus: gw.status,
+          gwError:  gw.data,
+          message: `Guidewire returned status ${gw.status}. Please check claim data and try again.`,
+          debug: `URL: ${GW_BASE}/claim/v1/claims | Status: ${gw.status}`
+        })
       } catch(e:any) {
         return JSON.stringify({ success:false, error:e.message })
       }
