@@ -1482,11 +1482,11 @@ export default function ClaimSearch() {
           <Link to="/" style={{ fontSize:13,color:C.muted,textDecoration:'none' }}>← Back to Home</Link>
         </div>
       </div>
-    </div>
 
       {/* ValueMomentum Claims Assistant — auto-injects claim context */}
       {foundClaim && <ClaimsAssistant claimContext={foundClaim as any} mode="full"/>}
       {selClaim   && <ClaimsAssistant claimContext={selClaim   as any} mode="full"/>}
       {!foundClaim && !selClaim && <ClaimsAssistant mode="full"/>}
+    </div>
   )
 }
