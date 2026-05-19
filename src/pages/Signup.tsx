@@ -1,171 +1,133 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/lib/authContext'
-import { useLogo } from '@/lib/logoConfig'
-import { clsx } from 'clsx'
+import VMlogo from '@/components/ui/VMlogo'
 
-type Step = 'verify' | 'create' | 'done'
+const C = {
+  navy:'#024099', blue:'#0254CC', bluePale:'#EBF3FF',
+  green:'#2EB124', greenLight:'#EDFAEB',
+  border:'#E2E8F2', bg:'#F5F8FF', white:'#FFFFFF',
+  text:'#1A2744', mid:'#4A5568', muted:'#718096', faint:'#A0AEC0',
+  error:'#DC2626', errorLight:'#FEF2F2',
+}
 
 export default function Signup() {
-  const navigate          = useNavigate()
-  const { login }         = useAuth()
-  const { logo }          = useLogo()
-  const [step, setStep]   = useState<Step>('verify')
-  const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState('')
+  const navigate = useNavigate()
+  const { login } = useAuth()
 
-  // Step 1 — Verify identity
-  const [policyNumber, setPolicyNumber] = useState('')
-  const [dob,          setDob]          = useState('')
-  const [zip,          setZip]          = useState('')
+  const [name,     setName]     = useState('')
+  const [email,    setEmail]    = useState('')
+  const [phone,    setPhone]    = useState('')
+  const [policy,   setPolicy]   = useState('')
+  const [password, setPassword] = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState('')
 
-  // Step 2 — Create account
-  const [firstName,  setFirstName]  = useState('')
-  const [lastName,   setLastName]   = useState('')
-  const [email,      setEmail]      = useState('')
-  const [phone,      setPhone]      = useState('')
-  const [password,   setPassword]   = useState('')
-  const [confirmPwd, setConfirmPwd] = useState('')
-
-  const handleVerify = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!policyNumber || !dob || !zip) { setError('All fields are required.'); return }
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setError('Please fill in all required fields.')
+      return
+    }
     setLoading(true)
-    // TODO: Call /api/v1/policy/verify with { policyNumber, dob, zip }
-    await new Promise(r => setTimeout(r, 1200))
-    setLoading(false)
-    // Mock: any policy number works in demo
-    setStep('create')
+    try {
+      // 🔌 Replace with real registration API call
+      await login(email, password) // mock: log in after signup
+      navigate('/claims/search', { replace: true })
+    } catch {
+      setError('Could not create account. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    if (!firstName || !lastName || !email || !password) { setError('All fields are required.'); return }
-    if (password !== confirmPwd) { setError('Passwords do not match.'); return }
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
-    setLoading(true)
-    // TODO: Call /api/v1/auth/register with user data
-    await new Promise(r => setTimeout(r, 1400))
-    await login(email, password)
-    setLoading(false)
-    setStep('done')
+  const S = {
+    page:  { minHeight:'100vh', background:C.bg, fontFamily:'"DM Sans",system-ui,sans-serif', display:'flex', flexDirection:'column' as const },
+    nav:   { background:C.navy, height:56, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', boxShadow:'0 2px 10px rgba(2,64,153,.3)' },
+    card:  { background:C.white, borderRadius:16, border:`1px solid ${C.border}`, padding:'32px', boxShadow:'0 4px 24px rgba(2,64,153,.1)' },
+    input: { width:'100%', fontSize:13.5, border:`1px solid ${C.border}`, borderRadius:8, padding:'10px 12px', color:C.text, outline:'none', fontFamily:'inherit', transition:'border-color .15s', boxSizing:'border-box' as const },
+    label: { fontSize:12, fontWeight:600, color:C.mid, display:'block', marginBottom:5 },
+    btn:   { width:'100%', background:C.navy, color:C.white, fontSize:14, fontWeight:700, padding:'12px', borderRadius:9, border:'none', cursor:'pointer', fontFamily:'inherit' },
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
-      {/* NAV */}
-      <nav className="h-16 bg-navy flex items-center justify-between px-5 md:px-8">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-[34px] h-[34px] rounded-lg bg-red flex items-center justify-center font-display font-black text-[15px] text-white">{logo.initials}</div>
-          <span className="font-display font-bold text-[15px] text-white">{logo.name} <span className="text-[#FF8099]">Claims</span></span>
+    <div style={S.page}>
+      <nav style={S.nav}>
+        <Link to="/" style={{ textDecoration:'none' }}><VMlogo size="md" variant="full-light"/></Link>
+        <Link to="/" style={{ fontSize:13, color:'rgba(255,255,255,.55)', textDecoration:'none' }}>
+          ← Back to Home
         </Link>
-        <Link to="/login" className="text-[13px] text-white/50 hover:text-white transition-colors">Already have an account? Log in</Link>
       </nav>
 
-      <div className="flex-1 flex items-center justify-center p-5">
-        <div className="w-full max-w-[480px]">
-
-          {/* Progress */}
-          {step !== 'done' && (
-            <div className="flex items-center gap-2 mb-6">
-              {['Verify Policy','Create Account','Done'].map((s, i) => (
-                <div key={s} className="flex items-center gap-2 flex-1">
-                  <div className={clsx('w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0',
-                    (step === 'verify' && i === 0) || (step === 'create' && i <= 1) ? 'bg-red text-white' : 'bg-border text-faint')}>
-                    {i + 1}
-                  </div>
-                  <span className={clsx('text-[11.5px] hidden sm:block', step === 'verify' && i === 0 || step === 'create' && i === 1 ? 'text-navy font-semibold' : 'text-faint')}>{s}</span>
-                  {i < 2 && <div className="flex-1 h-px bg-border" />}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="bg-white rounded-2xl shadow-card p-8">
-
-            {/* Step 1 — Verify Policy */}
-            {step === 'verify' && (
-              <>
-                <h1 className="font-display font-black text-[22px] text-navy mb-1">Create Your Account</h1>
-                <p className="text-[13px] text-muted mb-6">First, let us verify your policy. This keeps your account secure.</p>
-                <form onSubmit={handleVerify} className="flex flex-col gap-4">
-                  <div className="field">
-                    <label className="field-label">Policy Number <span className="text-red">*</span></label>
-                    <input value={policyNumber} onChange={e => setPolicyNumber(e.target.value)}
-                      placeholder="e.g. VM-AUTO-2024-88421" className="field-input" />
-                    <span className="field-hint">Found on your policy declaration page or insurance card</span>
-                  </div>
-                  <div className="field">
-                    <label className="field-label">Date of Birth <span className="text-red">*</span></label>
-                    <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="field-input" />
-                  </div>
-                  <div className="field">
-                    <label className="field-label">ZIP Code on Policy <span className="text-red">*</span></label>
-                    <input value={zip} onChange={e => setZip(e.target.value)} placeholder="75209" maxLength={5} className="field-input" />
-                  </div>
-                  {error && <div className="text-[12.5px] text-red font-semibold bg-red-light border border-red-mid rounded-lg px-3 py-2">{error}</div>}
-                  <button type="submit" disabled={loading} className="btn btn-primary justify-center py-3 text-[14px] w-full mt-1">
-                    {loading ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Verifying…</span> : 'Verify My Policy →'}
-                  </button>
-                </form>
-              </>
-            )}
-
-            {/* Step 2 — Create Account */}
-            {step === 'create' && (
-              <>
-                <div className="flex items-center gap-2 mb-5 p-3 bg-green-light border border-green-mid rounded-xl">
-                  <span className="text-green font-bold">✓</span>
-                  <span className="text-[13px] text-green-dark font-semibold">Policy verified successfully</span>
-                </div>
-                <h1 className="font-display font-black text-[22px] text-navy mb-1">Create Your Account</h1>
-                <p className="text-[13px] text-muted mb-6">Set up your login credentials.</p>
-                <form onSubmit={handleCreate} className="flex flex-col gap-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="field"><label className="field-label">First Name <span className="text-red">*</span></label><input value={firstName} onChange={e => setFirstName(e.target.value)} className="field-input" /></div>
-                    <div className="field"><label className="field-label">Last Name <span className="text-red">*</span></label><input value={lastName} onChange={e => setLastName(e.target.value)} className="field-input" /></div>
-                  </div>
-                  <div className="field"><label className="field-label">Email Address <span className="text-red">*</span></label><input type="email" value={email} onChange={e => setEmail(e.target.value)} className="field-input" /></div>
-                  <div className="field"><label className="field-label">Phone Number</label><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(214) 555-0100" className="field-input" /></div>
-                  <div className="field">
-                    <label className="field-label">Password <span className="text-red">*</span></label>
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="field-input" />
-                    <span className="field-hint">Minimum 8 characters</span>
-                  </div>
-                  <div className="field"><label className="field-label">Confirm Password <span className="text-red">*</span></label><input type="password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} className="field-input" /></div>
-                  {error && <div className="text-[12.5px] text-red font-semibold bg-red-light border border-red-mid rounded-lg px-3 py-2">{error}</div>}
-                  <button type="submit" disabled={loading} className="btn btn-primary justify-center py-3 text-[14px] w-full mt-1">
-                    {loading ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating account…</span> : 'Create Account →'}
-                  </button>
-                </form>
-              </>
-            )}
-
-            {/* Done */}
-            {step === 'done' && (
-              <div className="text-center py-4">
-                <div className="w-16 h-16 rounded-full bg-green flex items-center justify-center text-[28px] text-white mx-auto mb-4">✓</div>
-                <h1 className="font-display font-black text-[22px] text-navy mb-2">You're all set!</h1>
-                <p className="text-[13.5px] text-muted mb-6">Your account has been created. You are now logged in and ready to file or track claims.</p>
-                <div className="flex flex-col gap-2.5">
-                  <button onClick={() => navigate('/file-claim')} className="btn btn-primary justify-center py-3 w-full">File a Claim →</button>
-                  <button onClick={() => navigate('/track')} className="btn btn-ghost justify-center py-2.5 w-full">Track a Claim</button>
-                </div>
+      <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'24px 16px' }}>
+        <div style={{ width:'100%', maxWidth:440 }}>
+          <div style={S.card}>
+            <div style={{ textAlign:'center', marginBottom:24 }}>
+              <div style={{ display:'flex', justifyContent:'center', marginBottom:12 }}>
+                <VMlogo size="lg" variant="full"/>
               </div>
-            )}
+              <h1 style={{ fontSize:22, fontWeight:800, color:C.text, marginBottom:4 }}>Create your account</h1>
+              <p style={{ fontSize:13, color:C.muted }}>Manage all your claims in one place</p>
+            </div>
+
+            <div style={{ background:C.greenLight, border:`1px solid #A8E4A2`,
+              borderRadius:8, padding:'8px 12px', fontSize:12, color:'#1B5E20', marginBottom:20 }}>
+              ✅ <strong>Demo:</strong> Fill in any details to create a demo account
+            </div>
+
+            <form onSubmit={handleSignup} style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div>
+                <label style={S.label}>Full Name <span style={{ color:C.error }}>*</span></label>
+                <input value={name} onChange={e=>setName(e.target.value)}
+                  placeholder="Sarah M. Johnson" style={S.input}/>
+              </div>
+              <div>
+                <label style={S.label}>Email Address <span style={{ color:C.error }}>*</span></label>
+                <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
+                  placeholder="your@email.com" style={S.input} autoComplete="email"/>
+              </div>
+              <div>
+                <label style={S.label}>Phone Number</label>
+                <input value={phone} onChange={e=>setPhone(e.target.value)}
+                  placeholder="(214) 555-0000" style={S.input}/>
+              </div>
+              <div>
+                <label style={S.label}>Policy Number <span style={{ fontSize:10.5, fontWeight:400, color:C.faint }}>(optional — link an existing policy)</span></label>
+                <input value={policy} onChange={e=>setPolicy(e.target.value)}
+                  placeholder="e.g. 7407354463" style={S.input}/>
+              </div>
+              <div>
+                <label style={S.label}>Password <span style={{ color:C.error }}>*</span></label>
+                <input type="password" value={password} onChange={e=>setPassword(e.target.value)}
+                  placeholder="Min. 8 characters" style={S.input} autoComplete="new-password"/>
+              </div>
+
+              {error && (
+                <div style={{ fontSize:12.5, color:C.error, background:C.errorLight,
+                  border:`1px solid #FECACA`, borderRadius:8, padding:'8px 12px' }}>
+                  ⚠️ {error}
+                </div>
+              )}
+
+              <button type="submit" disabled={loading}
+                style={{ ...S.btn, opacity:loading?.7:1, marginTop:4 }}>
+                {loading ? 'Creating account…' : '✅ Create Account'}
+              </button>
+            </form>
+
+            <p style={{ textAlign:'center', fontSize:12, color:C.muted, marginTop:20 }}>
+              Already have an account?{' '}
+              <Link to="/login" style={{ color:C.navy, fontWeight:700, textDecoration:'none' }}>
+                Sign in
+              </Link>
+            </p>
           </div>
 
-          {step !== 'done' && (
-            <p className="text-center text-[12px] text-muted mt-4">
-              Already have an account? <Link to="/login" className="text-red font-semibold">Log in</Link>
-            </p>
-          )}
+          <p style={{ textAlign:'center', fontSize:11, color:C.faint, marginTop:10 }}>
+            🔒 Secured with 256-bit encryption · SOC 2 Type II certified
+          </p>
         </div>
-      </div>
-      <div className="text-center py-4 text-[11px] text-faint border-t border-border">
-        🔒 Secured with 256-bit encryption · SOC 2 Type II certified
       </div>
     </div>
   )
