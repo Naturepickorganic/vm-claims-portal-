@@ -127,9 +127,9 @@ function ServiceSelection({ onNext }: { onNext:(svc:string, claim:string)=>void 
       <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10, marginBottom:16 }}>
         {SERVICES.map(s=>(
           <div key={s.id} onClick={()=>setSelected(s.id)}
-            style={{ background:C.white, border:`2px solid ${selected===s.id?C.navy:C.border}`,
+            style={{ background: selected===s.id ? C.bluePale : C.white,
+              border:`2px solid ${selected===s.id?C.navy:C.border}`,
               borderRadius:12, padding:'16px 8px', textAlign:'center', cursor:'pointer',
-              background: selected===s.id ? C.bluePale : C.white,
               transform: selected===s.id ? 'translateY(-2px)' : 'none',
               transition:'all .2s', boxShadow: selected===s.id ? '0 4px 12px rgba(2,64,153,.15)' : 'none' }}>
             <div style={{ fontSize:28, marginBottom:8 }}>{s.icon}</div>
