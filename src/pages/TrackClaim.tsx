@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '@/lib/authContext'
 import VMlogo from '@/components/ui/VMlogo'
 import ClaimsAssistant from '@/components/ClaimsAssistant'
 
@@ -21,7 +20,6 @@ const VALID_LOOKUPS = new Set([
 
 export default function TrackClaim() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
   const [claimNum, setClaimNum] = useState('')
   const [zip,      setZip]      = useState('')
   const [error,    setError]    = useState('')
