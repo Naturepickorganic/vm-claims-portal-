@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '@/lib/authContext'
 import VMlogo from '@/components/ui/VMlogo'
 
@@ -12,8 +12,11 @@ const C = {
 }
 
 export default function Signup() {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const [params]  = useSearchParams()
   const { login } = useAuth()
+  const rawRedirect = params.get('redirect')
+  const redirect = rawRedirect ? decodeURIComponent(rawRedirect) : '/claims/search'
 
   const [name,     setName]     = useState('')
   const [email,    setEmail]    = useState('')
@@ -34,7 +37,7 @@ export default function Signup() {
     try {
       // 🔌 Replace with real registration API call
       await login(email, password) // mock: log in after signup
-      navigate('/claims/search', { replace: true })
+      navigate(redirect, { replace: true })
     } catch {
       setError('Could not create account. Please try again.')
     } finally {
