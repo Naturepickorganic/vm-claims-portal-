@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download, Upload, AlertCircle, CheckCircle, Clock, History, FileText, Shield, Car, FilePlus, FileX, Camera, CloudUpload, FolderOpen, Info, TableProperties, Plug, FileCheck, Id, CircleCheck, AlertTriangle } from 'lucide-react'
+import { Download, Upload, AlertCircle, CheckCircle, Clock, History, FileText, Camera, CloudUpload, FolderOpen, Info, AlertTriangle } from 'lucide-react'
 
 /* ── Brand tokens ── */
 const C = {
