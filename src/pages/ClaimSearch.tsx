@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, AlertCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown } from 'lucide-react'
 import VMlogo from '@/components/ui/VMlogo'
+import DocumentsTab from '@/components/DocumentsTab'
 import ClaimsAssistant from '@/components/ClaimsAssistant'
 import { useAuth } from '@/lib/authContext'
 
@@ -975,7 +976,7 @@ function ClaimTracker({ claim }: { claim:ClaimData }) {
    ═══════════════════════════════════════════════════════════════ */
 
 function ClaimDetail({ claim }: { claim:ClaimData }) {
-  const [tab,    setTab]    = useState<'info'|'payments'|'contacts'|'services'>('info')
+  const [tab,    setTab]    = useState<'info'|'payments'|'contacts'|'services'|'documents'>('info')
   const [tabView,setTabView]= useState(true)
   const [noteQ,  setNoteQ]  = useState('')
   const [payQ,   setPayQ]   = useState('')
@@ -1227,7 +1228,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
     </div>
   )
 
-  const TABS = [{id:'info' as const,label:'Info'},{id:'payments' as const,label:'Payments'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'}]
+  const TABS = [{id:'info' as const,label:'Info'},{id:'payments' as const,label:'Payments'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'},{id:'documents' as const,label:'📁 Documents'}]
 
   return (
     <div style={{ marginTop:16 }}>
@@ -1253,7 +1254,8 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
           {tab==='info'     &&<InfoTab/>}
           {tab==='payments' &&<PaymentsTab/>}
           {tab==='contacts' &&<ContactsTab/>}
-          {tab==='services' &&<ServicesTab/>}
+          {tab==='services'  &&<ServicesTab/>}
+      {tab==='documents' &&<DocumentsTab claimNumber={claim.claimNumber} lobType={claim.lobType}/>}
         </>
       ) : (
         /* ── SCROLL VIEW — all sections stacked vertically ── */
@@ -1262,7 +1264,8 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
             { label:'Info',     icon:'ℹ️', content:<InfoTab/> },
             { label:'Payments', icon:'💳', content:<PaymentsTab/> },
             { label:'Contacts', icon:'👤', content:<ContactsTab/> },
-            { label:'Services', icon:'⚙️', content:<ServicesTab/> },
+            { label:'Services',   icon:'⚙️', content:<ServicesTab/> },
+            { label:'Documents', icon:'📁', content:<DocumentsTab claimNumber={claim.claimNumber} lobType={claim.lobType}/> },
           ].map(s => (
             <div key={s.label} style={{ borderTop:`1px solid ${C.border}` }}>
               <div style={{ padding:'10px 16px', background:C.bg, borderBottom:`1px solid ${C.border}`,
