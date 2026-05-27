@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, AlertCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown } from 'lucide-react'
 import VMlogo from '@/components/ui/VMlogo'
-import DocumentsTab from '@/components/DocumentsTab'
+import DocumentsTab  from '@/components/DocumentsTab'
+import CoverageTab   from '@/components/CoverageTab'
 import ClaimsAssistant from '@/components/ClaimsAssistant'
 import { useAuth } from '@/lib/authContext'
 
@@ -976,7 +977,7 @@ function ClaimTracker({ claim }: { claim:ClaimData }) {
    ═══════════════════════════════════════════════════════════════ */
 
 function ClaimDetail({ claim }: { claim:ClaimData }) {
-  const [tab,    setTab]    = useState<'info'|'payments'|'contacts'|'services'|'documents'>('info')
+  const [tab,    setTab]    = useState<'coverage'|'info'|'payments'|'contacts'|'services'|'documents'>('coverage')
   const [tabView,setTabView]= useState(true)
   const [noteQ,  setNoteQ]  = useState('')
   const [payQ,   setPayQ]   = useState('')
@@ -1228,7 +1229,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
     </div>
   )
 
-  const TABS = [{id:'info' as const,label:'Info'},{id:'payments' as const,label:'Payments'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'},{id:'documents' as const,label:'📁 Documents'}]
+  const TABS = [{id:'coverage' as const,label:'📋 Coverage'},{id:'info' as const,label:'Info'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'},{id:'documents' as const,label:'📁 Documents'},{id:'payments' as const,label:'Payments'}]
 
   return (
     <div style={{ marginTop:16 }}>
@@ -1254,13 +1255,15 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
           {tab==='info'     &&<InfoTab/>}
           {tab==='payments' &&<PaymentsTab/>}
           {tab==='contacts' &&<ContactsTab/>}
-          {tab==='services'  &&<ServicesTab/>}
+          {tab==='coverage'  &&<CoverageTab claimNumber={claim.claimNumber} policyNumber={claim.policyNumber} lobType={claim.lobType} vehicle={claim.vehicle} adjusterName={claim.adjusterName}/>}
+      {tab==='services'  &&<ServicesTab/>}
       {tab==='documents' &&<DocumentsTab claimNumber={claim.claimNumber} lobType={claim.lobType}/>}
         </>
       ) : (
         /* ── SCROLL VIEW — all sections stacked vertically ── */
         <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
           {[
+            { label:'Coverage', icon:'📋', content:<CoverageTab claimNumber={claim.claimNumber} policyNumber={claim.policyNumber} lobType={claim.lobType} vehicle={claim.vehicle} adjusterName={claim.adjusterName}/> },
             { label:'Info',     icon:'ℹ️', content:<InfoTab/> },
             { label:'Payments', icon:'💳', content:<PaymentsTab/> },
             { label:'Contacts', icon:'👤', content:<ContactsTab/> },
@@ -1353,12 +1356,75 @@ export default function ClaimSearch() {
 
   const reset = () => { setFoundClaim(null); setShowPolicy(false); setSelClaim(null); setError('') }
 
-  const searchClaim = () => {
+  const searchClaim = async () => {
     setError(''); reset()
-    const c = MOCK_CLAIMS[claimInput.trim()]
-    if (c) setFoundClaim(c)
-    else if (claimInput.trim()) setError(`Claim "${claimInput}" not found. Try: 000-00-000480 (Auto), 000-00-000750 (Property), or 000-00-000751 (Property-water)`)
-    else setError('Please enter a claim number.')
+    const num = claimInput.trim()
+    if (!num) { setError('Please enter a claim number.'); return }
+
+    /* 1 — Check mock data first */
+    const mock = MOCK_CLAIMS[num]
+    if (mock) { setFoundClaim(mock); return }
+
+    /* 2 — Live GW lookup via local proxy or Vercel API */
+    setError('Searching Guidewire...')
+    try {
+      const PROXY = (import.meta as any).env?.VITE_PROXY_URL || ''
+      const url   = PROXY
+        ? `${PROXY}/gw/claim/v1/claims?claimNumber=${num}`
+        : `/api/gw/claim/v1/claims?claimNumber=${num}`
+
+      const res  = await fetch(url)
+      const data = await res.json()
+      const raw  = data?.data?.[0]?.attributes
+
+      if (!raw) { setError(`Claim "${num}" not found in Guidewire ClaimCenter.`); return }
+
+      /* Map GW response to ClaimData */
+      const isAuto = raw.lossType?.code === 'AUTO'
+      const gwClaim: ClaimData = {
+        claimNumber:  raw.claimNumber || num,
+        insuredName:  raw.insured?.displayName || raw.mainContact?.displayName || 'Unknown',
+        policyNumber: raw.policyNumber || '—',
+        claimStatus:  raw.state?.name || 'Open',
+        statusType:   raw.state?.code === 'open' ? 'on-track' : 'closed',
+        lobType:      isAuto ? 'auto' : 'property',
+        adjusterName: raw.assignedUser?.displayName || raw.adjuster || 'Assigned Adjuster',
+        adjusterPhone:'Contact via portal',
+        reporterName: raw.reporter?.displayName || raw.insured?.displayName || '—',
+        reportedType: raw.reportedByType?.name || 'Self / Insured',
+        reportedDate: raw.reportedDate ? new Date(raw.reportedDate).toLocaleDateString() : '—',
+        vehicle:      isAuto ? 'Vehicle — see adjuster' : 'Property — see adjuster',
+        dateOfLoss:   raw.lossDate ? new Date(raw.lossDate).toLocaleDateString() : '—',
+        lossType:     raw.lossCause?.name || raw.lossType?.name || '—',
+        repairShop:   '—',
+        rentalInfo:   '—',
+        activeStep:   raw.state?.code === 'open' ? 3 : 8,
+        progressPct:  raw.state?.code === 'open' ? 35 : 100,
+        statusMsg:    raw.state?.code === 'open'
+          ? 'Claim is open and in progress. Loss cause: ' + (raw.lossCause?.name || 'Under review') + '. Adjuster: ' + (raw.assignedUser?.displayName || 'Super User') + '.'
+          : 'This claim is closed. Contact your adjuster for details.',
+        notes:    (raw.claimHistory || []).slice(0,5).map((h: any) => ({
+          date:   new Date(h.eventTimeStamp).toLocaleDateString(),
+          author: h.user || 'System',
+          text:   h.description || h.type,
+          type:   'info',
+        })),
+        payments:  [],
+        contacts:  [{ role:'Adjuster', name: raw.assignedUser?.displayName || 'Super User', phone:'—', email:'—' }],
+        services:  [],
+        timeline:  (raw.claimHistory || []).slice(0,8).map((h: any, i: number) => ({
+          step:   i+1,
+          label:  h.type,
+          date:   new Date(h.eventTimeStamp).toLocaleDateString(),
+          status: 'done',
+          detail: h.description || h.type,
+        })),
+      }
+      setError('')
+      setFoundClaim(gwClaim)
+    } catch {
+      setError('Could not reach Guidewire. Check that the local proxy is running on port 3001.')
+    }
   }
 
   const searchPolicy = () => {
