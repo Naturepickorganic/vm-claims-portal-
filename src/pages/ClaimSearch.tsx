@@ -1434,11 +1434,67 @@ export default function ClaimSearch() {
     }
   }
 
-  const searchPolicy = () => {
+  const searchPolicy = async () => {
     setError(''); reset()
-    if (!policyInput.trim()) { setError('Please enter a policy number.'); return }
-    if (MOCK_POLICIES[policyInput.trim()]) { setPolicyNum(policyInput.trim()); setShowPolicy(true) }
-    else setError(`Policy "${policyInput}" not found. Try: 7407354463 (Auto-3 claims), 6601234500 (Property), 9901234567 (Mixed-25 claims)`)
+    const num = policyInput.trim()
+    if (!num) { setError('Please enter a policy number.'); return }
+
+    /* 1 — Check mock policies first */
+    if (MOCK_POLICIES[num]) { setPolicyNum(num); setShowPolicy(true); return }
+
+    /* 2 — Live GW lookup by policy number */
+    setError('Searching Guidewire...')
+    try {
+      const PROXY = (import.meta as any).env?.VITE_PROXY_URL || ''
+      if (!PROXY) { setError(`Policy "${num}" not found. Try: 7407354463, 6601234500, 9901234567`); return }
+
+      /* Search ClaimCenter for claims matching this policy number */
+      const r = await fetch(`${PROXY}/gw/claim/v1/claims?filter=policyNumber%3Aeq%3A${encodeURIComponent(num)}&pageSize=10`)
+      const d = await r.json()
+      const gwClaims = d?.data || []
+
+      if (gwClaims.length === 0) {
+        setError(`Policy "${num}" not found in Guidewire ClaimCenter. No claims found for this policy.`)
+        return
+      }
+
+      /* Also try to get PC policy details */
+      let pcInsured = ''; let pcLocation = ''; let pcProduct = ''
+      try {
+        const pcr = await fetch(`${PROXY}/pc/policy/v1/policies?pageSize=50`)
+        const pcd = await pcr.json()
+        const pcPolicy = (pcd?.data || []).find((p:any) => p.attributes?.policyNumber === num)
+        if (pcPolicy?.attributes) {
+          pcInsured  = pcPolicy.attributes.primaryInsured?.displayName || ''
+          pcLocation = pcPolicy.attributes.primaryLocation?.displayName || ''
+          pcProduct  = pcPolicy.attributes.product?.displayName || ''
+        }
+      } catch { /* PC lookup optional */ }
+
+      /* Build policy claims list from GW CC results */
+      const gwPolicyClaims: PolicyClaim[] = gwClaims.map((item:any) => {
+        const a = item.attributes
+        return {
+          claimNumber:  a.claimNumber,
+          insuredName:  pcInsured || a.insured?.displayName || a.mainContact?.displayName || 'Unknown',
+          adjusterName: a.assignedUser?.displayName || 'Assigned Adjuster',
+          status:       a.state?.code === 'open' ? 'Open' : 'Closed',
+          createdDate:  a.reportedDate ? new Date(a.reportedDate).toLocaleDateString() : '—',
+          vehicle:      pcLocation || (a.lossType?.code === 'AUTO' ? 'Vehicle — see details' : 'Property — see details'),
+          lossType:     a.lossCause?.name || a.lossType?.name || '—',
+          lobType:      a.lossType?.code === 'AUTO' ? 'auto' : 'property',
+        }
+      })
+
+      /* Store as dynamic policy and show */
+      const dynamicKey = `GW_${num}`
+      MOCK_POLICIES[dynamicKey] = gwPolicyClaims
+      setError('')
+      setPolicyNum(dynamicKey)
+      setShowPolicy(true)
+    } catch {
+      setError('Could not reach Guidewire. Check that the local proxy is running on port 3001.')
+    }
   }
 
   const handlePolicyClaimSelect = (c:PolicyClaim) => {
