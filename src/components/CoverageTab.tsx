@@ -279,27 +279,89 @@ export default function CoverageTab({ claimNumber, policyNumber, lobType, vehicl
       setLoading(true)
       const PROXY = (import.meta as any).env?.VITE_PROXY_URL || ''
 
-      /* Try GW claim coverages first */
       if (PROXY) {
         try {
-          const r = await fetch(`${PROXY}/gw/claim/v1/claims?filter=claimNumber%3Aeq%3A${claimNumber}&pageSize=1`)
-          const d = await r.json()
-          const raw = d?.data?.[0]?.attributes
-          if (raw) {
-            /* GW has claim — build coverage from real data */
-            const isAuto = raw.lossType?.code === 'AUTO'
-            const mockBase = getCoverage(claimNumber, isAuto ? 'auto' : 'property')
-            /* Override with real GW values where available */
+          /* ── Step 1: Get claim from ClaimCenter ── */
+          const cr = await fetch(`${PROXY}/gw/claim/v1/claims?filter=claimNumber%3Aeq%3A${claimNumber}&pageSize=1`)
+          const cd = await cr.json()
+          const claim = cd?.data?.[0]?.attributes
+
+          if (claim) {
+            const isAuto     = claim.lossType?.code === 'AUTO'
+            const polNum     = claim.policyNumber || policyNumber
+            const pcId       = claim.insured?.policySystemId || claim.mainContact?.policySystemId || ''
+            const mockBase   = getCoverage(claimNumber, isAuto ? 'auto' : 'property')
+
+            let pcPolicy:any = null; let pcLines:any[] = []
+            let pcCoverages:any[] = []; let pcVehicles:any[] = []
+
+            /* ── Step 2: Get PolicyCenter policy (if pcId available) ── */
+            if (pcId) {
+              try {
+                const pr  = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}`)
+                const pd  = await pr.json()
+                pcPolicy  = pd?.data?.attributes || null
+
+                /* ── Step 3: Get PC lines ── */
+                const lr  = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}/lines`)
+                const ld  = await lr.json()
+                pcLines   = ld?.data || []
+
+                if (pcLines.length > 0) {
+                  const lineId = pcLines[0].attributes?.id || pcLines[0].attributes?.patternCode
+                  /* ── Step 4: Get coverages ── */
+                  const cvr = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}/lines/${lineId}/coverages`)
+                  const cvd = await cvr.json()
+                  pcCoverages = cvd?.data || []
+
+                  /* ── Step 5: Get vehicles (auto only) ── */
+                  if (isAuto) {
+                    const vr  = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}/lines/${lineId}/personal-vehicles`)
+                    const vd  = await vr.json()
+                    pcVehicles = vd?.data || []
+                  }
+                }
+              } catch { /* PC optional */ }
+            }
+
+            /* ── Map real PC fields onto coverage ── */
+            const fmtDate = (d:string) => d ? new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'
+            const vehicle = pcVehicles[0]?.attributes
+            const vehStr  = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : (isAuto ? 'Vehicle — see adjuster' : 'Property — see adjuster')
+            const vinStr  = vehicle?.vin || '—'
+
+            // Build real coverage pills from PC
+            const realPills = pcCoverages.length > 0 ? pcCoverages.map((cv:any) => ({
+              label: cv.attributes?.pattern?.displayName || cv.attributes?.id || 'Coverage',
+              type:  cv.attributes?.selected ? 'active' as const : 'excluded' as const,
+            })) : mockBase.coveragePills
+
+            // Build real limits from PC coverages
+            const realLimits = pcCoverages.length > 0 ? pcCoverages.map((cv:any) => {
+              const terms = cv.attributes?.terms || {}
+              const termKey = Object.keys(terms)[0]
+              const termVal = termKey ? terms[termKey]?.displayValue || '—' : '—'
+              return {
+                name:     cv.attributes?.pattern?.displayName || cv.attributes?.id,
+                amount:   termVal,
+                barPct:   50,
+                barColor: '#024099',
+              }
+            }) : mockBase.limits
+
             setCoverage({
               ...mockBase,
-              policyNumber:       raw.policyNumber || mockBase.policyNumber,
-              policyPeriod:       mockBase.policyPeriod,
-              propertyOrVehicle:  raw.insured?.displayName || mockBase.propertyOrVehicle,
-              peril:              raw.lossCause?.name || mockBase.peril,
-              deductibleGradient: isAuto
-                ? 'linear-gradient(135deg,#024099,#0254CC)'
-                : 'linear-gradient(135deg,#0F6E56,#1B8A4B)',
-              gwPolicyCovEndpoint: `/policy/v1/policies/${raw.policyNumber}/coverages`,
+              policyNumber:      polNum || mockBase.policyNumber,
+              policyType:        pcPolicy?.product?.displayName || mockBase.policyType,
+              policyPeriod:      pcPolicy ? `${fmtDate(pcPolicy.periodStart)} — ${fmtDate(pcPolicy.periodEnd)}` : mockBase.policyPeriod,
+              propertyOrVehicle: pcPolicy ? (isAuto ? vehStr : (pcPolicy.primaryLocation?.displayName?.split(':')[1]?.trim() || vehStr)) : (claim.insured?.displayName || mockBase.propertyOrVehicle),
+              yearBuiltOrVIN:    isAuto ? (vehicle ? `VIN: ${vinStr}` : mockBase.yearBuiltOrVIN) : mockBase.yearBuiltOrVIN,
+              extraField:        pcPolicy?.primaryInsured?.displayName || claim.insured?.displayName || mockBase.extraField,
+              peril:             claim.lossCause?.name || mockBase.peril,
+              coveragePills:     realPills.length > 0 ? realPills : mockBase.coveragePills,
+              limits:            realLimits.length > 0 ? realLimits : mockBase.limits,
+              deductibleGradient: isAuto ? 'linear-gradient(135deg,#024099,#0254CC)' : 'linear-gradient(135deg,#0F6E56,#1B8A4B)',
+              gwPolicyCovEndpoint: `/policy/v1/policies/${pcId}/coverages`,
               gwClaimCovEndpoint:  `/claim/v1/claims/${claimNumber}/coverages`,
             })
             setLoading(false)
