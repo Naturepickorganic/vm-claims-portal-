@@ -275,19 +275,44 @@ export default function CoverageTab({ claimNumber, policyNumber, lobType, vehicl
   const [coverage, setCoverage] = useState<PolicyCoverage | null>(null)
 
   useEffect(() => {
-    /* 🔌 GW API calls go here when IP is whitelisted:
-       const [polRes, claimRes] = await Promise.all([
-         fetch(`/api/gw/policy/v1/policies/${policyNumber}/coverages`),
-         fetch(`/api/gw/claim/v1/claims/${claimNumber}/coverages`)
-       ])
-       const polData  = await polRes.json()
-       const claimData = await claimRes.json()
-       setCoverage(transformGWResponse(polData, claimData, lobType))
-    */
-    setTimeout(() => {
+    const load = async () => {
+      setLoading(true)
+      const PROXY = (import.meta as any).env?.VITE_PROXY_URL || ''
+
+      /* Try GW claim coverages first */
+      if (PROXY) {
+        try {
+          const r = await fetch(`${PROXY}/gw/claim/v1/claims?filter=claimNumber%3Aeq%3A${claimNumber}&pageSize=1`)
+          const d = await r.json()
+          const raw = d?.data?.[0]?.attributes
+          if (raw) {
+            /* GW has claim — build coverage from real data */
+            const isAuto = raw.lossType?.code === 'AUTO'
+            const mockBase = getCoverage(claimNumber, isAuto ? 'auto' : 'property')
+            /* Override with real GW values where available */
+            setCoverage({
+              ...mockBase,
+              policyNumber:       raw.policyNumber || mockBase.policyNumber,
+              policyPeriod:       mockBase.policyPeriod,
+              propertyOrVehicle:  raw.insured?.displayName || mockBase.propertyOrVehicle,
+              peril:              raw.lossCause?.name || mockBase.peril,
+              deductibleGradient: isAuto
+                ? 'linear-gradient(135deg,#024099,#0254CC)'
+                : 'linear-gradient(135deg,#0F6E56,#1B8A4B)',
+              gwPolicyCovEndpoint: `/policy/v1/policies/${raw.policyNumber}/coverages`,
+              gwClaimCovEndpoint:  `/claim/v1/claims/${claimNumber}/coverages`,
+            })
+            setLoading(false)
+            return
+          }
+        } catch { /* fall through to mock */ }
+      }
+
+      /* Fallback — mock data */
       setCoverage(getCoverage(claimNumber, lobType))
       setLoading(false)
-    }, 300)
+    }
+    load()
   }, [claimNumber, policyNumber, lobType])
 
   if (loading) {
