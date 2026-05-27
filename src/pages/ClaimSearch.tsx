@@ -1488,7 +1488,8 @@ export default function ClaimSearch() {
 
       /* Store as dynamic policy and show */
       const dynamicKey = `GW_${num}`
-      MOCK_POLICIES[dynamicKey] = gwPolicyClaims
+      /* Mark all GW claims as live */
+      MOCK_POLICIES[dynamicKey] = gwPolicyClaims.map((pc:any) => ({...pc, isLiveGW:true}))
       setError('')
       setPolicyNum(dynamicKey)
       setShowPolicy(true)
@@ -1497,13 +1498,56 @@ export default function ClaimSearch() {
     }
   }
 
-  const handlePolicyClaimSelect = (c:PolicyClaim) => {
+  const handlePolicyClaimSelect = async (c:PolicyClaim) => {
     const full = MOCK_CLAIMS[c.claimNumber]
-    if (full) { setSelClaim(full); setShowPolicy(false) }
-    else {
-      setSelClaim({ claimNumber:c.claimNumber, insuredName:c.insuredName, policyNumber:policyInput, claimStatus:c.status, statusType:c.status==='Closed'?'closed':'on-track', lobType:(c.lobType || 'auto') as LobType, adjusterName:c.adjusterName, adjusterPhone:'—', reporterName:c.insuredName, reportedType:'Self / Insured', reportedDate:c.createdDate, vehicle:c.vehicle, dateOfLoss:c.createdDate, lossType:c.lossType, repairShop:'—', rentalInfo:'—', activeStep:c.status==='Closed'?8:3, progressPct:c.status==='Closed'?100:30, statusMsg:c.status==='Closed'?'This claim is closed. Contact your adjuster for full details.':'Your claim is in progress. Contact your adjuster for details.', notes:[], payments:[], contacts:[], services:[], timeline:[] })
+    if (full) { setSelClaim(full); setShowPolicy(false); return }
+
+    /* Check if this came from a GW policy search — do full GW claim lookup */
+    const isGWPolicy = policyNum.startsWith('GW_')
+    if (isGWPolicy) {
       setShowPolicy(false)
+      setError('Loading claim from Guidewire...')
+      try {
+        const PROXY = (import.meta as any).env?.VITE_PROXY_URL || ''
+        const r  = await fetch(`${PROXY}/gw/claim/v1/claims?filter=claimNumber%3Aeq%3A${encodeURIComponent(c.claimNumber)}&pageSize=1`)
+        const d  = await r.json()
+        const raw = d?.data?.[0]?.attributes
+        if (raw) {
+          const isAuto = raw.lossType?.code === 'AUTO'
+          setError('')
+          setFoundClaim({
+            claimNumber:  raw.claimNumber,
+            insuredName:  raw.insured?.displayName || raw.mainContact?.displayName || c.insuredName,
+            policyNumber: raw.policyNumber || policyInput,
+            claimStatus:  raw.state?.name || 'Open',
+            statusType:   raw.state?.code === 'open' ? 'on-track' : 'closed',
+            lobType:      isAuto ? 'auto' : 'property',
+            adjusterName: raw.assignedUser?.displayName || c.adjusterName || 'Assigned Adjuster',
+            adjusterPhone:'Contact via portal',
+            reporterName: raw.reporter?.displayName || c.insuredName,
+            reportedType: raw.reportedByType?.name || 'Self / Insured',
+            reportedDate: raw.reportedDate ? new Date(raw.reportedDate).toLocaleDateString() : '—',
+            vehicle:      isAuto ? 'Vehicle — see Coverage tab' : 'Property — see Coverage tab',
+            dateOfLoss:   raw.lossDate ? new Date(raw.lossDate).toLocaleDateString() : '—',
+            lossType:     raw.lossCause?.name || raw.lossType?.name || '—',
+            repairShop:   '—', rentalInfo:'—',
+            activeStep:   raw.state?.code === 'open' ? 3 : 8,
+            progressPct:  raw.state?.code === 'open' ? 35 : 100,
+            statusMsg:    raw.state?.code === 'open' ? 'Claim open · Adjuster: ' + (raw.assignedUser?.displayName || 'Assigned') : 'Claim closed.',
+            notes:    (raw.claimHistory||[]).slice(0,5).map((h:any)=>({date:new Date(h.eventTimeStamp).toLocaleDateString(),author:h.user||'System',text:h.description||h.type,type:'info'})),
+            payments: [], services: [],
+            contacts: [{ role:'Adjuster', name:raw.assignedUser?.displayName||'Super User', phone:'—', email:'—', createdDate:raw.reportedDate?new Date(raw.reportedDate).toLocaleDateString():'—' }],
+            timeline: (raw.claimHistory||[]).slice(0,8).map((h:any,i:number)=>({step:i+1,label:h.type,date:new Date(h.eventTimeStamp).toLocaleDateString(),status:'done',detail:h.description||h.type})),
+            isLiveGW: true,
+          })
+          return
+        }
+      } catch { /* fall through */ }
+      setError('')
     }
+
+    setSelClaim({ claimNumber:c.claimNumber, insuredName:c.insuredName, policyNumber:policyInput, claimStatus:c.status, statusType:c.status==='Closed'?'closed':'on-track', lobType:(c.lobType || 'auto') as LobType, adjusterName:c.adjusterName, adjusterPhone:'—', reporterName:c.insuredName, reportedType:'Self / Insured', reportedDate:c.createdDate, vehicle:c.vehicle, dateOfLoss:c.createdDate, lossType:c.lossType, repairShop:'—', rentalInfo:'—', activeStep:c.status==='Closed'?8:3, progressPct:c.status==='Closed'?100:30, statusMsg:c.status==='Closed'?'This claim is closed. Contact your adjuster for full details.':'Your claim is in progress. Contact your adjuster for details.', notes:[], payments:[], contacts:[], services:[], timeline:[], isLiveGW: isGWPolicy })
+    setShowPolicy(false)
   }
 
   const clearAll = () => { reset(); setClaimInput(''); setPolicyInput('') }
