@@ -49,6 +49,7 @@ interface ClaimData {
   notes:NoteRow[]; payments:PaymentRow[]
   contacts:ContactRow[]; services:ServiceRow[]
   timeline:TimelineEvent[]
+  isLiveGW?:boolean
 }
 
 interface PolicyClaim {
@@ -1234,7 +1235,13 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
   return (
     <div style={{ marginTop:16 }}>
       <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',background:C.white,border:`1px solid ${C.border}`,borderRadius:'8px 8px 0 0',padding:'10px 16px',borderBottom:'none' }}>
-        <h2 style={{ fontSize:17,fontWeight:700,color:C.text }}>Claim {claim.claimNumber} Details</h2>
+        <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+          <h2 style={{ fontSize:17,fontWeight:700,color:C.text }}>Claim {claim.claimNumber} Details</h2>
+          {claim.isLiveGW
+            ? <span style={{ fontSize:10.5,fontWeight:700,padding:'3px 10px',borderRadius:10,background:'#EDFAEB',color:'#1B5E20',border:'1px solid #A8E4A2',display:'flex',alignItems:'center',gap:4 }}>🟢 Live GW Data</span>
+            : <span style={{ fontSize:10.5,fontWeight:700,padding:'3px 10px',borderRadius:10,background:'#EBF3FF',color:'#024099',border:'1px solid #BFDBFE',display:'flex',alignItems:'center',gap:4 }}>🔵 Demo Data</span>
+          }
+        </div>
         <div style={{ display:'flex',alignItems:'center',gap:8 }}>
           <span style={{ fontSize:12,color:C.muted }}>Show Tab View</span>
           <div onClick={()=>setTabView(v=>!v)} style={{ width:40,height:22,borderRadius:11,background:tabView?C.navy:'#CBD5E0',cursor:'pointer',position:'relative',transition:'background .2s' }}>
@@ -1421,7 +1428,7 @@ export default function ClaimSearch() {
         })),
       }
       setError('')
-      setFoundClaim(gwClaim)
+      setFoundClaim({...gwClaim, isLiveGW:true})
     } catch {
       setError('Could not reach Guidewire. Check that the local proxy is running on port 3001.')
     }
