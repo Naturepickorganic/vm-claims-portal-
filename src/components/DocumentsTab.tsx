@@ -141,7 +141,7 @@ function GWTag({ endpoints }: { endpoints: string[] }) {
 /* ══════════════════════════════════════════════════════════
    DOWNLOADS SUB-TAB
    ══════════════════════════════════════════════════════════ */
-function Downloads({ claimNumber }: { claimNumber: string }) {
+function Downloads({ claimNumber, gwDocs = [] }: { claimNumber: string; gwDocs?: any[] }) {
   const docs = MOCK_DOCS[claimNumber] || MOCK_DOCS['000-00-000480']
 
   const statusBadge = (s: DocStatus) => {
@@ -189,9 +189,15 @@ function Downloads({ claimNumber }: { claimNumber: string }) {
         ))}
       </div>
 
-      <div style={{ fontSize:11, fontWeight:600, color:C.muted, textTransform:'uppercase', letterSpacing:'.06em', marginBottom:10, display:'flex', alignItems:'center', gap:5 }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9z"/></svg>
-        Carrier-generated documents
+      <div style={{ fontSize:11, fontWeight:600, color:C.muted, textTransform:'uppercase', letterSpacing:'.06em', marginBottom:10, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9z"/></svg>
+          Carrier-generated documents
+        </div>
+        {gwDocs.length > 0
+          ? <span style={{ fontSize:10.5,fontWeight:700,padding:'2px 9px',borderRadius:10,background:'#EDFAEB',color:'#1B5E20',border:'1px solid #A8E4A2' }}>🟢 {gwDocs.length} Live GW Docs</span>
+          : <span style={{ fontSize:10.5,fontWeight:700,padding:'2px 9px',borderRadius:10,background:'#EBF3FF',color:'#024099',border:'1px solid #BFDBFE' }}>🔵 Sample Documents</span>
+        }
       </div>
 
       {docs.map(doc => {
@@ -483,7 +489,32 @@ function ActivityLog({ claimNumber }: { claimNumber: string }) {
    MAIN DOCUMENTS TAB
    ══════════════════════════════════════════════════════════ */
 export default function DocumentsTab({ claimNumber, lobType }: Props) {
-  const [sub, setSub] = useState<'downloads'|'requests'|'uploads'|'activity'>('downloads')
+  const [sub,     setSub]     = useState<'downloads'|'requests'|'uploads'|'activity'>('downloads')
+  const [gwDocs,  setGwDocs]  = useState<any[]>([])
+  const [gwLoaded,setGwLoaded]= useState(false)
+
+  /* Try GW documents API — fall back to mock if empty */
+  useState(() => {
+    const load = async () => {
+      const PROXY = (import.meta as any).env?.VITE_PROXY_URL || ''
+      if (!PROXY) { setGwLoaded(true); return }
+      try {
+        /* First get the claim internal ID */
+        const cr = await fetch(`${PROXY}/gw/claim/v1/claims?filter=claimNumber%3Aeq%3A${claimNumber}&pageSize=1`)
+        const cd = await cr.json()
+        const claimId = cd?.data?.[0]?.attributes?.id
+        if (!claimId) { setGwLoaded(true); return }
+
+        /* Then fetch documents */
+        const dr = await fetch(`${PROXY}/gw/claim/v1/claims/${claimId}/documents`)
+        const dd = await dr.json()
+        const docs = dd?.data || []
+        setGwDocs(docs)
+      } catch { /* fall through to mock */ }
+      setGwLoaded(true)
+    }
+    load()
+  })
 
   const docs     = MOCK_DOCS[claimNumber]     || MOCK_DOCS['000-00-000480']
   const requests = MOCK_REQUESTS[claimNumber] || MOCK_REQUESTS['000-00-000480']
@@ -526,7 +557,7 @@ export default function DocumentsTab({ claimNumber, lobType }: Props) {
       </div>
 
       {/* Content */}
-      {sub === 'downloads' && <Downloads claimNumber={claimNumber}/>}
+      {sub === 'downloads' && <Downloads claimNumber={claimNumber} gwDocs={gwDocs}/>}
       {sub === 'requests'  && <AdjusterRequests claimNumber={claimNumber}/>}
       {sub === 'uploads'   && <MyUploads claimNumber={claimNumber}/>}
       {sub === 'activity'  && <ActivityLog claimNumber={claimNumber}/>}
