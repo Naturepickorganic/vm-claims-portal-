@@ -1410,7 +1410,7 @@ export default function ClaimSearch() {
           type:   'info',
         })),
         payments:  [],
-        contacts:  [{ role:'Adjuster', name: raw.assignedUser?.displayName || 'Super User', phone:'—', email:'—' }],
+        contacts:  [{ role:'Adjuster', name: raw.assignedUser?.displayName || 'Super User', phone:'—', email:'—', createdDate: raw.reportedDate ? new Date(raw.reportedDate).toLocaleDateString() : '—' }],
         services:  [],
         timeline:  (raw.claimHistory || []).slice(0,8).map((h: any, i: number) => ({
           step:   i+1,
