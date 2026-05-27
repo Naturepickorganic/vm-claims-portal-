@@ -1370,8 +1370,8 @@ export default function ClaimSearch() {
     try {
       const PROXY = (import.meta as any).env?.VITE_PROXY_URL || ''
       const url   = PROXY
-        ? `${PROXY}/gw/claim/v1/claims?claimNumber=${num}`
-        : `/api/gw/claim/v1/claims?claimNumber=${num}`
+        ? `${PROXY}/gw/claim/v1/claims?filter=claimNumber%3Aeq%3A${encodeURIComponent(num)}&pageSize=1`
+        : `/api/gw/claim/v1/claims?filter=claimNumber%3Aeq%3A${encodeURIComponent(num)}&pageSize=1`
 
       const res  = await fetch(url)
       const data = await res.json()
