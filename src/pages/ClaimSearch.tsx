@@ -6,6 +6,10 @@ import DocumentsTab  from '@/components/DocumentsTab'
 import CoverageTab   from '@/components/CoverageTab'
 import ClaimsAssistant from '@/components/ClaimsAssistant'
 import { useAuth } from '@/lib/authContext'
+import SmartOfferCard from '@/components/SmartOfferCard'
+import OfferBanner    from '@/components/OfferBanner'
+import ClaimClosure   from '@/components/ClaimClosure'
+import getOffers, { type LobType as CSLobType, type TabId } from '@/lib/crossSellEngine'
 
 /* ── Brand tokens ── */
 const C = {
@@ -980,6 +984,8 @@ function ClaimTracker({ claim }: { claim:ClaimData }) {
 function ClaimDetail({ claim }: { claim:ClaimData }) {
   const [tab,    setTab]    = useState<'coverage'|'info'|'payments'|'contacts'|'services'|'documents'>('coverage')
   const [tabView,setTabView]= useState(true)
+  const [dismissedOffers, setDismissedOffers] = useState<string[]>([])
+  const dismissOffer = (id:string) => setDismissedOffers(prev=>[...prev,id])
   const [noteQ,  setNoteQ]  = useState('')
   const [payQ,   setPayQ]   = useState('')
   const [conQ,   setConQ]   = useState('')
@@ -1230,7 +1236,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
     </div>
   )
 
-  const TABS = [{id:'coverage' as const,label:'📋 Coverage'},{id:'info' as const,label:'Info'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'},{id:'documents' as const,label:'📁 Documents'},{id:'payments' as const,label:'Payments'}]
+  const TABS = [{id:'coverage' as const,label:'📋 Coverage'},{id:'info' as const,label:'Info'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'},{id:'documents' as const,label:'📁 Documents'},{id:'payments' as const,label:'Payments'},{id:'closure' as const,label:'🔒 Closure'}]
 
   return (
     <div style={{ marginTop:16 }}>
@@ -1250,22 +1256,63 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
         </div>
       </div>
       {tabView && (
-        <div style={{ display:'flex',background:C.white,border:`1px solid ${C.border}`,borderTop:'none',borderBottom:'none' }}>
+        <div style={{ display:'flex',background:C.white,border:`1px solid ${C.border}`,borderTop:'none',borderBottom:'none',overflowX:'auto' }}>
           {TABS.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{ padding:'9px 16px',fontSize:12.5,fontWeight:600,background:'transparent',border:'none',borderBottom:`2px solid ${tab===t.id?C.navy:'transparent'}`,color:tab===t.id?C.navy:C.muted,cursor:'pointer',transition:'color .15s' }}>{t.label}</button>
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{ padding:'9px 14px',fontSize:12,fontWeight:600,background:'transparent',border:'none',borderBottom:`2px solid ${tab===t.id?C.navy:'transparent'}`,color:tab===t.id?C.navy:(t.id==='closure'?'#DC2626':C.muted),cursor:'pointer',transition:'color .15s',whiteSpace:'nowrap' }}>{t.label}</button>
           ))}
         </div>
       )}
       {tabView ? (
-        /* ── TAB VIEW — show only the active tab ── */
-        <>
-          {tab==='info'     &&<InfoTab/>}
-          {tab==='payments' &&<PaymentsTab/>}
-          {tab==='contacts' &&<ContactsTab/>}
-          {tab==='coverage'  &&<CoverageTab claimNumber={claim.claimNumber} policyNumber={claim.policyNumber} lobType={claim.lobType} vehicle={claim.vehicle} adjusterName={claim.adjusterName}/>}
-      {tab==='services'  &&<ServicesTab/>}
-      {tab==='documents' &&<DocumentsTab claimNumber={claim.claimNumber} lobType={claim.lobType}/>}
-        </>
+        /* ── TAB VIEW — 3-column layout with Smart Offers ── */
+        (() => {
+          const csLob = (claim.lobType === 'auto' ? 'auto' : claim.lobType === 'property' ? 'property' : 'auto') as CSLobType
+          const offers = getOffers(csLob, tab as TabId)
+          const visibleUp = offers.upsell.filter(o=>!dismissedOffers.includes(o.id))
+          const visibleCs = offers.crossSell.filter(o=>!dismissedOffers.includes(o.id))
+          return (
+            <div style={{ display:'grid', gridTemplateColumns:'190px 1fr 190px', border:`1px solid ${C.border}`, borderTop:'none', background:'#F0F4FF', minHeight:360 }}>
+              {/* LEFT — Upsell */}
+              <div style={{ background:'#E8F8F3', borderRight:`1px solid #B2E5D4`, padding:10, display:'flex', flexDirection:'column', gap:8 }}>
+                <div style={{ fontSize:9.5, fontWeight:700, textTransform:'uppercase', letterSpacing:'.07em', color:'#0F6E56', display:'flex', alignItems:'center', gap:4, paddingBottom:6, borderBottom:'1px solid rgba(0,0,0,.08)', marginBottom:2 }}>
+                  🛡️ Upsell — upgrade
+                </div>
+                {visibleUp.length === 0
+                  ? <div style={{ fontSize:11, color:'#A0AEC0', textAlign:'center', marginTop:20, fontStyle:'italic' }}>No upsell recommendations<br/>for this tab</div>
+                  : visibleUp.map((o,i) => (
+                    <SmartOfferCard key={o.id} offer={o} variant="upsell" animate={true} onDismiss={dismissOffer}/>
+                  ))
+                }
+              </div>
+
+              {/* CENTER — Tab content */}
+              <div style={{ background:C.white, padding:'14px 16px', overflow:'auto' }}>
+                {offers.gapAlert && (
+                  <OfferBanner message={offers.gapAlert} onReview={()=>setTab('coverage')}/>
+                )}
+                {tab==='info'      && <InfoTab/>}
+                {tab==='payments'  && <PaymentsTab/>}
+                {tab==='contacts'  && <ContactsTab/>}
+                {tab==='coverage'  && <CoverageTab claimNumber={claim.claimNumber} policyNumber={claim.policyNumber} lobType={claim.lobType} vehicle={claim.vehicle} adjusterName={claim.adjusterName}/>}
+                {tab==='services'  && <ServicesTab/>}
+                {tab==='documents' && <DocumentsTab claimNumber={claim.claimNumber} lobType={claim.lobType}/>}
+                {tab==='closure'   && <ClaimClosure claimNumber={claim.claimNumber} policyNumber={claim.policyNumber} insuredName={claim.insuredName} adjusterName={claim.adjusterName} lobType={csLob} totalPayout={claim.payments?.[0]?.grossAmount} closedDate={claim.statusType==='closed'?claim.reportedDate:undefined} duration={44}/>}
+              </div>
+
+              {/* RIGHT — Cross-sell */}
+              <div style={{ background:'#FDF0EA', borderLeft:`1px solid #F5C4A8`, padding:10, display:'flex', flexDirection:'column', gap:8 }}>
+                <div style={{ fontSize:9.5, fontWeight:700, textTransform:'uppercase', letterSpacing:'.07em', color:'#993C1D', display:'flex', alignItems:'center', gap:4, paddingBottom:6, borderBottom:'1px solid rgba(0,0,0,.08)', marginBottom:2 }}>
+                  🤝 Cross-sell — services
+                </div>
+                {visibleCs.length === 0
+                  ? <div style={{ fontSize:11, color:'#A0AEC0', textAlign:'center', marginTop:20, fontStyle:'italic' }}>No cross-sell recommendations<br/>for this tab</div>
+                  : visibleCs.map((o,i) => (
+                    <SmartOfferCard key={o.id} offer={o} variant="crosssell" animate={true} onDismiss={dismissOffer}/>
+                  ))
+                }
+              </div>
+            </div>
+          )
+        })()
       ) : (
         /* ── SCROLL VIEW — all sections stacked vertically ── */
         <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
