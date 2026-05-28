@@ -982,7 +982,7 @@ function ClaimTracker({ claim }: { claim:ClaimData }) {
    ═══════════════════════════════════════════════════════════════ */
 
 function ClaimDetail({ claim }: { claim:ClaimData }) {
-  const [tab,    setTab]    = useState<'coverage'|'info'|'payments'|'contacts'|'services'|'documents'>('coverage')
+  const [tab,    setTab]    = useState<'coverage'|'info'|'payments'|'contacts'|'services'|'documents'|'closure'>('coverage')
   const [tabView,setTabView]= useState(true)
   const [dismissedOffers, setDismissedOffers] = useState<string[]>([])
   const dismissOffer = (id:string) => setDismissedOffers(prev=>[...prev,id])
