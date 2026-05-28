@@ -125,7 +125,7 @@ const O: Record<string, Offer> = {
   repairShops: {
     id:'repairShops', icon:'🔧', badge:'10% off labor', cta:'View API docs',
     title:'Compare certified repair shops',
-    desc:'Price-transparent certified repair via RepairPal and Openbay. Safelite for glass. Work warranted.',
+    desc:"Price-transparent certified repair via RepairPal and Openbay. Safelite for glass. Work warranted.",
     revenueType:'MARKETPLACE_COMMISSION',
     vendors:[ v('RepairPal','https://documenter.getpostman.com/view/16678580/TzshHjyY'), v('Openbay','https://www.openbay.com/api'), v('Safelite','https://www.safelite.com/commercial/api-integration') ],
   },
@@ -192,7 +192,7 @@ const O: Record<string, Offer> = {
   rcvUpgrade: {
     id:'rcvUpgrade', icon:'🏗️', badge:'RCV upgrade', cta:'Upgrade policy',
     title:'Extended replacement cost',
-    desc:'Upgrade from ACV to extended RCV — cover rebuild at today's full material and labor prices.',
+    desc:"Upgrade from ACV to extended RCV — cover rebuild at today's full material and labor prices.",
     revenueType:'POLICY_UPSELL',
     vendors:[ v('ValueMomentum','https://valuemomentum.com') ],
   },
@@ -316,14 +316,14 @@ const O: Record<string, Offer> = {
   safetyWC: {
     id:'safetyWC', icon:'🏗️', badge:'Safety credits', cta:'Start program',
     title:'Workplace safety + ergonomic program',
-    desc:'Formal safety training and ergonomic review — earn WC premium credits on renewal.',
+    desc:"Formal safety training and ergonomic review — earn WC premium credits on renewal.",
     revenueType:'POLICY_UPSELL',
     vendors:[ v('ValueMomentum','https://valuemomentum.com') ],
   },
   teleRehab: {
     id:'teleRehab', icon:'💊', badge:'Injured worker', cta:'View API docs',
     title:'Tele-rehab + behavioral health',
-    desc:'Hinge Health for virtual PT, Lyra and Spring Health for mental wellness support.',
+    desc:"Hinge Health for virtual PT, Lyra and Spring Health for mental wellness support.",
     revenueType:'SUBSCRIPTION_ADDON',
     vendors:[ v('Hinge Health','https://www.hingehealth.com/employers/integrations/'), v('Sword Health','https://swordhealth.com/employers'), v('Lyra Health','https://www.lyrahealth.com/enterprise/integrations/') ],
   },
@@ -348,7 +348,7 @@ const O: Record<string, Offer> = {
   cyberSuite: {
     id:'cyberSuite', icon:'🔒', badge:'Cyber Suite', cta:'Add bundle',
     title:'Cyber + data breach + EPLI bundle',
-    desc:'Bundle cyber, EPLI, and utility interruption into one SMB resilience endorsement.',
+    desc:"Bundle cyber, EPLI, and utility interruption into one SMB resilience endorsement.",
     revenueType:'POLICY_UPSELL',
     vendors:[ v('ValueMomentum','https://valuemomentum.com') ],
   },
