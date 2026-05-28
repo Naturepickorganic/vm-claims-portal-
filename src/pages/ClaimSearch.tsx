@@ -8,7 +8,8 @@ import ClaimsAssistant from '@/components/ClaimsAssistant'
 import { useAuth } from '@/lib/authContext'
 import SmartOfferCard from '@/components/SmartOfferCard'
 import OfferBanner    from '@/components/OfferBanner'
-import ClaimClosure   from '@/components/ClaimClosure'
+import ClaimClosure       from '@/components/ClaimClosure'
+import NotificationsTab  from '@/components/NotificationsTab'
 import getOffers, { type LobType as CSLobType, type TabId } from '@/lib/crossSellEngine'
 
 /* ── Brand tokens ── */
@@ -982,7 +983,7 @@ function ClaimTracker({ claim }: { claim:ClaimData }) {
    ═══════════════════════════════════════════════════════════════ */
 
 function ClaimDetail({ claim }: { claim:ClaimData }) {
-  const [tab,    setTab]    = useState<'coverage'|'info'|'payments'|'contacts'|'services'|'documents'|'closure'>('coverage')
+  const [tab,    setTab]    = useState<'coverage'|'info'|'payments'|'contacts'|'services'|'documents'|'closure'|'notifications'>('coverage')
   const [tabView,setTabView]= useState(true)
   const [dismissedOffers, setDismissedOffers] = useState<string[]>([])
   const dismissOffer = (id:string) => setDismissedOffers(prev=>[...prev,id])
@@ -1236,7 +1237,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
     </div>
   )
 
-  const TABS = [{id:'coverage' as const,label:'📋 Coverage'},{id:'info' as const,label:'Info'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'},{id:'documents' as const,label:'📁 Documents'},{id:'payments' as const,label:'Payments'},{id:'closure' as const,label:'🔒 Closure'}]
+  const TABS = [{id:'coverage' as const,label:'📋 Coverage'},{id:'info' as const,label:'Info'},{id:'contacts' as const,label:'Contacts'},{id:'services' as const,label:'Services'},{id:'documents' as const,label:'📁 Documents'},{id:'payments' as const,label:'Payments'},{id:'closure' as const,label:'🔒 Closure'},{id:'notifications' as const,label:'🔔 Notifications'}]
 
   return (
     <div style={{ marginTop:16 }}>
@@ -1295,6 +1296,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
                 {tab==='coverage'  && <CoverageTab claimNumber={claim.claimNumber} policyNumber={claim.policyNumber} lobType={claim.lobType} vehicle={claim.vehicle} adjusterName={claim.adjusterName}/>}
                 {tab==='services'  && <ServicesTab/>}
                 {tab==='documents' && <DocumentsTab claimNumber={claim.claimNumber} lobType={claim.lobType}/>}
+                {tab==='notifications' && <NotificationsTab claimNumber={claim.claimNumber} adjusterName={claim.adjusterName} insuredName={claim.insuredName}/>}
                 {tab==='closure'   && <ClaimClosure claimNumber={claim.claimNumber} policyNumber={claim.policyNumber} insuredName={claim.insuredName} adjusterName={claim.adjusterName} lobType={csLob} totalPayout={claim.payments?.[0]?.grossAmount} closedDate={claim.statusType==='closed'?claim.reportedDate:undefined} duration={44}/>}
               </div>
 
