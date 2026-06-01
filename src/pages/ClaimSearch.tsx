@@ -75,6 +75,183 @@ interface PolicyClaim {
 const MOCK_CLAIMS: Record<string,ClaimData> = {
 
   /* ════════════════════════════════════════════════════════
+     NEW DEMO CLAIMS — Sprint 2 · May 2026
+     Story 1: Workers Comp — RTW program active
+     Story 2: Commercial Auto — Fleet total loss
+     Story 3: Property — Water/Pipe burst + ALE active
+     Story 4: Auto — Total loss + EV replacement
+     ════════════════════════════════════════════════════════ */
+
+  /* ── STORY 1: Maria Santos — Workers Comp — Slip & Fall — RTW Active ── */
+  '000-00-001100': {
+    claimNumber:'000-00-001100', insuredName:'Maria Santos',
+    policyNumber:'WC-5512039847', claimStatus:'Open', statusType:'on-track', lobType:'wc',
+    adjusterName:'James Whitfield', adjusterPhone:'(512) 555-0198',
+    reporterName:'HR Manager — BuildRight Construction', reportedType:'Employer',
+    reportedDate:'2026-03-10', vehicle:'N/A — Workplace Injury',
+    dateOfLoss:'2026-03-10', lossType:'Slip and Fall — Wet Floor (Warehouse)',
+    repairShop:'N/A', rentalInfo:'N/A',
+    activeStep:5, progressPct:58,
+    statusMsg:"Maria's PT sessions are progressing well. Return-to-work target is Apr 28 (modified duty). Tele-rehab via Hinge Health — 8 of 12 sessions complete. RTW coordinator actively engaged with employer.",
+    notes:[
+      { adjuster:'James Whitfield', date:'Mar 12, 2026', message:'Compensability accepted. Left knee contusion and lumbar strain confirmed. PT authorized — 12 sessions Hinge Health virtual. Wage replacement: $875/week.' },
+      { adjuster:'James Whitfield', date:'Mar 10, 2026', message:'Claim filed by HR. Incident: warehouse floor (Bay 4) was wet — no signage. OSHA report #TX-2026-0310-441. ISO clear. Compensability investigation initiated.' },
+    ],
+    payments:[
+      { checkNumber:'WC-1100-003', payTo:'Maria Santos',           grossAmount:875,  issueDate:'2026-04-14', scheduledSendDate:'', status:'Issued'     },
+      { checkNumber:'WC-1100-002', payTo:'Maria Santos',           grossAmount:875,  issueDate:'2026-04-07', scheduledSendDate:'', status:'Issued'     },
+      { checkNumber:'WC-1100-001', payTo:'Hinge Health (PT)',      grossAmount:1200, issueDate:'2026-03-18', scheduledSendDate:'', status:'Issued'     },
+    ],
+    contacts:[
+      { name:'Maria Santos',           role:'Injured Worker',     createdDate:'Mar 10, 2026', phone:'(512) 555-0112', email:'maria.santos@email.com'      },
+      { name:'James Whitfield',        role:'WC Adjuster',        createdDate:'Mar 10, 2026', phone:'(512) 555-0198', email:'j.whitfield@valuemumt.com'   },
+      { name:'Dr. Kevin Patel',        role:'Treating Physician', createdDate:'Mar 11, 2026', phone:'(512) 555-0240', email:'kpatel@austinortho.com'       },
+      { name:'BuildRight Construction',role:'Employer (HR)',       createdDate:'Mar 10, 2026', phone:'(512) 555-0300', email:'hr@buildright.com'            },
+    ],
+    services:[
+      { serviceNumber:'SRV-1100-001', serviceType:'Virtual PT — Hinge Health',  provider:'Hinge Health',           serviceStatus:'Active',      expectedCompletion:'Apr 22, 2026' },
+      { serviceNumber:'SRV-1100-002', serviceType:'Wage Replacement — Indemnity',provider:'ValueMomentum WC',      serviceStatus:'Active',      expectedCompletion:'Apr 28, 2026' },
+      { serviceNumber:'SRV-1100-003', serviceType:'RTW Coordinator',             provider:'BuildRight HR + VM WC',  serviceStatus:'In Progress', expectedCompletion:'Apr 28, 2026' },
+    ],
+    timeline:[
+      { id:1,  category:'General',   title:'WC Claim Filed — Slip & Fall, Warehouse Bay 4',           sub:'Employer (BuildRight HR) filed FNOL. Wet floor, no wet floor sign. Left knee + lumbar strain. OSHA #TX-2026-0310-441. ISO ClaimSearch: clear.',                                      date:'Mar 10, 2026 · 2:30 PM', status:'done',     badge:'✓ Filed'      },
+      { id:2,  category:'General',   title:'Compensability Accepted — James Whitfield Assigned',       sub:'Investigation complete. Compensability accepted. Wage replacement: $875/week. Hinge Health virtual PT authorized (12 sessions). WhatsApp thread opened with Maria.',                 date:'Mar 12, 2026',           status:'done',     badge:'✓ Accepted'   },
+      { id:3,  category:'General',   title:'RTW Program Enrolled — BuildRight Construction',           sub:'Employer enrolled in formal RTW program. Modified duty role identified: office data entry. RTW target date Apr 28. Safety credit applied — 8% WC premium reduction.',                 date:'Mar 15, 2026',           status:'done',     badge:'✓ Enrolled'   },
+      { id:4,  category:'General',   title:'PT Sessions Started — Hinge Health Virtual',              sub:'Maria completed Session 1 via Hinge Health app. Knee flexion improving. Lumbar protocol initiated. Session 2 scheduled Mar 18. Lyra behavioral health coaching offered.',              date:'Mar 14, 2026',           status:'done',     badge:'✓ Started'    },
+      { id:5,  category:'General',   title:'8 of 12 PT Sessions Complete — On Track',                 sub:'Functional progress report: knee ROM 85% of baseline. Physician expects full clearance by Apr 22. Modified duty confirmed with employer. Indemnity payments current.',                 date:'Apr 7, 2026',            status:'active',   badge:'● Active'     },
+      { id:6,  category:'General',   title:'Modified Duty Return to Work',                             sub:'Maria returns to office data entry role Apr 28. PT continues 4 remaining sessions. Wage differential monitored weekly.',                                                               date:'Est. Apr 28, 2026',      status:'upcoming', badge:'⏳ Scheduled' },
+      { id:7,  category:'General',   title:'Full Duty Clearance & Claim Closure',                      sub:'Physician clearance expected May 5. Claim closes upon full duty return. OSHA 300 log updated. RTW safety credit locked in for renewal.',                                              date:'Est. May 5, 2026',       status:'upcoming', badge:'⏳ Scheduled' },
+    ],
+  },
+
+  /* ── STORY 2: FleetEdge Logistics — Commercial Auto — Total Loss Fleet Vehicle ── */
+  '000-00-001200': {
+    claimNumber:'000-00-001200', insuredName:'FleetEdge Logistics LLC',
+    policyNumber:'CA-8801234567', claimStatus:'Open', statusType:'action-needed', lobType:'commAuto',
+    adjusterName:'Rachel Kim', adjusterPhone:'(214) 555-0277',
+    reporterName:'Fleet Manager — Tony Nguyen', reportedType:'Employer / Fleet Manager',
+    reportedDate:'2026-04-02', vehicle:'2023 Ford F-250 Super Duty (Unit #FE-047)',
+    dateOfLoss:'2026-04-02', lossType:'Collision — Multi-Vehicle (Driver at fault)',
+    repairShop:'Total Loss — ACV Settlement Pending',
+    rentalInfo:'Enterprise Commercial #ENT-FL-2047 · F-250 replacement · Active',
+    activeStep:4, progressPct:42,
+    statusMsg:"⚠️ Action needed: Total loss determination complete. ACV = $41,200. Owner signature required on settlement agreement. Replacement vehicle sourced via Enterprise Commercial fleet program.",
+    notes:[
+      { adjuster:'Rachel Kim', date:'Apr 8, 2026', message:'Total loss confirmed. CCC/Mitchell AVC: $41,200. GAP waiver not on policy — owner advised. Replacement F-250 sourced via Enterprise Commercial. Settlement docs sent via DocuSign — awaiting signature.' },
+      { adjuster:'Rachel Kim', date:'Apr 2, 2026', message:'3-vehicle accident on I-35 Dallas. Driver Jamal Preston (insured). Police report #DAL-2026-0402. Other party: 2022 Nissan Sentra — both drivers transported to ER. FleetEdge carrier notified.' },
+    ],
+    payments:[
+      { checkNumber:'',            payTo:'FleetEdge Logistics LLC', grossAmount:41200, issueDate:'',           scheduledSendDate:'2026-04-22', status:'Pending Signature' },
+      { checkNumber:'CA-1200-001', payTo:'Enterprise Commercial',   grossAmount:3200,  issueDate:'2026-04-05', scheduledSendDate:'',           status:'Issued'            },
+    ],
+    contacts:[
+      { name:'Tony Nguyen (FleetEdge)', role:'Fleet Manager',       createdDate:'Apr 2, 2026',  phone:'(214) 555-0350', email:'tnguyen@fleetedge.com'         },
+      { name:'Rachel Kim',              role:'Commercial Adjuster',  createdDate:'Apr 2, 2026',  phone:'(214) 555-0277', email:'r.kim@valuemumt.com'           },
+      { name:'Jamal Preston',           role:'Driver (Insured)',     createdDate:'Apr 2, 2026',  phone:'(214) 555-0388', email:'jpreston@fleetedge.com'        },
+      { name:'Geotab Fleet Systems',    role:'Telematics Provider',  createdDate:'Apr 3, 2026',  phone:'(800) 555-0100', email:'support@geotab.com'            },
+    ],
+    services:[
+      { serviceNumber:'SRV-1200-001', serviceType:'Total Loss Valuation — CCC/Mitchell',  provider:'CCC Intelligent Solutions', serviceStatus:'Complete',  expectedCompletion:'Apr 8, 2026'  },
+      { serviceNumber:'SRV-1200-002', serviceType:'Replacement Fleet Vehicle — Enterprise',provider:'Enterprise Commercial',     serviceStatus:'Active',    expectedCompletion:'Apr 22, 2026' },
+      { serviceNumber:'SRV-1200-003', serviceType:'Subrogation — At-fault 3rd party',     provider:'ValueMomentum Legal',       serviceStatus:'In Progress',expectedCompletion:'Jun 2026'    },
+    ],
+    timeline:[
+      { id:1, category:'General',   title:'FNOL — Multi-Vehicle Collision I-35 Dallas',            sub:'3-vehicle accident. Driver Jamal Preston (insured). Police report #DAL-2026-0402. Both drivers transported. Geotab telematics data pulled — 58mph impact recorded.',                  date:'Apr 2, 2026 · 7:45 AM',  status:'done',   badge:'✓ Filed'           },
+      { id:2, category:'General',   title:'Rachel Kim Assigned — Commercial Lines',                 sub:'Commercial auto adjuster assigned. Enterprise Commercial replacement F-250 dispatched to FleetEdge yard. Geotab incident report shared with adjuster.',                                date:'Apr 2, 2026 · 11:00 AM', status:'done',   badge:'✓ Assigned'        },
+      { id:3, category:'Inspection',title:'Vehicle Inspected — Total Loss Recommended',             sub:'Field inspection complete. Frame damage confirmed. CCC/Mitchell TL threshold triggered. ACV analysis initiated. FleetEdge notified via WhatsApp.',                                    date:'Apr 4, 2026',            status:'done',   badge:'✓ Inspected'       },
+      { id:4, category:'General',   title:'⚠️ Total Loss Confirmed — ACV $41,200 — Signature Needed', sub:'CCC AVC: $41,200 (GAP not on policy — net payout = ACV). Settlement agreement sent via DocuSign to Tony Nguyen. Awaiting signature to release payment.',                           date:'Apr 8, 2026',            status:'active', badge:'⚠ Action Needed'   },
+      { id:5, category:'Payment',   title:'Settlement Payment — $41,200 to FleetEdge',              sub:'Payment released via OneInc ACH within 3 business days of signed agreement. Subrogation file opened against at-fault Nissan Sentra driver.',                                          date:'Est. Apr 22, 2026',      status:'upcoming',badge:'⏳ Pending Sig'   },
+    ],
+  },
+
+  /* ── STORY 3: James & Carol Webb — Property — Burst Pipe + ALE Active ── */
+  '000-00-001300': {
+    claimNumber:'000-00-001300', insuredName:'James & Carol Webb',
+    policyNumber:'HO-7789234501', claimStatus:'Open', statusType:'on-track', lobType:'property',
+    adjusterName:'Maria Delgado', adjusterPhone:'(972) 555-0155',
+    reporterName:'James Webb', reportedType:'Self / Insured',
+    reportedDate:'2026-02-18', vehicle:'N/A — Property Claim',
+    dateOfLoss:'2026-02-17', lossType:'Water Damage — Burst Pipe (Frozen)',
+    repairShop:'DryPros Restoration (ABC Restoration Group)',
+    rentalInfo:'ALE Active — Extended Stay America Plano · Suite #214 · $185/night',
+    activeStep:6, progressPct:72,
+    statusMsg:"Reconstruction underway. Drywall and flooring replacement 60% complete. HVAC system being replaced week of Apr 21. Estimated return to home: May 9. ALE coverage confirmed through completion.",
+    notes:[
+      { adjuster:'Maria Delgado', date:'Mar 15, 2026', message:'Xactimate estimate finalized: $68,400 (demo + structural drying + drywall + flooring + HVAC). Scope includes contents — separate Contents claim opened #000-00-001301. ALE authorized through May 15.' },
+      { adjuster:'Maria Delgado', date:'Feb 18, 2026', message:'Burst supply line — master bath, 2nd floor. Estimated water damage: kitchen ceiling, master bath, living room. DryPros dispatched same day. 14 LGR dehumidifiers deployed. Mold prevention protocol active.' },
+    ],
+    payments:[
+      { checkNumber:'HO-1300-003', payTo:'James & Carol Webb',      grossAmount:18500, issueDate:'2026-03-28', scheduledSendDate:'',           status:'Issued'     },
+      { checkNumber:'HO-1300-002', payTo:'DryPros Restoration',     grossAmount:22800, issueDate:'2026-03-15', scheduledSendDate:'',           status:'Issued'     },
+      { checkNumber:'HO-1300-001', payTo:'Extended Stay America',   grossAmount:5550,  issueDate:'2026-03-01', scheduledSendDate:'',           status:'Issued'     },
+      { checkNumber:'',            payTo:'ABC Restoration Group',   grossAmount:27100, issueDate:'',           scheduledSendDate:'2026-05-10', status:'Scheduled'  },
+    ],
+    contacts:[
+      { name:'James Webb',                  role:'Insured',           createdDate:'Feb 18, 2026', phone:'(972) 555-0189', email:'james.webb@email.com'         },
+      { name:'Carol Webb',                  role:'Co-Insured',        createdDate:'Feb 18, 2026', phone:'(972) 555-0190', email:'carol.webb@email.com'         },
+      { name:'Maria Delgado',               role:'Property Adjuster', createdDate:'Feb 18, 2026', phone:'(972) 555-0155', email:'m.delgado@valuemumt.com'      },
+      { name:'DryPros / ABC Restoration',   role:'General Contractor', createdDate:'Feb 18, 2026', phone:'(972) 555-0220', email:'jobs@abcrestoration.com'     },
+    ],
+    services:[
+      { serviceNumber:'SRV-1300-001', serviceType:'Water Mitigation — DryPros',       provider:'DryPros Restoration',    serviceStatus:'Complete',    expectedCompletion:'Mar 1, 2026'  },
+      { serviceNumber:'SRV-1300-002', serviceType:'Reconstruction — ABC Restoration', provider:'ABC Restoration Group',  serviceStatus:'In Progress', expectedCompletion:'May 9, 2026'  },
+      { serviceNumber:'SRV-1300-003', serviceType:'ALE — Extended Stay America',      provider:'Hotel Engine / ESA',     serviceStatus:'Active',      expectedCompletion:'May 9, 2026'  },
+      { serviceNumber:'SRV-1300-004', serviceType:'Contents Inventory & Replacement', provider:'Contents Specialist',    serviceStatus:'In Progress', expectedCompletion:'Apr 30, 2026' },
+    ],
+    timeline:[
+      { id:1, category:'General',    title:'FNOL — Burst Pipe Discovered (Feb 17 Freeze Event)',      sub:'James Webb called FNOL Feb 18. Pipe burst overnight during freeze. 2nd floor master bath supply line. Water spread to kitchen below, living room ceiling. DryPros dispatched same day.',      date:'Feb 18, 2026 · 8:00 AM', status:'done',     badge:'✓ Filed'       },
+      { id:2, category:'General',    title:'Emergency Mitigation — 14 Dehumidifiers Deployed',        sub:'DryPros on site within 4 hours. 14 LGR dehumidifiers, 8 air movers deployed. Moisture readings logged daily. ALE authorized — Extended Stay America Plano (Suite 214).',                   date:'Feb 18, 2026 · 2:00 PM', status:'done',     badge:'✓ Complete'    },
+      { id:3, category:'Inspection', title:'Full Scope Inspection — Xactimate Estimate $68,400',      sub:'3-day scope inspection with Maria Delgado + DryPros GC. Xactimate: demo $8,200 · structural drying $14,600 · drywall $18,400 · flooring $12,200 · HVAC $10,800 · overhead $3,200.',       date:'Mar 5, 2026',            status:'done',     badge:'✓ Complete'    },
+      { id:4, category:'General',    title:'Reconstruction Approved — ABC Restoration Engaged',       sub:'Scope approved. ABC Restoration Group selected as GC. Permits pulled. Demo started Mar 18. Contents specialist engaged — separate contents claim #000-00-001301.',                         date:'Mar 14, 2026',           status:'done',     badge:'✓ Approved'    },
+      { id:5, category:'General',    title:'ALE — Month 2, Extended Stay America Plano',              sub:'ALE coverage confirmed through May 15. Webb family in Suite 214 ($185/night — within policy limit). Hotel Engine negotiated extended rate. Contents in storage pod.',                      date:'Mar 18, 2026',           status:'done',     badge:'✓ Active'      },
+      { id:6, category:'Repair',     title:'Reconstruction 72% Complete — HVAC Replacement This Week', sub:'Drywall and flooring 60% done. HVAC system replacement begins Apr 21 (final major scope item). Return-home target confirmed: May 9. ALE coverage sufficient.',                           date:'Apr 15, 2026',           status:'active',   badge:'● In Progress' },
+      { id:7, category:'General',    title:'Final Walkthrough & Return to Home',                       sub:'Final inspection with adjuster, GC, and Webb family. Punch list items completed. ALE ends. Final payment ($27,100) released to ABC Restoration.',                                        date:'Est. May 9, 2026',       status:'upcoming', badge:'⏳ Scheduled'  },
+    ],
+  },
+
+  /* ── STORY 4: Priya Sharma — Auto — EV Total Loss (Tesla Model Y) ── */
+  '000-00-001400': {
+    claimNumber:'000-00-001400', insuredName:'Priya Sharma',
+    policyNumber:'AU-6634891022', claimStatus:'Closed', statusType:'closed', lobType:'auto',
+    adjusterName:'Derek Foster', adjusterPhone:'(469) 555-0188',
+    reporterName:'Priya Sharma', reportedType:'Self / Insured',
+    reportedDate:'2025-11-14', vehicle:'2024 Tesla Model Y Long Range (White)',
+    dateOfLoss:'2025-11-13', lossType:'Collision — Rear-End (Freeway, Highway 75)',
+    repairShop:'Total Loss — Tesla Certified Body Shop Assessment',
+    rentalInfo:'N/A — Settlement received, replacement EV purchased',
+    activeStep:8, progressPct:100,
+    statusMsg:"Claim closed Nov 29, 2025. Total loss settlement of $54,800 issued via ACH. Priya purchased a replacement 2025 Tesla Model Y. CARFAX title transfer complete. Excellent member experience — 5-star survey.",
+    notes:[
+      { adjuster:'Derek Foster', date:'Nov 21, 2025', message:'Tesla Certified shop confirmed: high-voltage battery pack compromised in impact. Repair cost $68,200 — exceeds TL threshold. ACV (Black Book EV): $54,800. GAP not applicable (no loan). Settlement accepted by Priya.' },
+      { adjuster:'Derek Foster', date:'Nov 14, 2025', message:'Rear-end collision Hwy 75 northbound. Priya rear-ended at speed — airbags deployed. She was transported to Medical City Dallas (released same day — minor injuries). Tesla app crash log shared — confirmed 42mph impact.' },
+    ],
+    payments:[
+      { checkNumber:'AU-1400-002', payTo:'Priya Sharma',     grossAmount:54800, issueDate:'2025-11-25', scheduledSendDate:'', status:'Issued'  },
+      { checkNumber:'AU-1400-001', payTo:'Lyft (Transport)', grossAmount:180,   issueDate:'2025-11-15', scheduledSendDate:'', status:'Issued'  },
+    ],
+    contacts:[
+      { name:'Priya Sharma',          role:'Insured',       createdDate:'Nov 14, 2025', phone:'(469) 555-0244', email:'priya.sharma@email.com'    },
+      { name:'Derek Foster',          role:'Adjuster',      createdDate:'Nov 14, 2025', phone:'(469) 555-0188', email:'d.foster@valuemumt.com'    },
+      { name:'Tesla Certified Shop',  role:'Assessing Shop',createdDate:'Nov 16, 2025', phone:'(972) 555-0500', email:'claims@teslacertified.com' },
+    ],
+    services:[
+      { serviceNumber:'SRV-1400-001', serviceType:'EV Assessment — Tesla Certified',   provider:'Tesla Certified Body',   serviceStatus:'Complete', expectedCompletion:'Nov 20, 2025' },
+      { serviceNumber:'SRV-1400-002', serviceType:'Total Loss Valuation — Black Book',  provider:'Black Book EV Data',     serviceStatus:'Complete', expectedCompletion:'Nov 21, 2025' },
+      { serviceNumber:'SRV-1400-003', serviceType:'Title Transfer — CARFAX/DMV',        provider:'CARFAX Title Express',   serviceStatus:'Complete', expectedCompletion:'Nov 28, 2025' },
+    ],
+    timeline:[
+      { id:1, category:'General',    title:'FNOL — Tesla Model Y Rear-Ended, Hwy 75',              sub:'Priya called FNOL from scene. Airbags deployed. Medical City Dallas — released same day. Tesla crash log: 42mph impact, HV battery fault. Police report #PL-2025-11-0913.',           date:'Nov 14, 2025 · 4:22 PM', status:'done', badge:'✓ Filed'       },
+      { id:2, category:'General',    title:'Derek Foster Assigned — EV Specialist Adjuster',       sub:'EV-certified adjuster assigned. Lyft transport arranged for Priya ($180 covered). Tesla tow to Tesla Certified shop arranged. WhatsApp thread opened. ISO: clear.',                  date:'Nov 14, 2025 · 6:00 PM', status:'done', badge:'✓ Assigned'    },
+      { id:3, category:'Inspection', title:'Tesla Certified Assessment — HV Battery Compromised',  sub:'Shop inspection: HV battery pack structural damage. Repair cost: $68,200. Exceeds 80% TL threshold. Total loss recommendation filed with Derek Foster.',                              date:'Nov 20, 2025',           status:'done', badge:'✓ Complete'    },
+      { id:4, category:'General',    title:'Total Loss Confirmed — Black Book EV ACV $54,800',     sub:'Black Book EV valuation: $54,800 (2024 Model Y LR, 8,200 miles, white). No GAP loan. Settlement offer sent to Priya via DocuSign + WhatsApp. Accepted same day.',                   date:'Nov 21, 2025',           status:'done', badge:'✓ Confirmed'   },
+      { id:5, category:'Payment',    title:'Settlement $54,800 — ACH to Priya Sharma',             sub:'Payment released via OneInc ACH. Priya received funds Nov 25. Title signed over. Tesla deactivated via Tesla Fleet API. CARFAX title transfer initiated.',                          date:'Nov 25, 2025',           status:'done', badge:'✓ Paid'        },
+      { id:6, category:'General',    title:'CARFAX Title Transfer Complete — Salvage Title Issued', sub:'DMV title transfer completed via CARFAX Title Express. Salvage title issued to carrier. Vehicle transferred to IAA auto auction.',                                                   date:'Nov 28, 2025',           status:'done', badge:'✓ Complete'    },
+      { id:7, category:'General',    title:'Claim Closed — 5-Star Survey — Priya Buys 2025 Model Y',sub:'HiMarley survey: 5 stars. "Fastest claim I have ever had — Derek was amazing." Priya purchased 2025 Tesla Model Y. New policy bound same day. Total cycle: 15 days.',             date:'Nov 29, 2025',           status:'done', badge:'✓ Closed'      },
+    ],
+  },
+
+
+  /* ════════════════════════════════════════════════════════
      AUTO CLAIMS
      ════════════════════════════════════════════════════════ */
 
