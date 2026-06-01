@@ -26,7 +26,7 @@ const C = {
 const AUTO_STEPS = ['Filed','Adjuster\nAssigned','Inspection\nComplete','Estimate\nApproved','Rental\nActive','Repair\nIn Progress','Payment','Closed']
 const PROP_STEPS = ['Filed','Adjuster\nAssigned','Inspection\nComplete','Estimate\nApproved','Mitigation\nComplete','Rebuild\nIn Progress','Payment','Closed']
 
-type EvtCategory = 'General'|'Repair'|'Rental'|'Payment'|'Inspection'|'Mitigation'|'Rebuild'|'ALE'|'Contents'
+type EvtCategory = 'General'|'Repair'|'Rental'|'Payment'|'Inspection'|'Mitigation'|'Rebuild'|'ALE'|'Contents'|'Core'|'Vendor'|'Intelligence'
 type StatusType  = 'on-track'|'action-needed'|'closed'
 type LobType     = 'auto'|'property'
 
@@ -1101,7 +1101,7 @@ function ClaimDetail({ claim }: { claim:ClaimData }) {
   const [svcPage,setSvcPage]= useState(1)
 
   const TH = { background:C.tblHead }
-  const catColor = (c:EvtCategory) => c==='Repair'?C.orange:c==='Rental'?C.purple:c==='Payment'?C.blue:c==='Inspection'?C.green:c==='Mitigation'?'#A32D2D':c==='Rebuild'?'#26215C':c==='ALE'?'#633806':c==='Contents'?'#854F0B':C.text
+  const catColor = (c:EvtCategory) => c==='Repair'?C.orange:c==='Rental'?C.purple:c==='Payment'?C.blue:c==='Inspection'?C.green:c==='Mitigation'?'#A32D2D':c==='Rebuild'?'#26215C':c==='ALE'?'#633806':c==='Contents'?'#854F0B':c==='Core'?'#024099':c==='Vendor'?'#0F6E56':c==='Intelligence'?'#6B21A8':C.text
   const dotColor = (s:string) => s==='done'?C.green:s==='active'?C.navy:'transparent'
   const badgeSt  = (s:string): React.CSSProperties => ({
     display:'inline-flex',fontSize:9.5,fontWeight:700,padding:'1px 7px',borderRadius:10,marginTop:3,
