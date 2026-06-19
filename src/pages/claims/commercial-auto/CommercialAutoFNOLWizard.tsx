@@ -194,7 +194,7 @@ export default function CommercialAutoFNOLWizard() {
       if (i >= SUBMIT_STEPS.length) {
         clearInterval(t)
         submitFNOL({ ...data, lob:'commercial-auto' } as any, {
-          onSuccess: (res) => navigate(`/claims/commercial-auto/${res.claimId}/status`),
+          onSuccess: (res) => navigate(`/claims/search?claim=${res.claimId}`),
           onError:   () => setIdx(-1),
         })
       }
