@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { clsx } from 'clsx'
 import { FNOLFormSchema, STEP_FIELDS, type FNOLFormData } from '@/lib/types'
 import { useFNOL } from '@/lib/api/hooks/useFNOL'
+import PolicyGate, { type PolicyCtx } from '@/components/fnol/PolicyGate'
 import Navbar   from '@/components/layout/Navbar'
 import Tip      from '@/components/ui/Tip'
 import InfoBox  from '@/components/ui/InfoBox'
@@ -91,6 +92,7 @@ export default function FNOLWizard() {
   const [conditions,  setConditions]  = useState<string[]>(['☀️ Clear/Dry'])
   const [ownShop, setOwnShop]     = useState(false)
   const [submitIdx, setSubmitIdx] = useState(-1)
+  const [policyCtx, setPolicyCtx] = useState<PolicyCtx | null>(null)
   const [photos, setPhotos]       = useState<Record<string,string[]>>({ vehicle:[], scene:[], doc:[] })
   const fileRefs = { vehicle: useRef<HTMLInputElement>(null), scene: useRef<HTMLInputElement>(null), doc: useRef<HTMLInputElement>(null) }
 
@@ -106,6 +108,13 @@ export default function FNOLWizard() {
     setDirection(n > step ? 'fwd' : 'back')
     setStep(n)
     window.scrollTo({ top:0, behavior:'smooth' })
+  }
+
+  /* Policy gate → prefill the form from real PolicyCenter data */
+  const handlePolicyReady = (ctx: PolicyCtx) => {
+    setPolicyCtx(ctx)
+    if (ctx.address)    setValue('location',   ctx.address)
+    if (ctx.dateOfLoss) setValue('dateOfLoss', ctx.dateOfLoss)
   }
 
   const handleNext = async () => {
@@ -128,7 +137,13 @@ export default function FNOLWizard() {
       setSubmitIdx(++i)
       if (i >= SUBMIT_STEPS.length) {
         clearInterval(t)
-        submitFNOL({ ...data, lob:'auto' }, {
+        submitFNOL({
+          ...data,
+          lob:          'auto',
+          policyNumber: policyCtx?.policyNumber,
+          vehicle:      policyCtx?.vehicle,
+          reporter:     policyCtx?.reporter,
+        }, {
           onSuccess: (res) => navigate(`/claims/auto/${res.claimId}/status`),
           onError:   () => setSubmitIdx(-1),
         })
@@ -160,6 +175,9 @@ export default function FNOLWizard() {
     </div>
   )
 
+  /* Policy gate — verify a real policy before opening the wizard */
+  if (!policyCtx) return <PolicyGate lob="auto" onReady={handlePolicyReady} />
+
   return (
     <FormProvider {...methods}>
       <div className="min-h-screen flex flex-col">
@@ -177,7 +195,7 @@ export default function FNOLWizard() {
 
         <div className="flex flex-1">
           {/* Sidebar — desktop only */}
-          <Sidebar step={step} steps={STEPS} progress={progress} onGoTo={goTo} lob="auto" />
+          <Sidebar step={step} steps={STEPS} progress={progress} onGoTo={goTo} lob="auto" policy={policyCtx} />
 
           <main className="flex-1 px-4 py-6 md:px-10 md:py-8 max-w-[860px]">
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -214,20 +232,29 @@ export default function FNOLWizard() {
 
 /* ══════════ SHARED LAYOUT COMPONENTS ══════════════════════════════ */
 
-interface SidebarProps { step:number; steps:typeof STEPS; progress:number; onGoTo:(n:number)=>void; lob:'auto'|'home' }
+interface SidebarProps { step:number; steps:typeof STEPS; progress:number; onGoTo:(n:number)=>void; lob:'auto'|'home'; policy?: PolicyCtx | null }
 
-export function Sidebar({ step, steps, progress, onGoTo, lob }: SidebarProps) {
-  const policyNum  = lob==='home' ? '#VM-HOME-2024-33891' : '#VM-AUTO-2024-88421'
-  const policyProp = lob==='home' ? '🏠 4821 Mockingbird Ln, Dallas TX' : '🚗 2021 Honda Accord EX-L · Silver'
+export function Sidebar({ step, steps, progress, onGoTo, lob, policy }: SidebarProps) {
+  const policyNum  = policy?.policyNumber
+    ? `#${policy.policyNumber}`
+    : (lob==='home' ? '#VM-HOME-2024-33891' : '#VM-AUTO-2024-88421')
+  const policyProp = policy?.vehicle?.display
+    ? `🚗 ${policy.vehicle.display}`
+    : (policy?.address ? `🏠 ${policy.address}`
+    : (lob==='home' ? '🏠 4821 Mockingbird Ln, Dallas TX' : '🚗 2021 Honda Accord EX-L · Silver'))
+  const insuredName = policy?.insured || 'Sarah M. Johnson'
   return (
     <aside className="hidden md:flex w-68 bg-navy flex-col sticky top-[60px] h-[calc(100vh-60px)] overflow-y-auto border-r border-white/8 flex-shrink-0">
       <div className="p-4 border-b border-white/8">
         <div className="text-[9.5px] font-bold tracking-widest uppercase text-white/30 mb-2">Your Policy</div>
         <div className="bg-white/6 border border-white/10 rounded-xl p-3">
-          <div className="text-[13px] font-bold text-white">Sarah M. Johnson</div>
+          <div className="text-[13px] font-bold text-white">{insuredName}</div>
           <div className="text-[11px] text-white/45 mt-px">Policy {policyNum}</div>
           <div className="text-[11.5px] text-white/60 mt-1">{policyProp}</div>
-          <div className="inline-flex items-center gap-1 mt-2 bg-green/20 border border-green/35 text-[10px] font-bold text-green-300 px-2 py-px rounded-full">✓ Active Coverage</div>
+          {policy && policy.inForce === false
+            ? <div className="inline-flex items-center gap-1 mt-2 bg-amber-400/20 border border-amber-400/35 text-[10px] font-bold text-amber-200 px-2 py-px rounded-full">⚠ Outside term</div>
+            : <div className="inline-flex items-center gap-1 mt-2 bg-green/20 border border-green/35 text-[10px] font-bold text-green-300 px-2 py-px rounded-full">✓ {policy ? 'In Force' : 'Active Coverage'}</div>
+          }
         </div>
       </div>
       <div className="px-5 py-3 border-b border-white/8">
