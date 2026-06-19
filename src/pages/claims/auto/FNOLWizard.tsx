@@ -93,6 +93,7 @@ export default function FNOLWizard() {
   const [ownShop, setOwnShop]     = useState(false)
   const [submitIdx, setSubmitIdx] = useState(-1)
   const [policyCtx, setPolicyCtx] = useState<PolicyCtx | null>(null)
+  const [createdClaim, setCreatedClaim] = useState<{ claimNumber: string; adjuster?: { name: string; phone: string; email: string } } | null>(null)
   const [photos, setPhotos]       = useState<Record<string,string[]>>({ vehicle:[], scene:[], doc:[] })
   const fileRefs = { vehicle: useRef<HTMLInputElement>(null), scene: useRef<HTMLInputElement>(null), doc: useRef<HTMLInputElement>(null) }
 
@@ -144,7 +145,10 @@ export default function FNOLWizard() {
           vehicle:      policyCtx?.vehicle,
           reporter:     policyCtx?.reporter,
         }, {
-          onSuccess: (res) => navigate(`/claims/auto/${res.claimId}/status`),
+          onSuccess: (res) => {
+            setCreatedClaim({ claimNumber: (res as any).claimNumber || res.claimId, adjuster: (res as any).adjuster })
+            setSubmitIdx(-1)
+          },
           onError:   () => setSubmitIdx(-1),
         })
       }
@@ -172,6 +176,45 @@ export default function FNOLWizard() {
           </div>
         </div>
       </div>
+    </div>
+  )
+
+  /* Success — claim created in Guidewire ClaimCenter */
+  if (createdClaim) return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar crumb="File a Claim" secondCrumb="Auto Insurance" />
+      <main className="flex-1 flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-[520px] text-center">
+          <div className="w-16 h-16 mx-auto rounded-full bg-green/15 border border-green/30 flex items-center justify-center text-3xl">✅</div>
+          <h1 className="text-2xl font-bold text-navy mt-4">Claim filed successfully</h1>
+          <p className="text-[13px] text-muted mt-1.5">
+            Your claim has been created in Guidewire ClaimCenter. A confirmation has been sent to your email and phone.
+          </p>
+
+          <div className="bg-white border border-border rounded-2xl p-5 mt-5 shadow-sm text-left">
+            <div className="text-[10.5px] font-bold uppercase tracking-wider text-slate">Your Claim Number</div>
+            <div className="text-3xl font-extrabold text-navy tracking-tight mt-1 select-all">{createdClaim.claimNumber}</div>
+            {createdClaim.adjuster && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="text-[10.5px] font-bold uppercase tracking-wider text-slate">Your Adjuster</div>
+                <div className="text-[14px] font-semibold text-navy mt-0.5">{createdClaim.adjuster.name}</div>
+                <div className="text-[12.5px] text-muted">{createdClaim.adjuster.phone} · {createdClaim.adjuster.email}</div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2.5 mt-5">
+            <button
+              type="button"
+              className="btn btn-green w-full py-3"
+              onClick={() => navigate(`/claims/search?claim=${encodeURIComponent(createdClaim.claimNumber)}`)}
+            >
+              Track your claim →
+            </button>
+            <button type="button" className="btn btn-ghost w-full" onClick={() => navigate('/')}>Back to Home</button>
+          </div>
+        </div>
+      </main>
     </div>
   )
 
