@@ -284,13 +284,26 @@ export default function CoverageTab({ claimNumber, policyNumber, lobType, vehicl
           /* ── Step 1: Get claim from ClaimCenter ── */
           const cr = await fetch(`${PROXY}/gw/claim/v1/claims?filter=claimNumber%3Aeq%3A${claimNumber}&pageSize=1`)
           const cd = await cr.json()
-          const claim = cd?.data?.[0]?.attributes
+          const claim   = cd?.data?.[0]?.attributes
+          const claimId = cd?.data?.[0]?.id
 
           if (claim) {
-            const isAuto     = claim.lossType?.code === 'AUTO'
+            const isAuto     = claim.lossType?.code === 'AUTO' || lobType === 'auto'
             const polNum     = claim.policyNumber || policyNumber
-            const pcId       = claim.insured?.policySystemId || claim.mainContact?.policySystemId || ''
+            let   pcId       = claim.insured?.policySystemId || claim.mainContact?.policySystemId || ''
             const mockBase   = getCoverage(claimNumber, isAuto ? 'auto' : 'property')
+
+            /* Resolve the PC policy by NUMBER — custom-line claims don't carry policySystemId.
+               If the policy isn't in PolicyCenter (mock / USAA-demo claims), lookup.found is
+               false, pcId stays empty, and every field below falls back to mock — untouched. */
+            let lookup: any = null
+            if (polNum) {
+              try {
+                const lr = await fetch(`${PROXY}/api/policy/lookup?policyNumber=${encodeURIComponent(polNum)}`)
+                lookup = await lr.json()
+                if (lookup?.found && lookup.pcId) pcId = lookup.pcId
+              } catch { /* keep pcId as-is → mock */ }
+            }
 
             let pcPolicy:any = null; let pcLines:any[] = []
             let pcCoverages:any[] = []; let pcVehicles:any[] = []
@@ -298,25 +311,25 @@ export default function CoverageTab({ claimNumber, policyNumber, lobType, vehicl
             /* ── Step 2: Get PolicyCenter policy (if pcId available) ── */
             if (pcId) {
               try {
-                const pr  = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}`)
+                const pr  = await fetch(`${PROXY}/pc/policy/v1/policies/${pcId}`)
                 const pd  = await pr.json()
                 pcPolicy  = pd?.data?.attributes || null
 
                 /* ── Step 3: Get PC lines ── */
-                const lr  = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}/lines`)
+                const lr  = await fetch(`${PROXY}/pc/policy/v1/policies/${pcId}/lines`)
                 const ld  = await lr.json()
                 pcLines   = ld?.data || []
 
                 if (pcLines.length > 0) {
                   const lineId = pcLines[0].attributes?.id || pcLines[0].attributes?.patternCode
                   /* ── Step 4: Get coverages ── */
-                  const cvr = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}/lines/${lineId}/coverages`)
+                  const cvr = await fetch(`${PROXY}/pc/policy/v1/policies/${pcId}/lines/${lineId}/coverages`)
                   const cvd = await cvr.json()
                   pcCoverages = cvd?.data || []
 
                   /* ── Step 5: Get vehicles (auto only) ── */
                   if (isAuto) {
-                    const vr  = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}/lines/${lineId}/personal-vehicles`)
+                    const vr  = await fetch(`${PROXY}/pc/policy/v1/policies/${pcId}/lines/${lineId}/personal-vehicles`)
                     const vd  = await vr.json()
                     pcVehicles = vd?.data || []
                   }
@@ -326,7 +339,16 @@ export default function CoverageTab({ claimNumber, policyNumber, lobType, vehicl
 
             /* ── Map real PC fields onto coverage ── */
             const fmtDate = (d:string) => d ? new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'
-            const vehicle = pcVehicles[0]?.attributes
+            /* Show the vehicle that's actually on the claim (the one picked at FNOL), not policy[0] */
+            let claimVeh:any = null
+            if (isAuto && claimId) {
+              try {
+                const vir = await fetch(`${PROXY}/gw/claim/v1/claims/${claimId}/vehicle-incidents`)
+                const vid = await vir.json()
+                claimVeh  = (vid?.data || []).map((v:any)=>v.attributes?.vehicle).find(Boolean) || null
+              } catch { /* fall back to policy vehicle */ }
+            }
+            const vehicle = claimVeh || pcVehicles[0]?.attributes
             const vehStr  = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : (isAuto ? 'Vehicle — see adjuster' : 'Property — see adjuster')
             const vinStr  = vehicle?.vin || '—'
 
@@ -352,11 +374,13 @@ export default function CoverageTab({ claimNumber, policyNumber, lobType, vehicl
             setCoverage({
               ...mockBase,
               policyNumber:      polNum || mockBase.policyNumber,
-              policyType:        pcPolicy?.product?.displayName || mockBase.policyType,
-              policyPeriod:      pcPolicy ? `${fmtDate(pcPolicy.periodStart)} — ${fmtDate(pcPolicy.periodEnd)}` : mockBase.policyPeriod,
-              propertyOrVehicle: pcPolicy ? (isAuto ? vehStr : (pcPolicy.primaryLocation?.displayName?.split(':')[1]?.trim() || vehStr)) : (claim.insured?.displayName || mockBase.propertyOrVehicle),
+              policyType:        lookup?.product || pcPolicy?.product?.displayName || mockBase.policyType,
+              policyPeriod:      (lookup?.found && lookup.periodStart)
+                                   ? `${fmtDate(lookup.periodStart)} — ${fmtDate(lookup.periodEnd)}`
+                                   : (pcPolicy ? `${fmtDate(pcPolicy.periodStart)} — ${fmtDate(pcPolicy.periodEnd)}` : mockBase.policyPeriod),
+              propertyOrVehicle: (pcPolicy || lookup?.found) ? (isAuto ? vehStr : (pcPolicy?.primaryLocation?.displayName?.split(':')[1]?.trim() || vehStr)) : (claim.insured?.displayName || mockBase.propertyOrVehicle),
               yearBuiltOrVIN:    isAuto ? (vehicle ? `VIN: ${vinStr}` : mockBase.yearBuiltOrVIN) : mockBase.yearBuiltOrVIN,
-              extraField:        pcPolicy?.primaryInsured?.displayName || claim.insured?.displayName || mockBase.extraField,
+              extraField:        lookup?.insured || pcPolicy?.primaryInsured?.displayName || claim.insured?.displayName || mockBase.extraField,
               peril:             claim.lossCause?.name || mockBase.peril,
               coveragePills:     realPills.length > 0 ? realPills : mockBase.coveragePills,
               limits:            realLimits.length > 0 ? realLimits : mockBase.limits,
