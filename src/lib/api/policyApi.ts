@@ -1,23 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════════
+/* ──────────────────────────────────────────────────────────────────
    policyApi.ts  →  src/lib/api/policyApi.ts
-   Calls the proxy's Phase-1 policy endpoints (PolicyCenter live).
-   ═══════════════════════════════════════════════════════════════════════ */
+   Calls the proxy's policy endpoints (PolicyCenter live).
+   ────────────────────────────────────────────────────────────────── */
 const PROXY =
   ((import.meta as any).env?.VITE_PROXY_URL as string) || 'http://localhost:3001'
-
-export interface PolicyLookup {
-  found:        boolean
-  policyNumber: string
-  pcId?:        string
-  insured?:     string
-  address?:     string
-  product?:     string
-  lob?:         string
-  periodStart?: string
-  periodEnd?:   string
-  inForce?:     boolean | null
-  message?:     string
-}
 
 export interface PolicyVehicle {
   id:        string
@@ -25,9 +11,26 @@ export interface PolicyVehicle {
   make:      string
   model:     string
   vin:       string
+  color?:    string
   bodyType?: string
   state?:    string
   display:   string
+}
+
+export interface PolicyLookup {
+  found:          boolean
+  policyNumber:   string
+  pcId?:          string
+  insured?:       string
+  accountNumber?: string
+  address?:       string
+  product?:       string
+  lob?:           string
+  periodStart?:   string
+  periodEnd?:     string
+  inForce?:       boolean | null
+  vehicles?:      PolicyVehicle[]
+  message?:       string
 }
 
 export async function lookupPolicy(policyNumber: string, lossDate?: string): Promise<PolicyLookup> {
