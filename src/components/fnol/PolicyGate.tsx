@@ -1,12 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════════
+/* ──────────────────────────────────────────────────────────────────
    PolicyGate.tsx  →  src/components/fnol/PolicyGate.tsx
-   Phase-1 FNOL front door: verify a REAL policy before the wizard opens.
+   FNOL front door: verify a REAL policy before the wizard opens.
      • policy # + loss date → live PolicyCenter lookup
      • in-force check vs loss date
      • auto-fill insured / address
      • vehicle picker when the policy has >1 vehicle
    Emits a PolicyCtx that the wizard threads into display + GW create.
-   ═══════════════════════════════════════════════════════════════════════ */
+   ────────────────────────────────────────────────────────────────── */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
@@ -21,13 +21,17 @@ export interface PolicyCtx {
   lob?:         string
   inForce?:     boolean | null
   dateOfLoss?:  string
-  vehicle?:     { id: string; year: number | string; make: string; model: string; vin: string; display: string }
+  vehicle?:     { id: string; year: number | string; make: string; model: string; vin: string; color?: string; display: string }
   reporter?:    { firstName: string; lastName: string }
 }
 
-/* Curated demo policies per LOB (from PC_Policies_Reference) — shown as a hint */
+/* Demo policy hints per LOB — shown as placeholder only */
 const DEMO_HINT: Record<string, string> = {
-  auto: '7819142859', home: '1784278359', 'commercial-auto': '0077432930', glass: '7819142859',
+  auto: '6428405338', home: '1784278359', 'commercial-auto': '0077432930', glass: '6428405338',
+}
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10)
 }
 
 function splitName(full?: string): { firstName: string; lastName: string } {
@@ -40,7 +44,7 @@ function splitName(full?: string): { firstName: string; lastName: string } {
 export default function PolicyGate({ lob, onReady }: { lob: string; onReady: (ctx: PolicyCtx) => void }) {
   const navigate = useNavigate()
   const [policyNumber, setPolicyNumber] = useState('')
-  const [dateOfLoss,   setDateOfLoss]   = useState('2025-04-22') // inside the A Welch demo term
+  const [dateOfLoss,   setDateOfLoss]   = useState(today())   // today → in-force on freshly issued policies
   const [loading,      setLoading]      = useState(false)
   const [error,        setError]        = useState('')
   const [policy,       setPolicy]       = useState<PolicyLookup | null>(null)
@@ -56,12 +60,14 @@ export default function PolicyGate({ lob, onReady }: { lob: string; onReady: (ct
       const p = await lookupPolicy(num, dateOfLoss)
       if (!p.found) { setError(p.message || `Policy ${num} was not found in PolicyCenter.`); setLoading(false); return }
       setPolicy(p)
-      if (p.pcId) {
+      /* lookup now returns vehicles inline; fall back to the dedicated endpoint if absent */
+      let list = p.vehicles || []
+      if (!list.length && p.pcId) {
         const v = await getVehicles(p.pcId)
-        const list = v.vehicles || []
-        setVehicles(list)
-        if (list.length === 1) setSelVehicle(list[0])
+        list = v.vehicles || []
       }
+      setVehicles(list)
+      if (list.length === 1) setSelVehicle(list[0])
     } catch {
       setError('Could not reach the proxy. Make sure node server.js is running on :3001 and you are on VPN.')
     }
@@ -83,7 +89,8 @@ export default function PolicyGate({ lob, onReady }: { lob: string; onReady: (ct
       dateOfLoss,
       vehicle:      selVehicle ? {
         id: selVehicle.id, year: selVehicle.year, make: selVehicle.make,
-        model: selVehicle.model, vin: selVehicle.vin, display: selVehicle.display,
+        model: selVehicle.model, vin: selVehicle.vin, color: selVehicle.color,
+        display: selVehicle.display,
       } : undefined,
       reporter:     splitName(policy.insured),
     })
@@ -144,7 +151,7 @@ export default function PolicyGate({ lob, onReady }: { lob: string; onReady: (ct
                 <div>
                   <div className="text-[15px] font-bold text-navy">{policy.insured || 'Insured'}</div>
                   <div className="text-[12px] text-muted mt-px">Policy #{policy.policyNumber} · {policy.product}</div>
-                  {policy.address && <div className="text-[12px] text-muted mt-0.5">{policy.address}</div>}
+                  {policy.address && <div className="text-[12px] text-muted mt-0.5 whitespace-pre-line">{policy.address}</div>}
                 </div>
                 {policy.inForce === false ? (
                   <span className="shrink-0 inline-flex items-center gap-1 bg-amber-100 border border-amber-300 text-amber-700 text-[10.5px] font-bold px-2.5 py-1 rounded-full">
@@ -189,7 +196,7 @@ export default function PolicyGate({ lob, onReady }: { lob: string; onReady: (ct
                               : 'border-border hover:border-navy/40')
                           }
                         >
-                          <div className="text-[13.5px] font-semibold text-navy">{v.display}</div>
+                          <div className="text-[13.5px] font-semibold text-navy">{v.display}{v.color ? ` · ${v.color}` : ''}</div>
                           <div className="text-[11px] text-muted mt-px">
                             VIN {v.vin || '—'}{v.bodyType ? ` · ${v.bodyType}` : ''}{v.state ? ` · ${v.state}` : ''}
                           </div>
