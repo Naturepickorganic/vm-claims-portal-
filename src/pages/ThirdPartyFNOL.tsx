@@ -48,6 +48,7 @@ export default function ThirdPartyFNOL() {
           </div>
           <div className="flex flex-col gap-2.5">
             <a href="tel:18008262534" className="btn btn-primary justify-center py-3">📞 Call Claims Team</a>
+            <Link to="/claims/search" className="btn btn-primary justify-center">View Claim Status →</Link>
             <button onClick={() => navigate('/')} className="btn btn-ghost justify-center">Back to Home</button>
           </div>
           <div className="mt-5 p-3 bg-blue-light border border-blue-mid rounded-xl text-[12px] text-[#1E3A8A]">
