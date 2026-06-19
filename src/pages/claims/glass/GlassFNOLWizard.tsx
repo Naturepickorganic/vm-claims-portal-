@@ -119,7 +119,7 @@ export default function GlassFNOLWizard() {
             </div>
           )}
           <div className="flex flex-col gap-2.5">
-            <Link to={`/claims/auto/${claimId}/status`} className="btn btn-primary justify-center py-3">Track my claim →</Link>
+            <Link to={`/claims/search?claim=${claimId}`} className="btn btn-primary justify-center py-3">View Claim Status →</Link>
             <Link to="/" className="btn btn-ghost justify-center">Back to home</Link>
           </div>
         </div>
@@ -437,4 +437,3 @@ export default function GlassFNOLWizard() {
     </div>
   )
 }
-
