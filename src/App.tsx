@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider }              from '@/lib/authContext'
 import Home                         from '@/pages/Home'
 import Login                        from '@/pages/Login'
@@ -18,6 +18,15 @@ import HomeClaimStatus              from '@/pages/claims/home/HomeClaimStatus'
 import CommercialAutoFNOLWizard     from '@/pages/claims/commercial-auto/CommercialAutoFNOLWizard'
 import CommercialAutoClaimStatus    from '@/pages/claims/commercial-auto/CommercialAutoClaimStatus'
 
+/* ── RedirectToSearch ──────────────────────────────────────────────────────
+   Intercepts all old ClaimStatus routes and redirects to the new
+   ClaimSearch detail page. Keeps old status files untouched.
+   ─────────────────────────────────────────────────────────────────────── */
+function RedirectToSearch() {
+  const { id } = useParams<{ id: string }>()
+  return <Navigate to={`/claims/search?claim=${id}`} replace />
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -33,13 +42,13 @@ export default function App() {
         <Route path="/track/result"                       element={<TrackResult />} />
         <Route path="/claims/glass/new"                   element={<GlassFNOLWizard />} />
         <Route path="/claims/auto/new"                    element={<FNOLWizard />} />
-        <Route path="/claims/auto/:id/status"             element={<ClaimStatus />} />
+        <Route path="/claims/auto/:id/status"             element={<RedirectToSearch />} />
         <Route path="/claims/auto/:id/closure"            element={<ClaimClosure />} />
         <Route path="/claims/home/new"                    element={<HomeFNOLWizard />} />
-        <Route path="/claims/home/:id/status"             element={<HomeClaimStatus />} />
+        <Route path="/claims/home/:id/status"             element={<RedirectToSearch />} />
         <Route path="/claims/commercial-auto/new"         element={<CommercialAutoFNOLWizard />} />
-        <Route path="/claims/commercial-auto/:id/status"  element={<CommercialAutoClaimStatus />} />
-        <Route path="/claims/:id/status"                  element={<ClaimStatus />} />
+        <Route path="/claims/commercial-auto/:id/status"  element={<RedirectToSearch />} />
+        <Route path="/claims/:id/status"                  element={<RedirectToSearch />} />
         <Route path="/claims/:id/closure"                 element={<ClaimClosure />} />
         <Route path="*"                                   element={<Navigate to="/" replace />} />
       </Routes>
