@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, AlertCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown } from 'lucide-react'
 import VMlogo from '@/components/ui/VMlogo'
 import DocumentsTab  from '@/components/DocumentsTab'
@@ -1511,6 +1511,23 @@ export default function ClaimSearch() {
   const [policyNum,  setPolicyNum]  = useState('')
   const [showPolicy, setShowPolicy] = useState(false)
   const [selClaim,   setSelClaim]   = useState<ClaimData|null>(null)
+  const [searchParams] = useSearchParams()
+
+  /* Auto-search when redirected from FNOL with ?claim=XXXXXXX */
+  useEffect(() => {
+    const autoClaimNum = searchParams.get('claim')
+    if (autoClaimNum) {
+      setClaimInput(autoClaimNum)
+      /* Attempt mock lookup first */
+      const mock = MOCK_CLAIMS[autoClaimNum]
+      if (mock) {
+        setFoundClaim(mock)
+        return
+      }
+      /* Otherwise trigger GW search */
+      setError('')
+    }
+  }, [])
 
   const reset = () => { setFoundClaim(null); setShowPolicy(false); setSelClaim(null); setError('') }
 
