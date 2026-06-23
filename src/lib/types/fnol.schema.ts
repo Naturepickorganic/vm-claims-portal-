@@ -15,6 +15,12 @@ export const FNOLFormSchema = z.object({
 
   /* Step 2 */
   drivable:           z.string().default('No — I need a tow'),
+  reporterType:       z.string().optional().default('insured'),
+  reporterName:       z.string().optional().default(''),
+  reporterPhone:      z.string().optional().default(''),
+  reporterAgency:     z.string().optional().default(''),
+  reporterRelation:   z.string().optional().default(''),
+  policyNumber:       z.string().optional().default(''),
   otherPartyName:     z.string().optional().default(''),
   otherPartyPhone:    z.string().optional().default(''),
   otherPartyInsurer:  z.string().optional().default(''),

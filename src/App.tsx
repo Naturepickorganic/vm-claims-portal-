@@ -11,6 +11,7 @@ import RoadsideAssistance           from '@/pages/RoadsideAssistance'
 import TrackResult                  from '@/pages/TrackResult'
 import GlassFNOLWizard              from '@/pages/claims/glass/GlassFNOLWizard'
 import FNOLWizard                   from '@/pages/claims/auto/FNOLWizard'
+import AutoFNOLGate                 from '@/pages/claims/auto/AutoFNOLGate'
 import ClaimStatus                  from '@/pages/claims/auto/ClaimStatus'
 import ClaimClosure                 from '@/pages/claims/auto/ClaimClosure'
 import HomeFNOLWizard               from '@/pages/claims/home/HomeFNOLWizard'
@@ -42,7 +43,7 @@ export default function App() {
         <Route path="/roadside"                           element={<RoadsideAssistance />} />
         <Route path="/track/result"                       element={<TrackResult />} />
         <Route path="/claims/glass/new"                   element={<GlassFNOLWizard />} />
-        <Route path="/claims/auto/new"                    element={<FNOLWizard />} />
+        <Route path="/claims/auto/new"                    element={<AutoFNOLGate />} />
         <Route path="/claims/auto/:id/status"             element={<RedirectToSearch />} />
         <Route path="/claims/auto/:id/closure"            element={<ClaimClosure />} />
         <Route path="/claims/home/new"                    element={<HomeFNOLWizard />} />

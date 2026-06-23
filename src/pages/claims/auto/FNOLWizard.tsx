@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { clsx } from 'clsx'
 import { FNOLFormSchema, STEP_FIELDS, type FNOLFormData } from '@/lib/types'
 import { useFNOL } from '@/lib/api/hooks/useFNOL'
-import PolicyGate, { type PolicyCtx } from '@/components/fnol/PolicyGate'
 import Navbar   from '@/components/layout/Navbar'
 import Tip      from '@/components/ui/Tip'
 import InfoBox  from '@/components/ui/InfoBox'
@@ -86,20 +85,34 @@ const DEFAULTS: Partial<FNOLFormData> = {
 /* ══════════════════════ MAIN COMPONENT ═══════════════════════════ */
 export default function FNOLWizard() {
   const navigate = useNavigate()
+
+  /* live data from the gate (undefined = mock demo mode) */
+  const live = (typeof window !== 'undefined' ? window.__VM_AUTO_LIVE : undefined) as
+    | { policyNumber:string; insured?:string; vehicle?:{ year?:string; make?:string; model?:string; vin?:string; color?:string; plate?:string; label?:string }; coverageLines?:{ name?:string; limits?:string }[] }
+    | undefined
+  const isLive = !!live
+
+  /* LIVE mode: real policy number, blank incident fields. MOCK mode: scripted DEFAULTS. */
+  const formDefaults: Partial<FNOLFormData> = isLive ? ({
+    incidentType:'collision',
+    conditions:[], damageZones:[], photoCount:0,
+    selectedShopIndex:0, inspectionMethod:'virtual',
+    certAccuracy:false, certAuthorize:false, certConsent:false,
+    policyNumber: live!.policyNumber,
+  } as Partial<FNOLFormData>) : DEFAULTS
+
   const [step, setStep]           = useState(0)
   const [direction, setDirection] = useState<'fwd'|'back'>('fwd')
-  const [damageZones, setDamageZones] = useState<Set<string>>(new Set(['Rear']))
-  const [conditions,  setConditions]  = useState<string[]>(['☀️ Clear/Dry'])
+  const [damageZones, setDamageZones] = useState<Set<string>>(new Set(isLive ? [] : ['Rear']))
+  const [conditions,  setConditions]  = useState<string[]>(isLive ? [] : ['☀️ Clear/Dry'])
   const [ownShop, setOwnShop]     = useState(false)
   const [submitIdx, setSubmitIdx] = useState(-1)
-  const [policyCtx, setPolicyCtx] = useState<PolicyCtx | null>(null)
-  const [createdClaim, setCreatedClaim] = useState<{ claimNumber: string; adjuster?: { name: string; phone: string; email: string } } | null>(null)
   const [photos, setPhotos]       = useState<Record<string,string[]>>({ vehicle:[], scene:[], doc:[] })
   const fileRefs = { vehicle: useRef<HTMLInputElement>(null), scene: useRef<HTMLInputElement>(null), doc: useRef<HTMLInputElement>(null) }
 
   const methods = useForm<FNOLFormData>({
     resolver: zodResolver(FNOLFormSchema),
-    defaultValues: DEFAULTS as FNOLFormData,
+    defaultValues: formDefaults as FNOLFormData,
     mode: 'onBlur',
   })
   const { handleSubmit, trigger, watch, setValue, formState: { isSubmitting } } = methods
@@ -109,13 +122,6 @@ export default function FNOLWizard() {
     setDirection(n > step ? 'fwd' : 'back')
     setStep(n)
     window.scrollTo({ top:0, behavior:'smooth' })
-  }
-
-  /* Policy gate → prefill the form from real PolicyCenter data */
-  const handlePolicyReady = (ctx: PolicyCtx) => {
-    setPolicyCtx(ctx)
-    if (ctx.address)    setValue('location',   ctx.address)
-    if (ctx.dateOfLoss) setValue('dateOfLoss', ctx.dateOfLoss)
   }
 
   const handleNext = async () => {
@@ -138,17 +144,24 @@ export default function FNOLWizard() {
       setSubmitIdx(++i)
       if (i >= SUBMIT_STEPS.length) {
         clearInterval(t)
-        submitFNOL({
-          ...data,
-          lob:          'auto',
-          policyNumber: policyCtx?.policyNumber,
-          vehicle:      policyCtx?.vehicle,
-          reporter:     policyCtx?.reporter,
-        }, {
-          onSuccess: (res) => {
-            setCreatedClaim({ claimNumber: (res as any).claimNumber || res.claimId, adjuster: (res as any).adjuster })
-            setSubmitIdx(-1)
-          },
+        const reporterName = (data.reporterName || live?.insured || '').trim()
+        const rParts = reporterName.split(/\s+/)
+        const reporter = reporterName ? {
+          firstName: rParts[0] || 'Policy',
+          lastName:  rParts.slice(1).join(' ') || 'Holder',
+          phone:     data.reporterPhone || '',
+          type:      data.reporterType || 'insured',
+          agency:    data.reporterAgency || '',
+          relation:  data.reporterRelation || '',
+        } : undefined
+        const payload = isLive
+          ? { ...data, lob:'auto', policyNumber: live!.policyNumber,
+              insured: live!.insured, reporter,
+              vehicle: live!.vehicle ? `${live!.vehicle.year||''} ${live!.vehicle.make||''} ${live!.vehicle.model||''}`.trim() : undefined,
+              vehicleVin: live!.vehicle?.vin }
+          : { ...data, lob:'auto', reporter }
+        submitFNOL(payload, {
+          onSuccess: (res) => navigate(`/claims/auto/${res.claimId || res.claimNumber}/status`),
           onError:   () => setSubmitIdx(-1),
         })
       }
@@ -179,48 +192,6 @@ export default function FNOLWizard() {
     </div>
   )
 
-  /* Success — claim created in Guidewire ClaimCenter */
-  if (createdClaim) return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar crumb="File a Claim" secondCrumb="Auto Insurance" />
-      <main className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-[520px] text-center">
-          <div className="w-16 h-16 mx-auto rounded-full bg-green/15 border border-green/30 flex items-center justify-center text-3xl">✅</div>
-          <h1 className="text-2xl font-bold text-navy mt-4">Claim filed successfully</h1>
-          <p className="text-[13px] text-muted mt-1.5">
-            Your claim has been created in Guidewire ClaimCenter. A confirmation has been sent to your email and phone.
-          </p>
-
-          <div className="bg-white border border-border rounded-2xl p-5 mt-5 shadow-sm text-left">
-            <div className="text-[10.5px] font-bold uppercase tracking-wider text-slate">Your Claim Number</div>
-            <div className="text-3xl font-extrabold text-navy tracking-tight mt-1 select-all">{createdClaim.claimNumber}</div>
-            {createdClaim.adjuster && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="text-[10.5px] font-bold uppercase tracking-wider text-slate">Your Adjuster</div>
-                <div className="text-[14px] font-semibold text-navy mt-0.5">{createdClaim.adjuster.name}</div>
-                <div className="text-[12.5px] text-muted">{createdClaim.adjuster.phone} · {createdClaim.adjuster.email}</div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-2.5 mt-5">
-            <button
-              type="button"
-              className="btn btn-green w-full py-3"
-              onClick={() => navigate(`/claims/search?claim=${encodeURIComponent(createdClaim.claimNumber)}`)}
-            >
-              Track your claim →
-            </button>
-            <button type="button" className="btn btn-ghost w-full" onClick={() => navigate('/')}>Back to Home</button>
-          </div>
-        </div>
-      </main>
-    </div>
-  )
-
-  /* Policy gate — verify a real policy before opening the wizard */
-  if (!policyCtx) return <PolicyGate lob="auto" onReady={handlePolicyReady} />
-
   return (
     <FormProvider {...methods}>
       <div className="min-h-screen flex flex-col">
@@ -238,7 +209,7 @@ export default function FNOLWizard() {
 
         <div className="flex flex-1">
           {/* Sidebar — desktop only */}
-          <Sidebar step={step} steps={STEPS} progress={progress} onGoTo={goTo} lob="auto" policy={policyCtx} />
+          <Sidebar step={step} steps={STEPS} progress={progress} onGoTo={goTo} lob="auto" />
 
           <main className="flex-1 px-4 py-6 md:px-10 md:py-8 max-w-[860px]">
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -275,29 +246,20 @@ export default function FNOLWizard() {
 
 /* ══════════ SHARED LAYOUT COMPONENTS ══════════════════════════════ */
 
-interface SidebarProps { step:number; steps:typeof STEPS; progress:number; onGoTo:(n:number)=>void; lob:'auto'|'home'; policy?: PolicyCtx | null }
+interface SidebarProps { step:number; steps:typeof STEPS; progress:number; onGoTo:(n:number)=>void; lob:'auto'|'home' }
 
-export function Sidebar({ step, steps, progress, onGoTo, lob, policy }: SidebarProps) {
-  const policyNum  = policy?.policyNumber
-    ? `#${policy.policyNumber}`
-    : (lob==='home' ? '#VM-HOME-2024-33891' : '#VM-AUTO-2024-88421')
-  const policyProp = policy?.vehicle?.display
-    ? `🚗 ${policy.vehicle.display}`
-    : (policy?.address ? `🏠 ${policy.address}`
-    : (lob==='home' ? '🏠 4821 Mockingbird Ln, Dallas TX' : '🚗 2021 Honda Accord EX-L · Silver'))
-  const insuredName = policy?.insured || 'Sarah M. Johnson'
+export function Sidebar({ step, steps, progress, onGoTo, lob }: SidebarProps) {
+  const policyNum  = lob==='home' ? '#VM-HOME-2024-33891' : '#VM-AUTO-2024-88421'
+  const policyProp = lob==='home' ? '🏠 4821 Mockingbird Ln, Dallas TX' : '🚗 2021 Honda Accord EX-L · Silver'
   return (
     <aside className="hidden md:flex w-68 bg-navy flex-col sticky top-[60px] h-[calc(100vh-60px)] overflow-y-auto border-r border-white/8 flex-shrink-0">
       <div className="p-4 border-b border-white/8">
         <div className="text-[9.5px] font-bold tracking-widest uppercase text-white/30 mb-2">Your Policy</div>
         <div className="bg-white/6 border border-white/10 rounded-xl p-3">
-          <div className="text-[13px] font-bold text-white">{insuredName}</div>
+          <div className="text-[13px] font-bold text-white">Sarah M. Johnson</div>
           <div className="text-[11px] text-white/45 mt-px">Policy {policyNum}</div>
           <div className="text-[11.5px] text-white/60 mt-1">{policyProp}</div>
-          {policy && policy.inForce === false
-            ? <div className="inline-flex items-center gap-1 mt-2 bg-amber-400/20 border border-amber-400/35 text-[10px] font-bold text-amber-200 px-2 py-px rounded-full">⚠ Outside term</div>
-            : <div className="inline-flex items-center gap-1 mt-2 bg-green/20 border border-green/35 text-[10px] font-bold text-green-300 px-2 py-px rounded-full">✓ {policy ? 'In Force' : 'Active Coverage'}</div>
-          }
+          <div className="inline-flex items-center gap-1 mt-2 bg-green/20 border border-green/35 text-[10px] font-bold text-green-300 px-2 py-px rounded-full">✓ Active Coverage</div>
         </div>
       </div>
       <div className="px-5 py-3 border-b border-white/8">
@@ -419,16 +381,48 @@ function Step1Auto({ conditions, onToggle }: { conditions:string[]; onToggle:(c:
 
 /* ══════════════════════ STEP 2 ════════════════════════════════════ */
 function Step2Auto() {
+  const vmLive = (typeof window !== 'undefined' ? window.__VM_AUTO_LIVE : undefined) as { insured?:string; vehicle?:{ year?:string; make?:string; model?:string; vin?:string; color?:string; plate?:string } } | undefined
   const { register, watch, setValue } = useFormContext<FNOLFormData>()
   const fault = watch('faultAssessment')
+  const reporterType = watch('reporterType') || 'insured'
+  // pre-fill reporter name from the live insured the first time
+  const insuredName = vmLive?.insured || ''
   return (
     <>
       <StepHeader step={1} title="People & Vehicles Involved" desc="Your vehicle details are already filled in from your policy." />
       <InfoBox type="green" icon="✅">We've pulled your vehicle and policy details. Verify, then add the other party's information.</InfoBox>
+
       <div className="card">
-        <div className="flex items-center justify-between mb-4"><div className="card-title">🚗 Your Vehicle</div><span className="text-[10px] font-bold text-muted bg-bg border border-border px-2 py-px rounded-full">From your policy</span></div>
+        <div className="card-title mb-3">🧑‍💼 Who is reporting this claim?</div>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {[['insured','Insured / Policyholder'],['agent','Agent / Broker'],['third_party','Third Party']].map(([val,label]) => (
+            <button key={val} type="button"
+              onClick={() => { setValue('reporterType', val); if (val === 'insured' && insuredName && !watch('reporterName')) setValue('reporterName', insuredName) }}
+              className={clsx('chip', reporterType === val && 'chip-on')}>{label}</button>
+          ))}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {[['Year','2021'],['Make','Honda'],['Model','Accord EX-L'],['Color','Silver'],['License Plate','KXP-4421 TX'],['VIN','1HGCV1F34MA123456']].map(([l,v]) => (
+          <div className="field">
+            <label className="field-label">Reporter's Name {reporterType === 'insured' && insuredName && <span className="prefill-badge">✓ Insured on file</span>}</label>
+            <input {...register('reporterName')} defaultValue={reporterType === 'insured' ? insuredName : ''} placeholder="Full name" className="field-input" />
+          </div>
+          <div className="field"><label className="field-label">Reporter's Phone</label><input {...register('reporterPhone')} placeholder="(___) ___-____" className="field-input" /></div>
+          {reporterType === 'agent' && (
+            <div className="field sm:col-span-2"><label className="field-label">Agency / Brokerage</label><input {...register('reporterAgency')} placeholder="Agency name" className="field-input" /></div>
+          )}
+          {reporterType === 'third_party' && (
+            <div className="field sm:col-span-2"><label className="field-label">Relationship to insured</label><input {...register('reporterRelation')} placeholder="e.g. witness, family member, other driver" className="field-input" /></div>
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="flex items-center justify-between mb-4"><div className="card-title">🚗 Your Vehicle</div><span className="text-[10px] font-bold text-muted bg-bg border border-border px-2 py-px rounded-full">{vmLive ? 'Live from policy' : 'From your policy'}</span></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {(vmLive && vmLive.vehicle
+            ? [['Year', vmLive.vehicle.year||''],['Make', vmLive.vehicle.make||''],['Model', vmLive.vehicle.model||''],['Color', vmLive.vehicle.color||''],['License Plate', vmLive.vehicle.plate||'—'],['VIN', vmLive.vehicle.vin||'']]
+            : [['Year','2021'],['Make','Honda'],['Model','Accord EX-L'],['Color','Silver'],['License Plate','KXP-4421 TX'],['VIN','1HGCV1F34MA123456']]
+          ).map(([l,v]) => (
             <div key={l} className="field"><label className="field-label">{l} <span className="prefill-badge">✓ On file</span></label><input defaultValue={v} className="field-input prefilled" readOnly /></div>
           ))}
           <div className="field sm:col-span-2">
@@ -473,7 +467,7 @@ function Step3Auto({ damageZones, onToggleZone, photos, fileRefs, onFiles, total
       <div className="card">
         <div className="card-title mb-3">🎯 Mark Where Your Car Was Damaged</div>
         <div className="bg-bg border border-border rounded-xl p-4 text-center">
-          <div className="text-[10.5px] font-bold text-slate uppercase tracking-wider mb-3">2021 Honda Accord — Top View</div>
+          <div className="text-[10.5px] font-bold text-slate uppercase tracking-wider mb-3">{(typeof window !== 'undefined' && window.__VM_AUTO_LIVE?.vehicle?.label) || '2021 Honda Accord'} — Top View</div>
           <div className="relative inline-block max-w-[240px] w-full">
             <svg viewBox="0 0 240 420" className="w-full" fill="none">
               <rect x="44" y="50" width="152" height="320" rx="26" fill="#E2E8F0"/>
@@ -519,6 +513,32 @@ function Step3Auto({ damageZones, onToggleZone, photos, fileRefs, onFiles, total
 
 /* ══════════════════════ STEP 4 ════════════════════════════════════ */
 function Step4Auto() {
+  const vmLive = (typeof window !== 'undefined' ? window.__VM_AUTO_LIVE : undefined) as { policyNumber?:string; coverageLines?:{ name?:string; limits?:string }[] } | undefined
+  if (vmLive && vmLive.coverageLines && vmLive.coverageLines.length > 0) {
+    return (
+      <>
+        <StepHeader step={3} title="Your Coverage" desc="Live coverage on your policy from Guidewire PolicyCenter." />
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <div className="card-title">🛡️ Your Coverage — Policy #{vmLive.policyNumber}</div>
+            <span className="text-[9.5px] font-bold px-2 py-px rounded-full bg-green text-white">● Live GW Data</span>
+          </div>
+          <div className="grid grid-cols-1 gap-2.5">
+            {vmLive.coverageLines.map((c,i) => (
+              <div key={i} className="border border-green-mid bg-green-light rounded-xl p-3.5">
+                <div className="flex items-start justify-between">
+                  <div className="text-[12px] font-bold text-[#064E3B]">{c.name}</div>
+                  <span className="text-[9.5px] font-bold px-2 py-px rounded-full ml-2 bg-green text-white flex-shrink-0">✓ Applies</span>
+                </div>
+                <div className="text-[13px] font-bold mt-1.5 text-green-dark">{c.limits || '—'}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <InfoBox type="green" icon="✅">These limits are read live from PolicyCenter for this policy.</InfoBox>
+      </>
+    )
+  }
   return (
     <>
       <StepHeader step={3} title="Your Coverage" desc="Here's exactly what your policy covers for this incident." />
