@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/authContext'
 import { useLogo } from '@/lib/logoConfig'
 import { clsx } from 'clsx'
 
-type LOB = 'auto' | 'home' | 'glass' | 'commercial-auto' | 'commercial-property' | 'workers-comp' | 'agri'
+type LOB = 'auto' | 'home' | 'glass' | 'commercial-auto' | 'commercial-property' | 'workers-comp' | 'agri' | 'sbl' | 'commercial-mp' | 'renters' | 'pet'
 type CustomerType = 'customer' | 'third-party' | 'carrier'
 
 const LOBS = [
@@ -15,6 +15,10 @@ const LOBS = [
   { id:'commercial-property'as LOB, icon:'🏢', label:'Commercial Property',   desc:'Business premises, equipment, inventory',              built:false, note:''            },
   { id:'workers-comp'       as LOB, icon:'👷', label:"Workers' Compensation", desc:'Employee injury, medical, return-to-work',             built:false, note:''            },
   { id:'agri'               as LOB, icon:'🌾', label:'Commercial Agriculture', desc:'Crop, livestock, farm equipment, structures',          built:false, note:''            },
+  { id:'sbl'                as LOB, icon:'🛡️', label:'General Liability',      desc:'Small-business liability — slip/fall, injury, product', built:true,  note:'New'         },
+  { id:'commercial-mp'      as LOB, icon:'🧩', label:'Commercial Multi-Peril', desc:'Bundled property + liability for businesses',          built:false, note:''            },
+  { id:'renters'            as LOB, icon:'🔑', label:'Renters Insurance',     desc:'Personal property and liability for renters',          built:false, note:''            },
+  { id:'pet'                as LOB, icon:'🐾', label:'Pet Insurance',         desc:'Veterinary, illness, and accident claims',             built:false, note:''            },
 ]
 
 const CUSTOMER_OPTIONS = [
@@ -39,6 +43,9 @@ export default function FileClaimStart() {
 
     if (lob === 'glass') {
       navigate('/claims/glass/new')
+    } else if (lob === 'sbl') {
+      if (isAuthenticated) navigate('/claims/sbl/new')
+      else navigate('/login?redirect=/claims/sbl/new&lob=General+Liability')
     } else if (LOBS_WITH_TYPE.includes(lob)) {
       setStep('type')
     } else if (lob === 'home') {

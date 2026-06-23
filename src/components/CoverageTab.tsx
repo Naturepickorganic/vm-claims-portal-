@@ -275,19 +275,141 @@ export default function CoverageTab({ claimNumber, policyNumber, lobType, vehicl
   const [coverage, setCoverage] = useState<PolicyCoverage | null>(null)
 
   useEffect(() => {
-    /* 🔌 GW API calls go here when IP is whitelisted:
-       const [polRes, claimRes] = await Promise.all([
-         fetch(`/api/gw/policy/v1/policies/${policyNumber}/coverages`),
-         fetch(`/api/gw/claim/v1/claims/${claimNumber}/coverages`)
-       ])
-       const polData  = await polRes.json()
-       const claimData = await claimRes.json()
-       setCoverage(transformGWResponse(polData, claimData, lobType))
-    */
-    setTimeout(() => {
+    const load = async () => {
+      setLoading(true)
+      const PROXY = (import.meta as any).env?.VITE_PROXY_URL || ''
+
+      if (PROXY) {
+        try {
+          /* ── Step 1: Get claim from ClaimCenter ── */
+          const cr = await fetch(`${PROXY}/gw/claim/v1/claims?filter=claimNumber%3Aeq%3A${claimNumber}&pageSize=1`)
+          const cd = await cr.json()
+          const claim = cd?.data?.[0]?.attributes
+
+          if (claim) {
+            const isAuto     = claim.lossType?.code === 'AUTO'
+            const polNum     = claim.policyNumber || policyNumber
+            let   pcId       = claim.insured?.policySystemId || claim.mainContact?.policySystemId || ''
+            const mockBase   = getCoverage(claimNumber, isAuto ? 'auto' : 'property')
+
+            /* policySystemId is often empty on custom-line (SBL/auto) claims —
+               resolve the PC policy by NUMBER so live coverage still loads. */
+            if (!pcId && polNum && polNum !== '—') {
+              try {
+                const sr = await fetch(`${PROXY}/pc/policy/v1/search/policies`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ data: { attributes: { policyNumber: polNum } } }),
+                })
+                const sd = await sr.json()
+                pcId = sd?.data?.[0]?.attributes?.policyId || ''
+              } catch { /* leave pcId empty → mock fallback */ }
+            }
+
+            let pcPolicy:any = null; let pcLines:any[] = []
+            let pcCoverages:any[] = []; let pcVehicles:any[] = []
+
+            /* ── Step 2: Get PolicyCenter policy (if pcId available) ── */
+            if (pcId) {
+              try {
+                const pr  = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}`)
+                const pd  = await pr.json()
+                pcPolicy  = pd?.data?.attributes || null
+
+                /* ── Step 3: Get PC lines ── */
+                const lr  = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}/lines`)
+                const ld  = await lr.json()
+                pcLines   = ld?.data || []
+
+                if (pcLines.length > 0) {
+                  const lineId = pcLines[0].attributes?.id || pcLines[0].attributes?.patternCode
+                  /* ── Step 4: Get coverages ── */
+                  const cvr = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}/lines/${lineId}/coverages`)
+                  const cvd = await cvr.json()
+                  pcCoverages = cvd?.data || []
+
+                  /* ── Step 5: Get vehicles (auto only) ── */
+                  if (isAuto) {
+                    const vr  = await fetch(`${PROXY}/pc/policy/v1/policies/${encodeURIComponent(pcId)}/lines/${lineId}/personal-vehicles`)
+                    const vd  = await vr.json()
+                    pcVehicles = vd?.data || []
+                  }
+                }
+              } catch { /* PC optional */ }
+            }
+
+            /* ── Map real PC fields onto coverage ── */
+            const fmtDate = (d:string) => d ? new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'
+            const vehicle = pcVehicles[0]?.attributes
+            const vehStr  = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : (isAuto ? 'Vehicle — see adjuster' : 'Property — see adjuster')
+            const vinStr  = vehicle?.vin || '—'
+
+            // Build real coverage pills from PC
+            const realPills = pcCoverages.length > 0 ? pcCoverages.map((cv:any) => ({
+              label: cv.attributes?.pattern?.displayName || cv.attributes?.id || 'Coverage',
+              type:  cv.attributes?.selected ? 'active' as const : 'excluded' as const,
+            })) : mockBase.coveragePills
+
+            // Build real limits from PC coverages — expand multi-term
+            // coverages (e.g. SBL General Liability: Agg / Occ / Ded / Medical)
+            // into one row per term, with friendly labels and money formatting.
+            const prettyTerm = (key: string) => key
+              .replace(/^SBLGeneralLiability/, '')
+              .replace(/GLAggLimit/, 'Aggregate limit')
+              .replace(/GLLiabilityOccurLimit/, 'Per occurrence')
+              .replace(/GLDeductible/, 'Deductible')
+              .replace(/MedicalExpense/, 'Medical payments')
+              .replace(/([a-z])([A-Z])/g, '$1 $2')
+              .trim()
+            const fmtTermVal = (raw: string) => {
+              if (!raw) return '—'
+              const m = String(raw).match(/^(\d+)k?usd$/i)
+              if (m) { const n = parseInt(m[1], 10); return '$' + (/kusd$/i.test(raw) ? n * 1000 : n).toLocaleString() }
+              return raw
+            }
+            const realLimits = pcCoverages.length > 0 ? pcCoverages.flatMap((cv:any) => {
+              const terms = cv.attributes?.terms || {}
+              const keys  = Object.keys(terms)
+              const covName = cv.attributes?.pattern?.displayName || cv.attributes?.id
+              if (keys.length === 0) return [{ name: covName, amount: '—', barPct: 50, barColor: '#024099' }]
+              return keys.map((k) => {
+                const t = terms[k]
+                const val = t?.choiceValue?.code ? fmtTermVal(t.choiceValue.code) : (t?.displayValue || '—')
+                return {
+                  name:     keys.length > 1 ? `${covName} — ${prettyTerm(k)}` : covName,
+                  amount:   val,
+                  barPct:   50,
+                  barColor: '#024099',
+                }
+              })
+            }) : mockBase.limits
+
+            setCoverage({
+              ...mockBase,
+              policyNumber:      polNum || mockBase.policyNumber,
+              policyType:        pcPolicy?.product?.displayName || mockBase.policyType,
+              policyPeriod:      pcPolicy ? `${fmtDate(pcPolicy.periodStart)} — ${fmtDate(pcPolicy.periodEnd)}` : mockBase.policyPeriod,
+              propertyOrVehicle: pcPolicy ? (isAuto ? vehStr : (pcPolicy.primaryLocation?.displayName?.split(':')[1]?.trim() || vehStr)) : (claim.insured?.displayName || mockBase.propertyOrVehicle),
+              yearBuiltOrVIN:    isAuto ? (vehicle ? `VIN: ${vinStr}` : mockBase.yearBuiltOrVIN) : mockBase.yearBuiltOrVIN,
+              extraField:        pcPolicy?.primaryInsured?.displayName || claim.insured?.displayName || mockBase.extraField,
+              peril:             claim.lossCause?.name || mockBase.peril,
+              coveragePills:     realPills.length > 0 ? realPills : mockBase.coveragePills,
+              limits:            realLimits.length > 0 ? realLimits : mockBase.limits,
+              deductibleGradient: isAuto ? 'linear-gradient(135deg,#024099,#0254CC)' : 'linear-gradient(135deg,#0F6E56,#1B8A4B)',
+              gwPolicyCovEndpoint: `/policy/v1/policies/${pcId}/coverages`,
+              gwClaimCovEndpoint:  `/claim/v1/claims/${claimNumber}/coverages`,
+            })
+            setLoading(false)
+            return
+          }
+        } catch { /* fall through to mock */ }
+      }
+
+      /* Fallback — mock data */
       setCoverage(getCoverage(claimNumber, lobType))
       setLoading(false)
-    }, 300)
+    }
+    load()
   }, [claimNumber, policyNumber, lobType])
 
   if (loading) {

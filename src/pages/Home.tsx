@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import {
   Car, Home as HomeIcon, Building2, Truck, HardHat, Sprout,
   AppWindow, MessageSquare, Phone, Mail, ChevronDown, ChevronUp,
+  ShieldAlert, Layers, KeyRound, PawPrint,
 } from 'lucide-react'
 import { useLogo } from '@/lib/logoConfig'
 import { useAuth } from '@/lib/authContext'
@@ -46,6 +47,10 @@ const LOBS = [
   { Icon:Truck,     label:'Commercial Auto',        desc:'Fleet vehicles, cargo, DOT incidents.',                 href:'/claims/commercial-auto/new',  active:true,  color:VM.blue,  bg:VM.bluePale,  tag:''           },
   { Icon:Building2, label:'Commercial Property',    desc:'Business premises, equipment, inventory.',              href:'#',                            active:false, color:'#A0AEC0', bg:VM.bg,        tag:''           },
   { Icon:HardHat,   label:"Workers' Compensation",  desc:'Employee injury, medical, and return-to-work.',         href:'#',                            active:false, color:'#A0AEC0', bg:VM.bg,        tag:''           },
+  { Icon:ShieldAlert,label:'General Liability',     desc:'Small-business liability — slip/fall, injury, product.',href:'/claims/sbl/new',              active:true,  color:VM.blue,  bg:VM.bluePale,  tag:'New'        },
+  { Icon:Layers,    label:'Commercial Multi-Peril', desc:'Bundled property + liability for businesses.',          href:'#',                            active:false, color:'#A0AEC0', bg:VM.bg,        tag:''           },
+  { Icon:KeyRound,  label:'Renters Insurance',      desc:'Personal property and liability for renters.',          href:'#',                            active:false, color:'#A0AEC0', bg:VM.bg,        tag:''           },
+  { Icon:PawPrint,  label:'Pet Insurance',          desc:'Veterinary, illness, and accident claims.',             href:'#',                            active:false, color:'#A0AEC0', bg:VM.bg,        tag:''           },
 ]
 
 const FAQS: Record<LOBKey, { q: string; a: string }[]> = {

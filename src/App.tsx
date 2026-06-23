@@ -17,6 +17,7 @@ import HomeFNOLWizard               from '@/pages/claims/home/HomeFNOLWizard'
 import HomeClaimStatus              from '@/pages/claims/home/HomeClaimStatus'
 import CommercialAutoFNOLWizard     from '@/pages/claims/commercial-auto/CommercialAutoFNOLWizard'
 import CommercialAutoClaimStatus    from '@/pages/claims/commercial-auto/CommercialAutoClaimStatus'
+import SBLFNOLWizard                from '@/pages/claims/sbl/SBLFNOLWizard'
 
 /* ── RedirectToSearch ──────────────────────────────────────────────────────
    Intercepts all old ClaimStatus routes and redirects to the new
@@ -48,6 +49,8 @@ export default function App() {
         <Route path="/claims/home/:id/status"             element={<RedirectToSearch />} />
         <Route path="/claims/commercial-auto/new"         element={<CommercialAutoFNOLWizard />} />
         <Route path="/claims/commercial-auto/:id/status"  element={<RedirectToSearch />} />
+        <Route path="/claims/sbl/new"                     element={<SBLFNOLWizard />} />
+        <Route path="/claims/sbl/:id/status"              element={<RedirectToSearch />} />
         <Route path="/claims/:id/status"                  element={<RedirectToSearch />} />
         <Route path="/claims/:id/closure"                 element={<ClaimClosure />} />
         <Route path="*"                                   element={<Navigate to="/" replace />} />
