@@ -32,6 +32,7 @@ export interface ClaimDocument {
 
 export interface FNOLSubmitResponse {
   claimId:   string
+  claimNumber?: string
   gwClaimId: string
   adjuster:  { name: string; phone: string; email: string }
   estimatedResolution: string
