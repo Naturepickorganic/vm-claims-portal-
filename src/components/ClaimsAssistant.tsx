@@ -98,7 +98,8 @@ export default function ClaimsAssistant({ claimContext, mode = 'full' }: Props) 
     ]
 
     try {
-      const res = await fetch('/api/chat', {
+      const PROXY = ((import.meta as any).env?.VITE_PROXY_URL as string) || ''
+      const res = await fetch(`${PROXY}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({

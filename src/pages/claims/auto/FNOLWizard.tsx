@@ -107,6 +107,7 @@ export default function FNOLWizard() {
   const [conditions,  setConditions]  = useState<string[]>(isLive ? [] : ['☀️ Clear/Dry'])
   const [ownShop, setOwnShop]     = useState(false)
   const [submitIdx, setSubmitIdx] = useState(-1)
+  const [result, setResult]       = useState<{ claimNumber: string } | null>(null)
   const [photos, setPhotos]       = useState<Record<string,string[]>>({ vehicle:[], scene:[], doc:[] })
   const fileRefs = { vehicle: useRef<HTMLInputElement>(null), scene: useRef<HTMLInputElement>(null), doc: useRef<HTMLInputElement>(null) }
 
@@ -161,7 +162,7 @@ export default function FNOLWizard() {
               vehicleVin: live!.vehicle?.vin }
           : { ...data, lob:'auto', reporter }
         submitFNOL(payload, {
-          onSuccess: (res) => navigate(`/claims/auto/${res.claimId || res.claimNumber}/status`),
+          onSuccess: (res) => { setSubmitIdx(-1); setResult({ claimNumber: res.claimNumber || res.claimId || 'pending' }) },
           onError:   () => setSubmitIdx(-1),
         })
       }
@@ -186,6 +187,30 @@ export default function FNOLWizard() {
                 <span>{i < submitIdx ? '✅' : s.icon}</span>{s.text}
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  /* Confirmation screen — shows the new claim number with a button to track it */
+  if (result) return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar crumb="File a Claim" secondCrumb="Auto Insurance" />
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="card text-center max-w-[440px] w-full">
+          <div className="w-14 h-14 rounded-full bg-green-light flex items-center justify-center mx-auto mb-3 text-[26px]">✓</div>
+          <h2 className="text-[22px] font-extrabold text-navy mb-1">Claim submitted</h2>
+          <p className="text-[13.5px] text-muted mb-5">Filed to ClaimCenter and assigned for review. You'll get a confirmation by email and text.</p>
+          <div className="inline-block text-left min-w-[300px] bg-bg border border-border rounded-[10px] px-[18px] py-3.5 mb-5">
+            <div className="flex justify-between items-center">
+              <span className="text-[12px] text-muted">Claim number</span>
+              <span className="text-[16px] font-extrabold text-navy tracking-wide">{result.claimNumber}</span>
+            </div>
+          </div>
+          <div className="flex gap-2.5 justify-center">
+            <button className="btn btn-primary" onClick={() => navigate(`/claims/search?claim=${result.claimNumber}`)}>View claim status →</button>
+            <button className="btn btn-ghost" onClick={() => navigate('/')}>Back to home</button>
           </div>
         </div>
       </div>
